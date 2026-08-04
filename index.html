@@ -4,55 +4,169 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#c2185b">
-  <title>MSFK Productcatalogus</title>
+  <title>MSFK Verkoop & THT</title>
   <link rel="stylesheet" href="./style.css?v=1">
 </head>
 <body>
   <div id="loading" class="loading">App laden…</div>
+
   <section id="loginView" class="login-screen hidden">
     <div class="login-card">
-      <h1>MSFK Productcatalogus</h1>
-      <p>Privé productcatalogus voor gebruik op telefoon en pc.</p>
+      <h1>MSFK Verkoop & THT</h1>
+      <p>Privé systeem voor productfoto’s, prijzen, voorraad en vervaldatums.</p>
       <button id="loginBtn" class="btn primary big">Inloggen met Google</button>
       <div id="loginMessage" class="message"></div>
     </div>
   </section>
+
   <div id="appView" class="hidden">
     <header class="topbar">
-      <div><h1 id="headerTitle">MSFK Productcatalogus</h1><div id="userEmail" class="small"></div></div>
+      <div>
+        <h1 id="appTitle">MSFK Verkoop & THT</h1>
+        <div id="userEmail" class="small"></div>
+      </div>
       <button id="logoutBtn" class="btn ghost">Uitloggen</button>
     </header>
+
     <nav class="tabs">
       <button data-tab="catalog" class="active">Catalogus</button>
-      <button data-tab="manage">Product toevoegen</button>
+      <button data-tab="add">Product toevoegen</button>
+      <button data-tab="tht">THT-overzicht</button>
       <button data-tab="settings">Instellingen</button>
     </nav>
+
     <main>
       <section id="catalog" class="tab active">
         <div class="toolbar">
-          <input id="searchInput" type="search" placeholder="Zoek product…">
-          <select id="categoryFilter"><option value="all">Alle categorieën</option></select>
-          <select id="availabilityFilter"><option value="available">Alleen beschikbaar</option><option value="all">Alles tonen</option><option value="soldout">Alleen uitverkocht</option></select>
+          <input id="catalogSearch" type="search" placeholder="Zoek product, barcode of categorie…">
+          <select id="catalogCategory"><option value="all">Alle categorieën</option></select>
+          <select id="catalogAvailability">
+            <option value="available">Alleen beschikbaar</option>
+            <option value="all">Alles tonen</option>
+            <option value="soldout">Alleen uitverkocht</option>
+          </select>
+          <button id="exportBtn" class="btn secondary">Export CSV</button>
         </div>
-        <div id="emptyCatalog" class="empty hidden">Geen producten gevonden.</div>
-        <div id="productGrid" class="product-grid"></div>
+        <div id="catalogEmpty" class="empty hidden">Geen producten gevonden.</div>
+        <div id="catalogGrid" class="product-grid"></div>
       </section>
-      <section id="manage" class="tab">
+
+      <section id="add" class="tab">
         <div class="panel">
-          <h2 id="formTitle">Nieuw product</h2><input id="editingId" type="hidden">
-          <div class="grid2"><div><label>Productnaam</label><input id="productName" placeholder="Bijv. Appelmoes Green 360gr"></div><div><label>Prijs (CG)</label><input id="price" type="number" min="0" step="0.01" placeholder="3.79"></div></div>
-          <div class="grid2"><div><label>Datum</label><input id="productDate" type="date"></div><div><label>Categorie</label><input id="category" list="categories" placeholder="Bijv. Snoep"><datalist id="categories"><option value="Snoep"><option value="Chips"><option value="Drank"><option value="Koek"><option value="Boodschappen"><option value="Overig"></datalist></div></div>
-          <label>Omschrijving</label><textarea id="description" rows="3" placeholder="Korte omschrijving"></textarea>
-          <div class="checks"><label><input id="available" type="checkbox" checked> Beschikbaar</label><label><input id="featured" type="checkbox"> Uitgelicht</label></div>
-          <label>Productfoto</label><input id="photoInput" type="file" accept="image/*" capture="environment"><img id="photoPreview" class="preview hidden" alt="Productfoto">
-          <div class="button-row"><button id="saveProductBtn" class="btn primary">Product opslaan</button><button id="cancelEditBtn" class="btn light hidden">Annuleren</button></div>
-          <div id="productMessage" class="message"></div>
+          <h2 id="formTitle">Nieuw product</h2>
+          <input id="editingId" type="hidden">
+
+          <div class="scan-row">
+            <input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Barcode">
+            <button id="scanBtn" class="btn secondary">Scan barcode</button>
+          </div>
+          <video id="scannerVideo" class="scanner hidden" playsinline></video>
+          <button id="stopScanBtn" class="btn light hidden">Stop scanner</button>
+
+          <div class="grid2">
+            <div>
+              <label>Productnaam</label>
+              <input id="productName" placeholder="Bijv. Appelmoes Green 360gr">
+            </div>
+            <div>
+              <label>Prijs (CG)</label>
+              <input id="price" type="number" min="0" step="0.01" placeholder="3.79">
+            </div>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>THT / vervaldatum</label>
+              <input id="expiryDate" type="date">
+            </div>
+            <div>
+              <label>Aantal</label>
+              <input id="quantity" type="number" min="0" value="1">
+            </div>
+            <div>
+              <label>Locatie</label>
+              <select id="location">
+                <option>Winkel</option>
+                <option>Magazijn</option>
+                <option>Koeling</option>
+                <option>Vriezer</option>
+                <option>Anders</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>Categorie</label>
+              <input id="category" list="categorySuggestions" placeholder="Bijv. Snoep">
+              <datalist id="categorySuggestions">
+                <option value="Snoep"><option value="Chips"><option value="Drank">
+                <option value="Koek"><option value="Boodschappen"><option value="Overig">
+              </datalist>
+            </div>
+            <div class="checks">
+              <label><input id="available" type="checkbox" checked> Beschikbaar</label>
+              <label><input id="featured" type="checkbox"> Uitgelicht</label>
+            </div>
+          </div>
+
+          <label>Omschrijving / opmerking</label>
+          <textarea id="notes" rows="3" placeholder="Optioneel"></textarea>
+
+          <label>Productfoto</label>
+          <input id="photoInput" type="file" accept="image/*" capture="environment">
+          <img id="photoPreview" class="preview hidden" alt="Productfoto">
+
+          <div class="button-row">
+            <button id="saveBtn" class="btn primary">Product opslaan</button>
+            <button id="cancelEditBtn" class="btn light hidden">Annuleren</button>
+          </div>
+          <div id="formMessage" class="message"></div>
         </div>
-        <div class="panel"><div class="list-heading"><h2>Producten beheren</h2><input id="manageSearch" type="search" placeholder="Zoeken…"></div><div id="productList" class="product-list"></div></div>
+
+        <div class="panel">
+          <div class="list-heading">
+            <h2>Producten beheren</h2>
+            <input id="manageSearch" type="search" placeholder="Zoeken…">
+          </div>
+          <div id="manageList" class="manage-list"></div>
+        </div>
       </section>
-      <section id="settings" class="tab"><div class="panel"><h2>Instellingen</h2><label>Naam van de app</label><input id="shopName" placeholder="MSFK Productcatalogus"><label>Korte tekst</label><input id="subtitle" placeholder="Bekijk onze producten."><button id="saveSettingsBtn" class="btn secondary">Instellingen opslaan</button><div id="settingsMessage" class="message"></div></div></section>
+
+      <section id="tht" class="tab">
+        <div class="summary-cards">
+          <div class="summary danger"><span>Verlopen</span><strong id="expiredCount">0</strong></div>
+          <div class="summary warning"><span>Binnen 30 dagen</span><strong id="soonCount">0</strong></div>
+          <div class="summary good"><span>Goed</span><strong id="goodCount">0</strong></div>
+          <div class="summary"><span>Totaal</span><strong id="totalCount">0</strong></div>
+        </div>
+        <div class="toolbar">
+          <input id="thtSearch" type="search" placeholder="Zoek product of barcode…">
+          <select id="thtStatus">
+            <option value="all">Alle statussen</option>
+            <option value="expired">Verlopen</option>
+            <option value="soon">Binnen 30 dagen</option>
+            <option value="good">Goed</option>
+            <option value="nodate">Geen datum</option>
+          </select>
+        </div>
+        <div id="thtList" class="tht-list"></div>
+      </section>
+
+      <section id="settings" class="tab">
+        <div class="panel">
+          <h2>Instellingen</h2>
+          <label>Naam van de app</label>
+          <input id="settingTitle" placeholder="MSFK Verkoop & THT">
+          <label>Ondertitel</label>
+          <input id="settingSubtitle" placeholder="Privé productcatalogus">
+          <button id="saveSettingsBtn" class="btn secondary">Instellingen opslaan</button>
+          <div id="settingsMessage" class="message"></div>
+        </div>
+      </section>
     </main>
   </div>
+
   <script type="module" src="./app.js?v=1"></script>
 </body>
 </html>

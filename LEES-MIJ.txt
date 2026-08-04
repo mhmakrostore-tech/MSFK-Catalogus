@@ -1,12 +1,25 @@
-MSFK NIEUW PROJECT
+MSFK VERKOOP & THT - DEFINITIEVE VERSIE
 
-1. Maak in GitHub een nieuwe repository: MSFK-Catalogus
-2. Upload alle bestanden uit deze map.
-3. Ga naar Settings > Pages.
-4. Kies Deploy from a branch, main, /(root), Save.
-5. Open Firebase > Firestore > Rules.
-6. Plak de inhoud van firestore.rules en klik Publish.
-7. Open daarna:
-   https://mhmakrostore-tech.github.io/MSFK-Catalogus/
+BESTANDEN OM TE UPLOADEN:
+- index.html
+- style.css
+- app.js
+- firebase-config.js
+- firestore.rules
+
+BELANGRIJK:
+1. Upload deze bestanden in de nieuwe repository MSFK-Catalogus.
+2. Firebase > Firestore > Rules:
+   vervang de regels door de inhoud van firestore.rules en klik Publish.
+3. Firebase > Authentication > Settings > Authorized domains:
+   voeg mhmakrostore-tech.github.io toe als die nog niet bestaat.
+4. GitHub Pages werkt meestal alleen vanuit een openbare repository op een gratis GitHub-account.
+   Als Pages niet geactiveerd kan worden terwijl de repository Private is, zet alleen de repository Public.
+   De PRODUCTGEGEVENS blijven privé door de Firebase-regels.
+5. GitHub > Settings > Pages > Deploy from a branch > main > /(root) > Save.
+
+Website:
+https://mhmakrostore-tech.github.io/MSFK-Catalogus/
 
 Alleen mh.makrostore@gmail.com kan inloggen.
+Foto's worden verkleind en rechtstreeks in Firestore opgeslagen.
