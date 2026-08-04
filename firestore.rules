@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email == "mh.makrostore@gmail.com";
+    }
+    match /catalogProducts/{productId} {
+      allow read, create, update, delete: if isOwner();
+    }
+    match /publicSettings/catalog {
+      allow read, create, update, delete: if isOwner();
+    }
+  }
+}

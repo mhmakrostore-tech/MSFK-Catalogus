@@ -1,0 +1,12 @@
+MSFK NIEUW PROJECT
+
+1. Maak in GitHub een nieuwe repository: MSFK-Catalogus
+2. Upload alle bestanden uit deze map.
+3. Ga naar Settings > Pages.
+4. Kies Deploy from a branch, main, /(root), Save.
+5. Open Firebase > Firestore > Rules.
+6. Plak de inhoud van firestore.rules en klik Publish.
+7. Open daarna:
+   https://mhmakrostore-tech.github.io/MSFK-Catalogus/
+
+Alleen mh.makrostore@gmail.com kan inloggen.
