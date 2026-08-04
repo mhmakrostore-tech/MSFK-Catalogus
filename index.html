@@ -37,10 +37,6 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
 <section id="catalog" class="tab active">
 <div id="catalogScanReader" class="hidden" style="max-width:520px;margin:0 auto 14px"></div>
 <button id="stopCatalogScanBtn" type="button" class="btn light hidden" style="margin-bottom:14px">Stop scanner</button>
-<div id="expiryAlertPanel" class="alert-panel hidden">
-  <h3>Producten met EXP die binnenkort vervallen</h3>
-  <div id="expiryAlertList" class="alert-list"></div>
-</div>
 <div class="toolbar"><div class="scan-line"><input id="search" type="search" placeholder="Zoek product of barcode…"><button id="catalogScanBtn" type="button" class="btn secondary">Scan barcode</button></div><select id="category"><option value="all">Alle categorieën</option></select><select id="availability"><option value="available">Alleen beschikbaar</option><option value="all">Alles tonen</option><option value="soldout">Uitverkocht</option></select></div><div id="grid" class="product-grid"></div></section>
 <section id="add" class="tab">
 <div class="panel"><h2 id="formTitle">Nieuw product</h2><input id="editId" type="hidden">
@@ -126,6 +122,11 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
       </div>
     </div>
     <div id="notificationMessage" class="message"></div>
+    <hr style="margin:18px 0">
+    <div id="expiryAlertPanel" class="alert-panel hidden">
+      <h3>Producten met EXP die binnenkort vervallen</h3>
+      <div id="expiryAlertList" class="alert-list"></div>
+    </div>
   </div>
 </section>
 
