@@ -87,6 +87,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
           <option value="pcs">pcs</option>
         </select>
       </div>
+      <div id="toppersWeightNote" class="hidden meta" style="margin-top:6px">Voor TOPPERS zijn alleen gr en oz beschikbaar.</div>
       <div id="mqsWeightWrap" class="hidden" style="margin-top:8px">
         <label style="margin-top:0">MQS formaat</label>
         <select id="mqsWeightPreset">
@@ -364,6 +365,7 @@ function normalizedWeight(p){
   if(unit==='gr')return {value,unit,base:value,type:'mass'};
   if(unit==='l')return {value,unit,base:value*1000,type:'volume'};
   if(unit==='ml')return {value,unit,base:value,type:'volume'};
+  if(unit==='oz')return {value,unit,base:value*28.3495,type:'mass'};
   if(unit==='pcs')return {value,unit,base:value,type:'count'};
   return {value,unit,base:value,type:unit};
 }
@@ -377,6 +379,7 @@ function weightText(p){
     if(w.value===3)return '3 KG';
   }
   if(w.unit==='gr'&&w.value===500)return '500 gr';
+  if(w.unit==='oz')return `${Number(w.value).toLocaleString('nl-NL')} oz`;
   return `${Number(w.value).toLocaleString('nl-NL')} ${w.unit}`;
 }
 function productDisplayName(p){
@@ -402,12 +405,30 @@ function compareProductsByNameWeight(a,b){
 }
 
 
+
+function isToppersCategory(){
+  return String($('cat').value||'').trim().toUpperCase()==='TOPPERS';
+}
+function updateWeightUnitOptions(){
+  const select=$('weightUnit');
+  const current=select.value;
+  const toppers=isToppersCategory();
+  const options=toppers
+    ? [['gr','gr'],['oz','oz']]
+    : [['gr','gr'],['kg','kg'],['ml','ml'],['l','l'],['pcs','pcs']];
+  select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
+  if(options.some(([value])=>value===current))select.value=current;
+  else select.value='gr';
+}
+
 function isMQSCategory(){
   return String($('cat').value||'').trim().toUpperCase()==='MQS';
 }
 function updateMQSWeightUI(){
+  updateWeightUnitOptions();
   const isMQS=isMQSCategory();
   $('mqsWeightWrap').classList.toggle('hidden',!isMQS);
+  $('toppersWeightNote').classList.toggle('hidden',!isToppersCategory());
   $('p12Box').classList.toggle('hidden',isMQS);
   $('crtBox').classList.toggle('hidden',isMQS);
   $('expiry1Wrap').classList.toggle('hidden',isMQS);
