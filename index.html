@@ -20,7 +20,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
 .toolbar{display:grid;grid-template-columns:1fr 220px 220px;gap:10px;background:#fff;padding:14px;border-radius:18px;box-shadow:var(--shadow);margin-bottom:18px}.panel{margin-bottom:20px}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:17px}.card{overflow:hidden;background:#fff;border-radius:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .photo{aspect-ratio:1/1;background:#eef0f3;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.placeholder{width:100%;height:100%;display:grid;place-items:center;color:var(--muted)}
-.badge{position:absolute;top:10px;left:10px;background:#fff;padding:6px 9px;border-radius:99px;font-size:.77rem;font-weight:800}.body{padding:15px}.cat{font-size:.78rem;color:var(--brand);font-weight:800;text-transform:uppercase}.exp-line{font-weight:900;font-size:1.05rem;color:#000);margin-top:6px}
+.badge{position:absolute;top:10px;left:10px;background:#fff;padding:6px 9px;border-radius:99px;font-size:.77rem;font-weight:800}.body{padding:15px}.cat{font-size:.78rem;color:var(--brand);font-weight:800;text-transform:uppercase}
 .body h2{font-size:1.1rem;margin:5px 0}.meta{color:var(--muted);font-size:.9rem;line-height:1.45}.price{font-size:1.35rem;font-weight:900;color:var(--dark);margin-top:10px}.price-lines{display:grid;gap:5px;margin-top:10px}.price-line{display:flex;justify-content:space-between;gap:10px;padding:6px 8px;background:#f8fafc;border-radius:9px}.price-label{font-weight:800;color:var(--dark)}
 .preview{width:210px;height:210px;object-fit:cover;border-radius:15px;margin-top:10px}.scan-line{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:end}#reader{max-width:520px;margin:14px auto;background:#fff;border-radius:16px;overflow:hidden}.found-box{margin-top:10px;padding:12px;border-radius:12px;background:#ecfdf5;color:#166534;font-weight:700}.sales-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sale-items{display:grid;gap:10px;margin-top:14px}.sale-item{display:grid;grid-template-columns:minmax(180px,1fr) 120px 90px 120px auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--border);border-radius:12px;background:#fafafa}.history-card{background:#fff;border:1px solid var(--border);border-radius:15px;padding:14px;margin-bottom:12px}.history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.total-box{font-size:1.35rem;font-weight:900;color:var(--dark);margin-top:12px}.status-paid{color:#15803d;font-weight:800}.status-open{color:#b91c1c;font-weight:800}.alert-panel{background:#fff7ed;border:1px solid #fed7aa;border-radius:16px;padding:14px;margin-bottom:16px}.alert-panel h3{margin:0 0 8px;color:#9a3412}.alert-list{display:grid;gap:7px}.alert-item{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:#fff;border-radius:10px}.notif-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.order-type-options{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 14px}.order-type-options label{display:flex;align-items:center;gap:7px;margin:0;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;font-weight:800}.order-type-options input{width:auto}.catalog-order-panel{margin-bottom:16px}.cart-summary{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:12px}.catalog-order-controls{display:grid;grid-template-columns:110px 85px;gap:8px;margin-top:12px}.catalog-order-controls select,.catalog-order-controls input{padding:9px 10px}.editing-order-banner{padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:11px;margin-bottom:12px;font-weight:800;color:#9a3412}.unit-box{margin-top:16px;padding:15px;border:1px solid var(--border);border-radius:15px;background:#fafafa}.unit-box h3{margin:0 0 8px;color:var(--dark)}.order-preview{margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px}.order-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.order-table{width:100%;border-collapse:collapse;margin-top:12px}.order-table th,.order-table td{border:1px solid var(--border);padding:9px;text-align:left}.order-table th{background:#f8fafc}@media print{body *{visibility:hidden}.order-preview,.order-preview *{visibility:visible}.order-preview{position:absolute;left:0;top:0;width:100%;border:0}.no-print{display:none!important}}@media(max-width:760px){.sales-grid{grid-template-columns:1fr}.sale-item{grid-template-columns:1fr 90px}.sale-item .wide{grid-column:1/-1}}.message{min-height:22px;margin-top:10px;font-weight:700}.row{display:grid;grid-template-columns:80px 1fr auto;gap:12px;align-items:center;padding:12px;background:#fff;border-radius:15px;border:1px solid var(--border);margin-bottom:10px}.row img{width:80px;height:80px;object-fit:cover;border-radius:12px}.actions{display:flex;gap:7px;flex-wrap:wrap}
 @media(max-width:760px){.toolbar,.grid2,.grid3{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.row{grid-template-columns:65px 1fr}.actions{grid-column:1/-1}}
@@ -102,7 +102,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
     <div><label>Aantal per CRT</label><input id="unitsPerCarton" type="number" min="1" placeholder="Bijv. 72"></div>
   </div>
 </div>
-<div class="grid2"><div><label>EXP</label><input id="expiry" type="date"></div><div><label>Categorie</label><input id="cat"></div></div>
+<div class="grid2"><div><label>EXP 1</label><input id="expiry1" type="date"></div><div><label>EXP 2</label><input id="expiry2" type="date"></div><div><label>Categorie</label><input id="cat"></div></div>
 <div class="button-row"><button id="scanBtn" type="button" class="btn secondary">Scan barcode met camera</button><button id="stopScanBtn" type="button" class="btn light hidden">Stop scanner</button></div><div id="reader" class="hidden"></div>
 <button id="stopScanBtn" type="button" class="btn light hidden" style="margin-top:8px">Stop scanner</button>
 <div id="foundBox" class="found-box hidden"></div>
@@ -331,6 +331,21 @@ function editSavedOrder(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+function productExpiryDates(p){
+  const values=[p.expiryDate1,p.expiryDate2,p.expiryDate].filter(Boolean);
+  return [...new Set(values)].sort();
+}
+function nearestExpiryDate(p){
+  const dates=productExpiryDates(p);
+  if(!dates.length)return '';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const upcoming=dates.filter(d=>new Date(d+'T00:00:00')>=today);
+  return (upcoming.length?upcoming:dates).sort()[0];
+}
+function secondExpiryDate(p){
+  const first=nearestExpiryDate(p);
+  return productExpiryDates(p).find(d=>d!==first)||'';
+}
 function formatDate(dateStr){
   if(!dateStr)return '';
   const parts=String(dateStr).split('-');
@@ -395,7 +410,7 @@ function applySavedProduct(code){
   }
   $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
-  $('expiry').value=p.expiryDate||'';
+  $('expiry1').value=p.expiryDate1||p.expiryDate||'';$('expiry2').value=p.expiryDate2||'';
   
   $('cat').value=p.category||'';
   $('notes').value=p.notes||'';
@@ -408,7 +423,7 @@ function applySavedProduct(code){
     $('preview').src='';
     $('preview').classList.add('hidden');
   }
-  const pr=normalizedPrices(p);box.textContent=`Eerder opgeslagen product gevonden: ${p.name||'product'}${pr.each?` · EACH $ ${pr.each.toFixed(2)}`:''}${pr.p12?` · P12 $ ${pr.p12.toFixed(2)}`:''}${pr.crt?` · CRT $ ${pr.crt.toFixed(2)}`:''}${p.expiryDate?' · laatste EXP '+formatDate(p.expiryDate):''}`;
+  const pr=normalizedPrices(p);box.textContent=`Eerder opgeslagen product gevonden: ${p.name||'product'}${pr.each?` · EACH $ ${pr.each.toFixed(2)}`:''}${pr.p12?` · P12 $ ${pr.p12.toFixed(2)}`:''}${pr.crt?` · CRT $ ${pr.crt.toFixed(2)}`:''}${nearestExpiryDate(p)?' · laatste EXP '+formatDate(nearestExpiryDate(p)):''}`;
   box.classList.remove('hidden');
   msg($('formMsg'),'Productgegevens automatisch ingevuld.');
   return true;
@@ -558,7 +573,7 @@ function expiryDaysLeft(dateStr){
 function getExpiringProducts(){
   const threshold=Number(localStorage.getItem('msfkNotificationDays')||30);
   return products
-    .map(p=>({...p,daysLeft:expiryDaysLeft(p.expiryDate)}))
+    .flatMap(p=>productExpiryDates(p).map(expiryDate=>({...p,expiryDate,daysLeft:expiryDaysLeft(expiryDate)})))
     .filter(p=>p.daysLeft!==null && p.daysLeft<=threshold)
     .sort((a,b)=>a.daysLeft-b.daysLeft);
 }
@@ -680,7 +695,7 @@ function render(){
       <div class="body">
         <div class="cat">${safe(p.category||'Overig')}</div>
         <h2>${safe(p.name)}</h2>
-        <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${p.expiryDate?`<div class="exp-line">EXP: ${safe(formatDate(p.expiryDate))}</div>`:''}</div>
+        <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line">EXP: ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}</div>
         ${productPriceHtml(p)}
         <div class="catalog-order-controls">
           <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
@@ -700,8 +715,8 @@ function render(){
   renderList();
 }
 function renderList(){$('list').innerHTML='';for(const p of products.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','nl'))){const e=document.createElement('div');e.className='row';e.innerHTML=`${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}<div><strong>${safe(p.name)}</strong><div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${(()=>{const pr=normalizedPrices(p);return [pr.each?`EACH $ ${pr.each.toFixed(2)}`:'',pr.p12?`P12 $ ${pr.p12.toFixed(2)}`:'',pr.crt?`CRT $ ${pr.crt.toFixed(2)}`:''].filter(Boolean).join(' · ')})()}</div></div><div class="actions"><button class="btn light" data-e="${p.id}">Bewerken</button><button class="btn light" data-d="${p.id}">Verwijderen</button></div>`;$('list').appendChild(e)}$('list').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>edit(b.dataset.e));$('list').querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('Product verwijderen?'))await deleteDoc(doc(db,'catalogProducts',b.dataset.d))})}
-function edit(id){const p=products.find(x=>x.id===id);if(!p)return;$('editId').value=id;$('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';$('expiry').value=p.expiryDate||'';$('cat').value=p.category||'';$('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}$('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click()}
-function reset(){$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry').value='';$('cat').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function edit(id){const p=products.find(x=>x.id===id);if(!p)return;$('editId').value=id;$('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';$('expiry1').value=p.expiryDate1||p.expiryDate||'';$('expiry2').value=p.expiryDate2||'';$('cat').value=p.category||'';$('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}$('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click()}
+function reset(){$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('cat').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add')stopScanner();if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
@@ -718,7 +733,7 @@ $('saveBtn').onclick=async()=>{const name=$('name').value.trim();
   if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
   if(priceEach<=0&&priceP12<=0&&priceCrt<=0)return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
   if(priceCrt>0&&unitsPerCarton<1)return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
-  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:$('codeP12').value.trim(),codeCrt:$('codeCrt').value.trim(),name,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate:$('expiry').value,category:$('cat').value.trim()||'Overig',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{if($('editId').value)await setDoc(doc(db,'catalogProducts',$('editId').value),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),'Product opgeslagen.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
+  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:$('codeP12').value.trim(),codeCrt:$('codeCrt').value.trim(),name,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:$('expiry1').value,expiryDate2:$('expiry2').value,expiryDate:([$('expiry1').value,$('expiry2').value].filter(Boolean).sort()[0]||''),category:$('cat').value.trim()||'Overig',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{if($('editId').value)await setDoc(doc(db,'catalogProducts',$('editId').value),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),'Product opgeslagen.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
 onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();});
 </script>
