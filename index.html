@@ -948,7 +948,7 @@ function render(){
             <div class="cat">${safe(p.category||'Overig')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
             <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line">EXP: ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}</div>
-            ${productPriceHtml(p)}
+            ${productPriceHtml(p)}${String(p.category||'').trim().toUpperCase()==='MQS'&&Number(p.unitsPerCarton||0)>0?`<div class="price-line"><span class="price-label">CRT</span><strong>${Number(p.unitsPerCarton)} stuks</strong></div>`:''}
             <div class="catalog-order-controls">
               <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
               <input class="catalog-order-qty" data-product="${p.id}" type="number" min="0" step="1" placeholder="Aantal" value="${current.qty||''}">
