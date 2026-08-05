@@ -90,12 +90,12 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
       <div id="mqsWeightWrap" class="hidden" style="margin-top:8px">
         <label style="margin-top:0">MQS formaat</label>
         <select id="mqsWeightPreset">
-          <option value="">Kies formaat</option>
+          <option value="">Kies formaat</option><option value="MQS">MQS</option>
           <option value="500|gr">500 gr</option>
-          <option value="1|kg">1 kg</option>
-          <option value="1.25|kg">1.250 kg</option>
-          <option value="1.5|kg">1.5 kg</option>
-          <option value="3|kg">3 kg</option>
+          <option value="1|kg">1 KG</option>
+          <option value="1.25|kg">1.250 KG</option>
+          <option value="1.5|kg">1.5 KG</option>
+          <option value="3|kg">3 KG</option>
         </select>
       </div>
     </div>
@@ -110,7 +110,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
   </div>
 </div>
 
-<div class="unit-box">
+<div id="p12Box" class="unit-box">
   <h3>P12</h3>
   <div class="grid2">
     <div><label>P12 Code</label><input id="codeP12" placeholder="Code per 12"></div>
@@ -118,7 +118,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
   </div>
 </div>
 
-<div class="unit-box">
+<div id="crtBox" class="unit-box">
   <h3>CRT</h3>
   <div class="grid3">
     <div><label>CRT Code</label><input id="codeCrt" placeholder="Code per karton"></div>
@@ -126,7 +126,7 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
     <div><label>Aantal per CRT</label><input id="unitsPerCarton" type="number" min="1" placeholder="Bijv. 72"></div>
   </div>
 </div>
-<div class="grid2"><div><label>EXP 1</label><input id="expiry1" type="date"></div><div><label>EXP 2</label><input id="expiry2" type="date"></div><div><label>Categorie</label><input id="cat"></div></div>
+<div class="grid2"><div id="expiry1Wrap"><label>EXP 1</label><input id="expiry1" type="date"></div><div id="expiry2Wrap"><label>EXP 2</label><input id="expiry2" type="date"></div><div><label>Categorie</label><input id="cat"></div></div>
 <div class="button-row"><button id="scanBtn" type="button" class="btn secondary">Scan barcode met camera</button><button id="stopScanBtn" type="button" class="btn light hidden">Stop scanner</button></div><div id="reader" class="hidden"></div>
 <button id="stopScanBtn" type="button" class="btn light hidden" style="margin-top:8px">Stop scanner</button>
 <div id="foundBox" class="found-box hidden"></div>
@@ -369,12 +369,30 @@ function normalizedWeight(p){
 }
 function weightText(p){
   const w=normalizedWeight(p);
-  return w.value?`${Number(w.value).toLocaleString('nl-NL')} ${w.unit}`:'';
+  if(!w.value)return '';
+  if(w.unit==='kg'){
+    if(w.value===1)return '1 KG';
+    if(w.value===1.25)return '1.250 KG';
+    if(w.value===1.5)return '1.5 KG';
+    if(w.value===3)return '3 KG';
+  }
+  if(w.unit==='gr'&&w.value===500)return '500 gr';
+  return `${Number(w.value).toLocaleString('nl-NL')} ${w.unit}`;
 }
 function productDisplayName(p){
+  const isMQS=String(p.category||'').trim().toUpperCase()==='MQS';
+  if(isMQS)return weightText(p)||'MQS';
   return `${p.name||''}${weightText(p)?' '+weightText(p):''}`.trim();
 }
 function compareProductsByNameWeight(a,b){
+  const aMQS=String(a.category||'').trim().toUpperCase()==='MQS';
+  const bMQS=String(b.category||'').trim().toUpperCase()==='MQS';
+  if(aMQS&&bMQS){
+    const order=['MQS','500 gr','1 KG','1.250 KG','1.5 KG','3 KG'];
+    const ai=order.indexOf(productDisplayName(a));
+    const bi=order.indexOf(productDisplayName(b));
+    return (ai<0?999:ai)-(bi<0?999:bi);
+  }
   const nameCompare=String(a.name||'').localeCompare(String(b.name||''),'nl',{sensitivity:'base'});
   if(nameCompare!==0)return nameCompare;
   const wa=normalizedWeight(a),wb=normalizedWeight(b);
@@ -390,12 +408,26 @@ function isMQSCategory(){
 function updateMQSWeightUI(){
   const isMQS=isMQSCategory();
   $('mqsWeightWrap').classList.toggle('hidden',!isMQS);
+  $('p12Box').classList.toggle('hidden',isMQS);
+  $('crtBox').classList.toggle('hidden',isMQS);
+  $('expiry1Wrap').classList.toggle('hidden',isMQS);
+  $('expiry2Wrap').classList.toggle('hidden',isMQS);
+
   if(isMQS){
     const value=Number($('weightValue').value||0);
     const unit=$('weightUnit').value;
-    const key=`${value}|${unit}`;
+    const key=value?`${value}|${unit}`:'MQS';
     const option=[...$('mqsWeightPreset').options].find(o=>o.value===key);
-    $('mqsWeightPreset').value=option?key:'';
+    $('mqsWeightPreset').value=option?key:'MQS';
+
+    // MQS uses only EACH and no EXP.
+    $('priceP12').value='';
+    $('priceCrt').value='';
+    $('codeP12').value='';
+    $('codeCrt').value='';
+    $('unitsPerCarton').value='';
+    $('expiry1').value='';
+    $('expiry2').value='';
   }else{
     $('mqsWeightPreset').value='';
   }
@@ -757,7 +789,7 @@ function render(){
     (groups[category]??=[]).push(p);
   }
 
-  const categoryNames=Object.keys(groups).sort((x,y)=>x.localeCompare(y,'nl'));
+  const categoryNames=Object.keys(groups).sort((x,y)=>{if(x.toUpperCase()==='MQS')return -1;if(y.toUpperCase()==='MQS')return 1;return x.localeCompare(y,'nl');});
   $('grid').innerHTML='';
   $('categoryJumpbar').innerHTML='';
 
@@ -806,7 +838,7 @@ function render(){
         card.innerHTML=`<div class="photo">${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div>
           <div class="body">
             <div class="cat">${safe(p.category||'Overig')}</div>
-            <h2>${safe(p.name)}</h2>${weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
+            <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
             <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line">EXP: ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}</div>
             ${productPriceHtml(p)}
             <div class="catalog-order-controls">
@@ -856,7 +888,13 @@ $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=
 $('cat').addEventListener('input',updateMQSWeightUI);
 $('cat').addEventListener('change',updateMQSWeightUI);
 $('mqsWeightPreset').onchange=()=>{
-  const [value,unit]=String($('mqsWeightPreset').value||'').split('|');
+  const selected=String($('mqsWeightPreset').value||'');
+  if(selected==='MQS'){
+    $('weightValue').value='';
+    $('weightUnit').value='gr';
+    return;
+  }
+  const [value,unit]=selected.split('|');
   if(value&&unit){
     $('weightValue').value=value;
     $('weightUnit').value=unit;
@@ -881,11 +919,18 @@ window.addEventListener('scroll',()=>{
 $('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopCatalogScanner();signOut(auth)};
 $('photoInput').onchange=async()=>{const f=$('photoInput').files?.[0];if(!f)return;photoData=await imageData(f);$('preview').src=photoData;$('preview').classList.remove('hidden')};
 $('saveBtn').onclick=async()=>{const name=$('name').value.trim();
-  const priceEach=Number($('priceEach').value||0),priceP12=Number($('priceP12').value||0),priceCrt=Number($('priceCrt').value||0),unitsPerCarton=Number($('unitsPerCarton').value||0);
+  const isMQS=isMQSCategory();
+  const priceEach=Number($('priceEach').value||0);
+  const priceP12=isMQS?0:Number($('priceP12').value||0);
+  const priceCrt=isMQS?0:Number($('priceCrt').value||0);
+  const unitsPerCarton=isMQS?0:Number($('unitsPerCarton').value||0);
   if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
-  if(priceEach<=0&&priceP12<=0&&priceCrt<=0)return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
-  if(priceCrt>0&&unitsPerCarton<1)return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
-  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:$('codeP12').value.trim(),codeCrt:$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:$('expiry1').value,expiryDate2:$('expiry2').value,expiryDate:([$('expiry1').value,$('expiry2').value].filter(Boolean).sort()[0]||''),category:$('cat').value.trim()||'Overig',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{if($('editId').value)await setDoc(doc(db,'catalogProducts',$('editId').value),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),'Product opgeslagen.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
+  if(isMQS&&priceEach<=0)return msg($('formMsg'),'Vul de EACH prijs in.',true);
+  if(!isMQS&&priceEach<=0&&priceP12<=0&&priceCrt<=0)return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
+  if(!isMQS&&priceCrt>0&&unitsPerCarton<1)return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
+  const exp1=isMQS?'':$('expiry1').value;
+  const exp2=isMQS?'':$('expiry2').value;
+  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),category:$('cat').value.trim()||'Overig',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{if($('editId').value)await setDoc(doc(db,'catalogProducts',$('editId').value),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),'Product opgeslagen.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
 onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
 </script>
