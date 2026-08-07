@@ -73,6 +73,32 @@ label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-t
 <div class="toolbar"><div class="scan-line"><input id="search" type="search" placeholder="Zoek product, code of barcode…"><button id="catalogScanBtn" type="button" class="btn secondary">Scan barcode</button></div><select id="category"><option value="all">Alle categorieën</option></select><select id="availability"><option value="available">Alleen beschikbaar</option><option value="all">Alles tonen</option><option value="soldout">Uitverkocht</option></select></div><div id="categoryJumpbar" class="category-jumpbar"></div><div id="grid"></div></section>
 <section id="add" class="tab">
 <div class="panel"><h2 id="formTitle">Nieuw product</h2><input id="editId" type="hidden">
+<div class="category-top-box">
+  <label>Categorie</label>
+  <div class="category-select-row">
+    <select id="cat"></select>
+    <button id="manageCategoriesBtn" type="button" class="btn light">Categorieën beheren</button>
+  </div>
+</div>
+
+<div id="categoryManager" class="category-manager hidden">
+  <div class="category-manager-head">
+    <h3>Categorieën beheren</h3>
+    <button id="closeCategoryManagerBtn" type="button" class="btn light">Sluiten</button>
+  </div>
+  <div class="grid2">
+    <div>
+      <label>Nieuwe categorie</label>
+      <input id="newCategoryName" placeholder="Bijv. DRANKEN">
+    </div>
+    <div class="category-add-btn-wrap">
+      <button id="addCategoryBtn" type="button" class="btn secondary">Categorie toevoegen</button>
+    </div>
+  </div>
+  <div id="categoryManagerList"></div>
+  <div id="categoryManagerMessage" class="message"></div>
+</div>
+
 
 <div id="mqsBulkBox" class="unit-box hidden">
   <h3>MQS-formaten</h3>
@@ -1117,8 +1143,8 @@ function render(){
   renderList();
 }
 function renderList(){$('list').innerHTML='';for(const p of products.slice().sort(compareProductsByNameWeight)){const e=document.createElement('div');e.className='row';e.innerHTML=`${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}<div><strong>${safe(productDisplayName(p))}</strong><div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${(()=>{const pr=normalizedPrices(p);return [pr.each?`EACH $ ${pr.each.toFixed(2)}`:'',pr.p12?`P12 $ ${pr.p12.toFixed(2)}`:'',pr.crt?`CRT $ ${pr.crt.toFixed(2)}`:''].filter(Boolean).join(' · ')})()}</div></div><div class="actions"><button class="btn light" data-e="${p.id}">Bewerken</button><button class="btn light" data-d="${p.id}">Verwijderen</button></div>`;$('list').appendChild(e)}$('list').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>edit(b.dataset.e));$('list').querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('Product verwijderen?'))await deleteDoc(doc(db,'catalogProducts',b.dataset.d))})}
-function edit(id){const p=products.find(x=>x.id===id);if(!p)return;$('editId').value=id;$('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();$('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';$('expiry1').value=p.expiryDate1||p.expiryDate||'';$('expiry2').value=p.expiryDate2||'';$('cat').value=p.category||'';$('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}$('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click()}
-function reset(){['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('cat').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function edit(id){const p=products.find(x=>x.id===id);if(!p)return;$('editId').value=id;$('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();$('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';$('expiry1').value=p.expiryDate1||p.expiryDate||'';$('expiry2').value=p.expiryDate2||'';refreshCategorySelects();$('cat').value=normalizeCategoryName(p.category||'OVERIG');updateMQSWeightUI();$('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}$('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click()}
+function reset(){['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add')stopScanner();if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
