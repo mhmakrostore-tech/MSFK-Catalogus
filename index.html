@@ -533,7 +533,9 @@ function mqsFormatKey(p){
 function loadMQSBulkValues(){
   const map={};
   const wanted=String($('mqsProductName')?.value||'').trim().toLowerCase();
-  products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&(!wanted||String(p.name||'').trim().toLowerCase()===wanted)).forEach(p=>{const key=mqsFormatKey(p);if(key)map[key]=p;});
+  const matched=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&wanted&&String(p.name||'').trim().toLowerCase()===wanted);
+  matched.forEach(p=>{const key=mqsFormatKey(p);if(key)map[key]=p;});
+
   const fill=(key,codeId,priceId,crtId)=>{
     const p=map[key]||{};
     $(codeId).value=p.codeEach||p.productCode||'';
@@ -545,6 +547,20 @@ function loadMQSBulkValues(){
   fill('kg','mqsCodeKg','mqsPriceKg','mqsCrtKg');
   const kgProduct=map['kg']||{};
   $('mqsActualKg').value=kgProduct.actualWeightKg??'';
+
+  // Belangrijk: gebruik alleen de foto van DIT MQS-product.
+  // Als de naam nieuw is en er nog geen product bestaat, moet de foto leeg zijn.
+  const imageProduct=matched.find(p=>p.photoData);
+  if(imageProduct?.photoData){
+    photoData=imageProduct.photoData;
+    $('preview').src=photoData;
+    $('preview').classList.remove('hidden');
+  }else{
+    photoData='';
+    $('photoInput').value='';
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
 }
 async function saveMQSBulk(){
   const productName=String($('mqsProductName').value||'').trim();
@@ -588,6 +604,12 @@ async function saveMQSBulk(){
       else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
     }
     msg($('formMsg'),`${productName} opgeslagen.`);
+    // Foto zit nu veilig in Firebase. Wis alleen de tijdelijke werkfoto,
+    // zodat een volgend nieuw MQS-product nooit deze foto automatisch overneemt.
+    photoData='';
+    $('photoInput').value='';
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
     loadMQSBulkValues();
   }catch(e){
     msg($('formMsg'),'Opslaan mislukt: '+e.message,true);
@@ -1374,6 +1396,16 @@ $('addCategoryBtn').onclick=addCategory;
 $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
 
 $('mqsProductName').addEventListener('change',loadMQSBulkValues);
+$('mqsProductName').addEventListener('input',()=>{
+  const wanted=String($('mqsProductName').value||'').trim().toLowerCase();
+  const exists=products.some(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===wanted);
+  if(!exists){
+    photoData='';
+    $('photoInput').value='';
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
+});
 $('cat').addEventListener('input',updateMQSWeightUI);
 $('cat').addEventListener('change',updateMQSWeightUI);
 $('mqsWeightPreset').onchange=()=>{
