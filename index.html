@@ -977,30 +977,64 @@ function updateNotificationStatus(){
 }
 async function enableNotifications(){
   if(!('Notification' in window))return msg($('notificationMessage'),'Browsermeldingen worden niet ondersteund.',true);
-  const permission=await Notification.requestPermission();
-  updateNotificationStatus();
-  if(permission==='granted'){
-    msg($('notificationMessage'),'Meldingen zijn ingeschakeld.');
-    maybeShowExpiryNotification(true);
-  }else{
-    msg($('notificationMessage'),'Toestemming voor meldingen is niet gegeven.',true);
+  try{
+    const permission=await Notification.requestPermission();
+    updateNotificationStatus();
+    if(permission==='granted'){
+      msg($('notificationMessage'),'Meldingen zijn ingeschakeld.');
+      await maybeShowExpiryNotification(true);
+    }else{
+      msg($('notificationMessage'),'Toestemming voor meldingen is niet gegeven.',true);
+    }
+  }catch(e){
+    console.warn('Meldingen inschakelen mislukt:',e);
+    msg($('notificationMessage'),'Meldingen konden op dit apparaat niet worden gestart. De meldingenpagina blijft wel werken.',true);
   }
 }
-function maybeShowExpiryNotification(force=false){
+async function maybeShowExpiryNotification(force=false){
   renderExpiryAlerts();
   if(!('Notification' in window)||Notification.permission!=='granted')return;
+
   const list=getExpiringProducts();
   if(!list.length)return;
+
   const today=new Date().toISOString().slice(0,10);
   const last=localStorage.getItem('msfkLastExpiryNotification');
   if(!force && last===today)return;
+
   const expired=list.filter(p=>p.daysLeft<0).length;
   const soon=list.filter(p=>p.daysLeft>=0).length;
   const parts=[];
   if(expired)parts.push(`${expired} verlopen`);
   if(soon)parts.push(`${soon} verlopen binnenkort`);
-  new Notification('MSFK EXP-melding',{body:parts.join(' · '),icon:'./icon.svg'});
-  localStorage.setItem('msfkLastExpiryNotification',today);
+
+  const title='MSFK EXP-melding';
+  const options={body:parts.join(' · '),icon:'./icon.svg'};
+
+  try{
+    // Android/Samsung Internet vereist showNotification via een Service Worker.
+    if('serviceWorker' in navigator){
+      const registration=await navigator.serviceWorker.getRegistration();
+      if(registration&&registration.showNotification){
+        await registration.showNotification(title,options);
+        localStorage.setItem('msfkLastExpiryNotification',today);
+        return;
+      }
+    }
+
+    // Desktopbrowsers ondersteunen meestal de gewone Notification-constructor.
+    const isAndroid=/Android/i.test(navigator.userAgent||'');
+    if(!isAndroid){
+      new Notification(title,options);
+      localStorage.setItem('msfkLastExpiryNotification',today);
+      return;
+    }
+
+    // Op Android zonder actieve Service Worker: geen fout tonen.
+    console.info('Geen actieve Service Worker voor systeemmelding. Meldingen blijven zichtbaar op de pagina Meldingen.');
+  }catch(e){
+    console.warn('Systeemmelding niet beschikbaar op dit apparaat:',e);
+  }
 }
 
 
@@ -1598,7 +1632,7 @@ $('saveBtn').onclick=async()=>{if(isMQSCategory())return saveMQSBulk();const nam
   const exp2=isMQS?'':$('expiry2').value;
   const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),stockExp1:exp1?Number($('stockExp1').value||0):0,stockExp2:exp2?Number($('stockExp2').value||0):0,category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{const editingId=$('editId').value.trim();if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
-onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification();refreshCategorySelects();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
+onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
 </script>
 <div class="floating-actions no-print">
   <button id="catalogHomeBtn" class="floating-btn" type="button" title="Terug naar Catalogus" aria-label="Terug naar Catalogus">🏠</button>
