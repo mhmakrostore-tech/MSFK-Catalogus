@@ -273,7 +273,7 @@ import {getFirestore,collection,doc,setDoc,addDoc,deleteDoc,onSnapshot,serverTim
 
 const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
 const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
-let products=[],sales=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,catalogCart={},editingSaleId='';
+let products=[],sales=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
 async function imageData(file){const data=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)});const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=data});const max=700,s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.68)}
@@ -585,7 +585,8 @@ async function saveMQSBulk(){
   try{
     for(const row of rows){
       if(!row.code&&row.price<=0&&row.crt<=0)continue;
-      const existing=products.find(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===productName.toLowerCase()&&mqsFormatKey(p)===row.key);
+      const lookupName=(editingMQSOriginalName||productName).trim().toLowerCase();
+      const existing=products.find(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===lookupName&&mqsFormatKey(p)===row.key);
       const data={
         name:productName,
         category:'MQS',
@@ -614,7 +615,7 @@ async function saveMQSBulk(){
       if(existing)await setDoc(doc(db,'catalogProducts',existing.id),data,{merge:true});
       else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
     }
-    msg($('formMsg'),`${productName} opgeslagen.`);
+    msg($('formMsg'),editingMQSOriginalName?`${productName} gewijzigd.`:`${productName} opgeslagen.`);editingMQSOriginalName='';setProductFormMode(false);
     // Maak het MQS-formulier leeg voor het volgende nieuwe product.
     if($('mqsProductName'))$('mqsProductName').value='';
     [
@@ -1434,7 +1435,13 @@ async function deleteProductById(id){
   const p=products.find(x=>x.id===id);if(!p)return;
   if(confirm(`Product verwijderen: ${productDisplayName(p)}?`))await deleteDoc(doc(db,'catalogProducts',id));
 }
-function clearNormalEditForm(){
+
+function setProductFormMode(editing){
+  if($('saveBtn'))$('saveBtn').textContent=editing?'Wijzigingen opslaan':'Product toevoegen';
+  if(!editing&&$('formTitle'))$('formTitle').textContent='Nieuw product';
+}
+
+function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
   $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
 }
 function edit(id){
@@ -1446,8 +1453,10 @@ function edit(id){
     // MQS is edited as a product group. Load the group matching this exact product name.
     clearNormalEditForm();
     $('cat').value='MQS';updateMQSWeightUI();
+    editingMQSOriginalName=String(p.name||'').trim();
     $('mqsProductName').value=p.name||'';
     loadMQSBulkValues();
+    setProductFormMode(true);
     photoData=p.photoData||'';
     if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
     $('formTitle').textContent='MQS product aanpassen';
@@ -1456,7 +1465,7 @@ function edit(id){
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
-  $('editId').value=id;
+  $('editId').value=id;setProductFormMode(true);
   $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';
   updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
@@ -1473,7 +1482,7 @@ function duplicateProduct(id){
   const cat=normalizeCategoryName(p.category||'OVERIG');
   $('cat').value=cat;
   if(cat==='MQS'){
-    clearNormalEditForm();$('cat').value='MQS';updateMQSWeightUI();
+    clearNormalEditForm();editingMQSOriginalName='';setProductFormMode(false);$('cat').value='MQS';updateMQSWeightUI();
     const sourceName=p.name||'';
     $('mqsProductName').value=sourceName;
     loadMQSBulkValues();
@@ -1484,7 +1493,7 @@ function duplicateProduct(id){
     $('formTitle').textContent='MQS product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
-  $('editId').value='';
+  $('editId').value='';editingMQSOriginalName='';setProductFormMode(false);
   $('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
@@ -1492,7 +1501,7 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){editingMQSOriginalName='';setProductFormMode(false);if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add')stopScanner();if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
@@ -1560,7 +1569,7 @@ $('saveBtn').onclick=async()=>{if(isMQSCategory())return saveMQSBulk();const nam
   if(!isMQS&&priceCrt>0&&unitsPerCarton<1)return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
   const exp1=isMQS?'':$('expiry1').value;
   const exp2=isMQS?'':$('expiry2').value;
-  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{if($('editId').value)await setDoc(doc(db,'catalogProducts',$('editId').value),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),'Product opgeslagen.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
+  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,photoData,updatedAt:serverTimestamp()};try{const editingId=$('editId').value.trim();if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
 onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification();refreshCategorySelects();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
 </script>
