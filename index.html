@@ -130,6 +130,38 @@ window.addEventListener('unhandledrejection',function(e){
     </tbody>
   </table>
 </div>
+
+<div id="makroOnlyBox" class="unit-box hidden">
+  <h3>MAKRO – alleen intern</h3>
+  <p class="meta">Alleen foto, barcode en EXP/voorraad. Dit product komt nooit in de Catalogus of Nieuwe verkoop.</p>
+  <div class="grid2">
+    <div>
+      <label>Productnaam</label>
+      <input id="makroName" placeholder="Naam product">
+    </div>
+    <div>
+      <label>Barcode</label>
+      <input id="makroBarcode" inputmode="numeric" placeholder="Scan of typ barcode">
+    </div>
+  </div>
+  <div class="button-row">
+    <button id="makroScanBtn" type="button" class="btn secondary">Scan barcode</button>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div>
+      <label>EXP 1</label><input id="makroExpiry1" type="date">
+      <label>Aantal bij EXP 1</label><input id="makroStock1" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 2</label><input id="makroExpiry2" type="date">
+      <label>Aantal bij EXP 2</label><input id="makroStock2" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 3</label><input id="makroExpiry3" type="date">
+      <label>Aantal bij EXP 3</label><input id="makroStock3" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+  </div>
+</div>
 <div id="normalProductFields"><div class="grid2">
   <div><label>Productnaam</label><input id="name" placeholder="Bijv. Toppers Hoola Rings"></div>
     <div>
@@ -588,6 +620,44 @@ function loadMQSBulkValues(){
     $('preview').classList.add('hidden');
   }
 }
+
+async function saveMakroProduct(){
+  const name=$('makroName').value.trim();
+  if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
+
+  const exp1=$('makroExpiry1').value;
+  const exp2=$('makroExpiry2').value;
+  const exp3=$('makroExpiry3').value;
+  if(!exp1&&!exp2&&!exp3)return msg($('formMsg'),'Vul minstens één EXP-datum in.',true);
+
+  const data={
+    name,
+    category:'MAKRO',
+    barcode:$('makroBarcode').value.trim(),
+    expiryDate1:exp1,
+    expiryDate2:exp2,
+    expiryDate3:exp3,
+    expiryDate:([exp1,exp2,exp3].filter(Boolean).sort()[0]||''),
+    stockExp1:exp1?Number($('makroStock1').value||0):0,
+    stockExp2:exp2?Number($('makroStock2').value||0):0,
+    stockExp3:exp3?Number($('makroStock3').value||0):0,
+    internalOnly:true,
+    available:false,
+    price:0,priceEach:0,priceP12:0,priceCrt:0,
+    codeEach:'',codeP12:'',codeCrt:'',
+    photoData,
+    updatedAt:serverTimestamp()
+  };
+
+  try{
+    const editingId=$('editId').value.trim();
+    if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});
+    else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+    msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'MAKRO product toegevoegd.');
+    reset();
+  }catch(e){msg($('formMsg'),e.message,true);}
+}
+
 async function saveMQSBulk(){
   const productName=String($('mqsProductName').value||'').trim();
   if(!productName)return msg($('formMsg'),'Vul de productnaam in.',true);
@@ -649,23 +719,45 @@ async function saveMQSBulk(){
   }
 }
 
+
+function isMakroCategory(){
+  return normalizeCategoryName($('cat').value)==='MAKRO';
+}
+function updateMakroUI(){
+  const isMakro=isMakroCategory();
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('normalProductFields').classList.toggle('hidden',isMakro||isMQSCategory());
+  $('mqsBulkBox').classList.toggle('hidden',!isMQSCategory());
+  if(isMakro){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
+}
+
 function isMQSCategory(){
   return normalizeCategoryName($('cat').value)==='MQS';
 }
 function updateMQSWeightUI(){
   updateWeightUnitOptions();
   const isMQS=isMQSCategory();
+  const isMakro=isMakroCategory();
   $('mqsBulkBox').classList.toggle('hidden',!isMQS);
-  $('normalProductFields').classList.toggle('hidden',isMQS);
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('normalProductFields').classList.toggle('hidden',isMQS||isMakro);
   $('toppersWeightNote').classList.toggle('hidden',!isToppersCategory());
   if(isMQS&&$('mqsProductName')?.value.trim())loadMQSBulkValues();
+  if(isMakro){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
 }
 
 function productExpiryEntries(p){
   const entries=[];
   if(p.expiryDate1)entries.push({expiryDate:p.expiryDate1,expiryStock:Number(p.stockExp1||0),expirySlot:1});
   if(p.expiryDate2)entries.push({expiryDate:p.expiryDate2,expiryStock:Number(p.stockExp2||0),expirySlot:2});
-  if(!p.expiryDate1&&!p.expiryDate2&&p.expiryDate)entries.push({expiryDate:p.expiryDate,expiryStock:Number(p.stockExp1||0),expirySlot:1});
+  if(p.expiryDate3)entries.push({expiryDate:p.expiryDate3,expiryStock:Number(p.stockExp3||0),expirySlot:3});
+  if(!p.expiryDate1&&!p.expiryDate2&&!p.expiryDate3&&p.expiryDate)entries.push({expiryDate:p.expiryDate,expiryStock:Number(p.stockExp1||0),expirySlot:1});
 
   // If both batches happen to have the same EXP date, show one line with combined stock.
   const merged={};
@@ -801,7 +893,7 @@ async function startScanner(){
       {facingMode:'environment'},
       {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats},
       async decodedText=>{
-        $('barcode').value=decodedText;
+        $('barcode').value=decodedText;if(isMakroCategory())$('makroBarcode').value=decodedText;
         applySavedProduct(decodedText);
         msg($('formMsg'),'Barcode gescand: '+decodedText);
         await stopScanner();
@@ -1104,8 +1196,10 @@ function saveExtraCategories(list){
 }
 function allCategoryNames(){
   const fromProducts=products.map(p=>normalizeCategoryName(p.category||'OVERIG')).filter(Boolean);
-  const all=[...new Set([...fromProducts,...savedExtraCategories(),'MQS','TOPPERS','OVERIG'])];
+  const all=[...new Set([...fromProducts,...savedExtraCategories(),'MAKRO','MQS','TOPPERS','OVERIG'])];
   return all.sort((a,b)=>{
+    if(a==='MAKRO')return -1;
+    if(b==='MAKRO')return 1;
     if(a==='MQS')return -1;
     if(b==='MQS')return 1;
     if(a==='TOPPERS')return -1;
@@ -1170,7 +1264,7 @@ async function renameCategory(oldName){
   }catch(e){msg($('categoryManagerMessage'),'Hernoemen mislukt: '+e.message,true);}
 }
 async function deleteCategory(name){
-  if(name==='MQS'||name==='TOPPERS'||name==='OVERIG'){
+  if(name==='MAKRO'||name==='MQS'||name==='TOPPERS'||name==='OVERIG'){
     return msg($('categoryManagerMessage'),`${name} is een vaste categorie en kan niet worden verwijderd.`,true);
   }
   const affected=products.filter(p=>normalizeCategoryName(p.category)===name);
@@ -1512,6 +1606,26 @@ function edit(id){
   refreshCategorySelects();
   const cat=normalizeCategoryName(p.category||'OVERIG');
   $('cat').value=cat;
+  if(cat==='MAKRO'){
+    clearNormalEditForm();
+    $('cat').value='MAKRO';updateMQSWeightUI();
+    $('editId').value=id;setProductFormMode(true);
+    $('makroName').value=p.name||'';
+    $('makroBarcode').value=p.barcode||'';
+    $('makroExpiry1').value=p.expiryDate1||p.expiryDate||'';
+    $('makroExpiry2').value=p.expiryDate2||'';
+    $('makroExpiry3').value=p.expiryDate3||'';
+    $('makroStock1').value=p.stockExp1??'';
+    $('makroStock2').value=p.stockExp2??'';
+    $('makroStock3').value=p.stockExp3??'';
+    photoData=p.photoData||'';
+    if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+    $('formTitle').textContent='MAKRO product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    document.querySelector('[data-tab="add"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   if(cat==='MQS'){
     // MQS is edited as a product group. Load the group matching this exact product name.
     clearNormalEditForm();
@@ -1564,7 +1678,7 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){editingMQSOriginalName='';setProductFormMode(false);if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add')stopScanner();if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
@@ -1574,6 +1688,7 @@ $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hid
 $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
 $('addCategoryBtn').onclick=addCategory;
 
+$('makroScanBtn').onclick=startScanner;
 $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
 
 $('mqsProductName').addEventListener('change',loadMQSBulkValues);
@@ -1620,7 +1735,7 @@ window.addEventListener('scroll',()=>{
 
 $('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopCatalogScanner();signOut(auth)};
 $('photoInput').onchange=async()=>{const f=$('photoInput').files?.[0];if(!f)return;photoData=await imageData(f);$('preview').src=photoData;$('preview').classList.remove('hidden')};
-$('saveBtn').onclick=async()=>{if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
+$('saveBtn').onclick=async()=>{if(isMakroCategory())return saveMakroProduct();if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
   const isMQS=isMQSCategory();
   const priceEach=Number($('priceEach').value||0);
   const priceP12=isMQS?0:Number($('priceP12').value||0);
