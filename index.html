@@ -149,7 +149,7 @@ window.addEventListener('unhandledrejection',function(e){
     <button id="makroStopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
   </div>
   <div id="makroReader" class="hidden" style="margin-top:10px"></div>
-  <div id="makroScanMsg" class="message"></div>
+  <div id="makroScanMsg" class="message"></div><p class="meta">Na scannen zoekt de app eerst in MSFK en daarna automatisch online naar de productnaam.</p>
   <div class="grid3" style="margin-top:12px">
     <div>
       <label>EXP 1</label><input id="makroExpiry1" type="date">
@@ -983,6 +983,63 @@ function applySavedProduct(code){
   return true;
 }
 
+
+async function lookupProductOnlineByBarcode(barcode,{targetInput=null,statusBox=null}={}){
+  const code=String(barcode||'').trim();
+  if(!code)return null;
+
+  const status=statusBox||$('formMsg');
+  if(status)msg(status,'Barcode online zoeken…');
+
+  try{
+    const url=`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}?fields=product_name,product_name_en,brands`;
+    const response=await fetch(url,{method:'GET',headers:{'Accept':'application/json'}});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    const data=await response.json();
+
+    if(Number(data?.status)!==1 || !data?.product){
+      if(status)msg(status,'Barcode gescand, maar productnaam niet online gevonden.');
+      return null;
+    }
+
+    const product=data.product||{};
+    const name=String(product.product_name||product.product_name_en||'').trim();
+    const brands=String(product.brands||'').trim();
+
+    let finalName=name;
+    if(brands && name && !name.toLowerCase().includes(brands.toLowerCase().split(',')[0].trim())){
+      finalName=`${brands.split(',')[0].trim()} ${name}`.trim();
+    }else if(!finalName && brands){
+      finalName=brands.split(',')[0].trim();
+    }
+
+    if(!finalName){
+      if(status)msg(status,'Product gevonden, maar er staat geen duidelijke productnaam online.');
+      return product;
+    }
+
+    const target=targetInput||getNameInputForCurrentCategory();
+    if(target){
+      target.value=finalName;
+      if(status)msg(status,`Online gevonden: ${finalName}. Je kunt de naam nog aanpassen.`);
+    }
+    return product;
+  }catch(e){
+    console.warn('Online barcode zoeken mislukt:',e);
+    if(status)msg(status,'Online productnaam kon niet worden gevonden. Je kunt de naam handmatig invullen.',true);
+    return null;
+  }
+}
+
+function localProductForBarcode(code,category=''){
+  const barcode=String(code||'').trim();
+  const wantedCategory=normalizeCategoryName(category||'');
+  return products.find(p=>
+    String(p.barcode||'').trim()===barcode &&
+    (!wantedCategory || normalizeCategoryName(p.category||'')===wantedCategory)
+  )||null;
+}
+
 async function stopMakroScanner(){
   if(makroQrCode&&makroScannerRunning){
     try{await makroQrCode.stop();}catch{}
@@ -1023,10 +1080,7 @@ async function startMakroScanner(){
         msg($('makroScanMsg'),'Barcode gescand: '+decodedText);
 
         // If this barcode already exists in MAKRO, load that exact product for quick editing.
-        const existing=products.find(p=>
-          String(p.category||'').trim().toUpperCase()==='MAKRO' &&
-          String(p.barcode||'').trim()===String(decodedText).trim()
-        );
+        const existing=localProductForBarcode(decodedText,'MAKRO');
         if(existing){
           $('editId').value=existing.id;
           $('makroName').value=existing.name||'';
@@ -1048,6 +1102,10 @@ async function startMakroScanner(){
           $('formTitle').textContent='MAKRO product aanpassen';
           $('cancelBtn').classList.remove('hidden');
           msg($('makroScanMsg'),'Bestaand MAKRO-product gevonden. Gegevens geladen.');
+        }else{
+          $('editId').value='';
+          setProductFormMode(false);
+          await lookupProductOnlineByBarcode(decodedText,{targetInput:$('makroName'),statusBox:$('makroScanMsg')});
         }
 
         await stopMakroScanner();
@@ -1092,9 +1150,16 @@ async function startScanner(){
       {facingMode:'environment'},
       {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats},
       async decodedText=>{
-        $('barcode').value=decodedText;if(isMakroCategory())$('makroBarcode').value=decodedText;
-        applySavedProduct(decodedText);
-        msg($('formMsg'),'Barcode gescand: '+decodedText);
+        $('barcode').value=decodedText;
+        if(isMakroCategory())$('makroBarcode').value=decodedText;
+
+        const local=localProductForBarcode(decodedText);
+        if(local){
+          applySavedProduct(decodedText);
+          msg($('formMsg'),'Bestaand product gevonden. Gegevens geladen.');
+        }else{
+          await lookupProductOnlineByBarcode(decodedText,{targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')});
+        }
         await stopScanner();
       },
       ()=>{}
@@ -1380,8 +1445,39 @@ async function startCatalogScanner(){
 }
 
 
+
+async function migrateToppersCategoryOnce(){
+  if(localStorage.getItem('msfkToppersMigratedV1')==='yes')return;
+
+  const affected=products.filter(p=>{
+    const raw=String(p.category||'').trim();
+    return raw && raw.toLowerCase()==='toppers' && raw!=='TOPPERS';
+  });
+
+  if(!affected.length){
+    localStorage.setItem('msfkToppersMigratedV1','yes');
+    return;
+  }
+
+  try{
+    await Promise.all(
+      affected.map(p=>
+        setDoc(
+          doc(db,'catalogProducts',p.id),
+          {category:'TOPPERS',updatedAt:serverTimestamp()},
+          {merge:true}
+        )
+      )
+    );
+    localStorage.setItem('msfkToppersMigratedV1','yes');
+    console.info(`${affected.length} product(en) verplaatst naar TOPPERS.`);
+  }catch(e){
+    console.warn('TOPPERS migratie mislukt:',e);
+  }
+}
+
 function normalizeCategoryName(name){
-  return String(name||'').trim().replace(/\s+/g,' ').toUpperCase();
+  const value=String(name||'').trim().replace(/\s+/g,' ').toUpperCase();return value==='TOPPERS'?'TOPPERS':value;
 }
 function savedExtraCategories(){
   try{
@@ -1920,8 +2016,31 @@ $('mqsWeightPreset').onchange=()=>{
 
 $('scanBtn').onclick=startScanner;
 $('stopScanBtn').onclick=stopScanner;
-$('barcode').addEventListener('change',()=>applySavedProduct($('barcode').value.trim()));
-$('barcode').addEventListener('blur',()=>applySavedProduct($('barcode').value.trim()));
+
+$('makroBarcode').addEventListener('change',async()=>{
+  const code=$('makroBarcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code,'MAKRO');
+  if(local){
+    edit(local.id);
+  }else{
+    await lookupProductOnlineByBarcode(code,{targetInput:$('makroName'),statusBox:$('makroScanMsg')});
+  }
+});
+
+$('barcode').addEventListener('change',async()=>{
+  const code=$('barcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code);
+  if(local)applySavedProduct(code);
+  else await lookupProductOnlineByBarcode(code,{targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')});
+});
+$('barcode').addEventListener('blur',async()=>{
+  const code=$('barcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code);
+  if(local)applySavedProduct(code);
+});
 
 $('catalogHomeBtn').onclick=()=>{
   const catalogTab=document.querySelector('[data-tab="catalog"]');
@@ -1957,7 +2076,7 @@ $('saveBtn').onclick=async()=>{if(isMakroCategory())return saveMakroProduct();if
   const exp2=isMQS?'':$('expiry2').value;
   const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),stockExp1:exp1?Number($('stockExp1').value||0):0,stockExp2:exp2?Number($('stockExp2').value||0):0,category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,internalOnly:$('internalOnly').checked,photoData,updatedAt:serverTimestamp()};try{const editingId=$('editId').value.trim();if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
-onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
+onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));migrateToppersCategoryOnce();categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();},e=>msg($('saleMessage'),e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
 </script>
 <div class="floating-actions no-print">
   <button id="catalogHomeBtn" class="floating-btn" type="button" title="Terug naar Catalogus" aria-label="Terug naar Catalogus">🏠</button>
