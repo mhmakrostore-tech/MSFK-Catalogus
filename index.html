@@ -1728,8 +1728,9 @@ function exportPackageTotalsCsv(){
     return msg($('packageMessage'),'Bereken eerst de pakketten voordat je exporteert.',true);
   }
 
-  const rows=[['Product','Code','Gebruikt PCS']];
-  totals.forEach(t=>rows.push([t.name,t.code||'',String(t.qty||0)]));
+  // Excel-indeling: productnaam en aantal altijd in aparte cellen/kolommen.
+  const rows=[['Productnaam','Aantal PCS']];
+  totals.forEach(t=>rows.push([t.name,String(t.qty||0)]));
   const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
