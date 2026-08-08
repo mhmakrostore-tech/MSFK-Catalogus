@@ -1516,6 +1516,11 @@ function normalizedPackageSettings(){
           productId:String(i.productId||''),
           customProductId:String(i.customProductId||''),
           qty:Math.max(0,Number(i.qty||0))
+        })).filter(i=>(i.productId||i.customProductId)&&i.qty>0):[],
+        choiceItems:Array.isArray(saved.choiceItems)?saved.choiceItems.map(i=>({
+          productId:String(i.productId||''),
+          customProductId:String(i.customProductId||''),
+          qty:Math.max(0,Number(i.qty||0))
         })).filter(i=>(i.productId||i.customProductId)&&i.qty>0):[]
       };
     }),
@@ -1525,7 +1530,8 @@ function normalizedPackageSettings(){
       code:String(p.code||'').trim()
     })).filter(p=>p.id&&p.name):[],
     history:Array.isArray(stored.history)?stored.history:[],
-    dayCounts:stored.dayCounts&&typeof stored.dayCounts==='object'?stored.dayCounts:{}
+    dayCounts:stored.dayCounts&&typeof stored.dayCounts==='object'?stored.dayCounts:{},
+    dayChoices:stored.dayChoices&&typeof stored.dayChoices==='object'?stored.dayChoices:{}
   };
 }
 
@@ -1659,12 +1665,19 @@ function renderPackageSystem(){
         <input class="package-name-input" value="${safe(pkg.name)}" aria-label="Pakketnaam">
         <button type="button" class="btn secondary save-package-recipe">Opslaan</button>
       </div>
+      <h4 style="margin:10px 0 4px">Vaste producten</h4>
       <div class="package-recipe-list"></div>
-      <button type="button" class="btn light add-package-product">+ Product toevoegen</button>`;
+      <button type="button" class="btn light add-package-product">+ Vast product toevoegen</button>
+      <hr style="margin:14px 0">
+      <h4 style="margin:0 0 4px">Keuzeproducten (optioneel)</h4>
+      <p class="meta">Bijvoorbeeld Jello óf Snoep. Bij het aantal gemaakte pakketten vul je later de verdeling in.</p>
+      <div class="package-choice-list"></div>
+      <button type="button" class="btn light add-package-choice">+ Keuzeproduct toevoegen</button>`;
 
     const list=card.querySelector('.package-recipe-list');
+    const choiceList=card.querySelector('.package-choice-list');
 
-    const addRecipeRow=(item={productId:'',customProductId:'',qty:1})=>{
+    const addRecipeRow=(container,item={productId:'',customProductId:'',qty:1})=>{
       const row=document.createElement('div');
       row.className='package-recipe-row';
       row.innerHTML=`
@@ -1674,33 +1687,42 @@ function renderPackageSystem(){
           <label class="meta" style="margin-top:6px">of extra product</label>
           <select class="package-custom-product-select">${packageCustomProductOptions(item.customProductId)}</select>
         </div>
-        <input class="package-product-qty" type="number" min="1" step="1" value="${Math.max(1,Number(item.qty||1))}" title="Aantal PCS per pakket">
+        <div>
+          <label class="meta">PCS per pakket</label>
+          <input class="package-product-qty" type="number" min="1" step="1" value="${Math.max(1,Number(item.qty||1))}">
+        </div>
         <button type="button" class="btn light remove-package-product">Verwijder</button>`;
       const catalogSel=row.querySelector('.package-product-select');
       const customSel=row.querySelector('.package-custom-product-select');
       catalogSel.onchange=()=>{if(catalogSel.value)customSel.value='';};
       customSel.onchange=()=>{if(customSel.value)catalogSel.value='';};
       row.querySelector('.remove-package-product').onclick=()=>row.remove();
-      list.appendChild(row);
+      container.appendChild(row);
     };
 
-    pkg.items.forEach(addRecipeRow);
-    card.querySelector('.add-package-product').onclick=()=>addRecipeRow();
+    pkg.items.forEach(item=>addRecipeRow(list,item));
+    (pkg.choiceItems||[]).forEach(item=>addRecipeRow(choiceList,item));
+    card.querySelector('.add-package-product').onclick=()=>addRecipeRow(list);
+    card.querySelector('.add-package-choice').onclick=()=>addRecipeRow(choiceList);
 
     card.querySelector('.save-package-recipe').onclick=async()=>{
       const name=cleanCustomerName(card.querySelector('.package-name-input').value);
       if(!name)return msg($('packageMessage'),'Vul een pakketnaam in.',true);
 
-      const items=[...list.querySelectorAll('.package-recipe-row')].map(row=>({
+      const readRows=container=>[...container.querySelectorAll('.package-recipe-row')].map(row=>({
         productId:row.querySelector('.package-product-select').value,
         customProductId:row.querySelector('.package-custom-product-select').value,
         qty:Number(row.querySelector('.package-product-qty').value||0)
       })).filter(i=>(i.productId||i.customProductId)&&i.qty>0);
 
+      const items=readRows(list);
+      const choiceItems=readRows(choiceList);
+
       const latest=normalizedPackageSettings();
       const target=latest.packages.find(p=>p.id===pkg.id);
       target.name=name;
       target.items=items;
+      target.choiceItems=choiceItems;
 
       try{
         await savePackageSettings(latest);
@@ -1715,10 +1737,27 @@ function renderPackageSystem(){
 
     const countCard=document.createElement('div');
     countCard.className='package-count-card';
+    const choiceInputs=(pkg.choiceItems||[]).map((item,index)=>{
+      let label='Keuzeproduct';
+      if(item.productId){
+        const p=products.find(x=>x.id===item.productId);
+        if(p)label=productDisplayName(p);
+      }else if(item.customProductId){
+        const cp=state.customProducts.find(x=>x.id===item.customProductId);
+        if(cp)label=cp.name;
+      }
+      const savedChoice=Number(state.dayChoices?.[pkg.id]?.[index]||0);
+      return `<div style="margin-top:8px">
+        <label>${safe(label)}</label>
+        <input class="package-choice-count" data-package-id="${pkg.id}" data-choice-index="${index}" type="number" min="0" step="1" value="${savedChoice}" placeholder="Aantal pakketten">
+      </div>`;
+    }).join('');
+
     countCard.innerHTML=`
       <strong>${safe(pkg.name)}</strong>
       <label>Aantal gemaakt</label>
-      <input class="package-made-count" data-package-id="${pkg.id}" type="number" min="0" step="1" value="${Number(state.dayCounts[pkg.id]||0)}">`;
+      <input class="package-made-count" data-package-id="${pkg.id}" type="number" min="0" step="1" value="${Number(state.dayCounts[pkg.id]||0)}">
+      ${(pkg.choiceItems||[]).length?`<div class="meta" style="margin-top:8px"><strong>Verdeling keuzeproducten</strong></div>${choiceInputs}`:''}`;
     countGrid.appendChild(countCard);
   }
 
@@ -1726,7 +1765,42 @@ function renderPackageSystem(){
   renderPackageHistory();
 }
 
-function calculatePackageTotalsFromCounts(counts){
+function addPackageTotal(totals,state,item,used){
+  if(!used)return;
+
+  if(item.productId){
+    const p=products.find(x=>x.id===item.productId);
+    if(!p)return;
+    const key='catalog:'+item.productId;
+    const current=totals.get(key)||{
+      productId:item.productId,
+      customProductId:'',
+      name:productDisplayName(p),
+      code:normalizedCodes(p).each,
+      qty:0
+    };
+    current.qty+=used;
+    totals.set(key,current);
+    return;
+  }
+
+  if(item.customProductId){
+    const custom=state.customProducts.find(x=>x.id===item.customProductId);
+    if(!custom)return;
+    const key='custom:'+item.customProductId;
+    const current=totals.get(key)||{
+      productId:'',
+      customProductId:item.customProductId,
+      name:custom.name,
+      code:custom.code||'',
+      qty:0
+    };
+    current.qty+=used;
+    totals.set(key,current);
+  }
+}
+
+function calculatePackageTotalsFromCounts(counts,choiceCounts={}){
   const state=normalizedPackageSettings();
   const totals=new Map();
 
@@ -1736,39 +1810,13 @@ function calculatePackageTotalsFromCounts(counts){
 
     for(const item of pkg.items){
       const used=made*Math.max(0,Number(item.qty||0));
-      if(!used)continue;
-
-      if(item.productId){
-        const p=products.find(x=>x.id===item.productId);
-        if(!p)continue;
-        const key='catalog:'+item.productId;
-        const current=totals.get(key)||{
-          productId:item.productId,
-          customProductId:'',
-          name:productDisplayName(p),
-          code:normalizedCodes(p).each,
-          qty:0
-        };
-        current.qty+=used;
-        totals.set(key,current);
-        continue;
-      }
-
-      if(item.customProductId){
-        const custom=state.customProducts.find(x=>x.id===item.customProductId);
-        if(!custom)continue;
-        const key='custom:'+item.customProductId;
-        const current=totals.get(key)||{
-          productId:'',
-          customProductId:item.customProductId,
-          name:custom.name,
-          code:custom.code||'',
-          qty:0
-        };
-        current.qty+=used;
-        totals.set(key,current);
-      }
+      addPackageTotal(totals,state,item,used);
     }
+
+    (pkg.choiceItems||[]).forEach((item,index)=>{
+      const assigned=Math.max(0,Number(choiceCounts?.[pkg.id]?.[index]||0));
+      addPackageTotal(totals,state,item,assigned*Math.max(0,Number(item.qty||0)));
+    });
   }
 
   return [...totals.values()].sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}));
@@ -1790,15 +1838,32 @@ function renderPackageTotals(totals=packageLastTotals){
 
 async function calculateAndSavePackages(){
   const counts={};
+  const choiceCounts={};
   document.querySelectorAll('.package-made-count').forEach(input=>{
     counts[input.dataset.packageId]=Math.max(0,Number(input.value||0));
+  });
+  document.querySelectorAll('.package-choice-count').forEach(input=>{
+    const pkgId=input.dataset.packageId;
+    const index=Number(input.dataset.choiceIndex);
+    if(!choiceCounts[pkgId])choiceCounts[pkgId]={};
+    choiceCounts[pkgId][index]=Math.max(0,Number(input.value||0));
   });
 
   if(!Object.values(counts).some(v=>v>0)){
     return msg($('packageMessage'),'Vul bij minstens één pakket het aantal gemaakt in.',true);
   }
 
-  const totals=calculatePackageTotalsFromCounts(counts);
+  const stateForValidation=normalizedPackageSettings();
+  for(const pkg of stateForValidation.packages){
+    const made=Math.max(0,Number(counts[pkg.id]||0));
+    if(!made || !(pkg.choiceItems||[]).length)continue;
+    const assigned=(pkg.choiceItems||[]).reduce((sum,item,index)=>sum+Math.max(0,Number(choiceCounts?.[pkg.id]?.[index]||0)),0);
+    if(assigned!==made){
+      return msg($('packageMessage'),`${pkg.name}: keuzeproducten zijn ${assigned} verdeeld, maar je hebt ${made} pakketten gemaakt. De verdeling moet gelijk zijn.`,true);
+    }
+  }
+
+  const totals=calculatePackageTotalsFromCounts(counts,choiceCounts);
   if(!totals.length){
     return msg($('packageMessage'),'Er zijn nog geen producten aan de gekozen pakketten toegevoegd.',true);
   }
@@ -1811,11 +1876,13 @@ async function calculateAndSavePackages(){
     id:`pkg-${Date.now()}`,
     createdAtISO:new Date().toISOString(),
     counts,
+    choiceCounts,
     packageNames,
     totals:totals.map(x=>({...x}))
   };
 
   state.dayCounts=counts;
+  state.dayChoices=choiceCounts;
   state.history=[historyEntry,...state.history].slice(0,200);
 
   try{
@@ -1832,6 +1899,7 @@ async function calculateAndSavePackages(){
 async function startNewPackageDay(){
   const state=normalizedPackageSettings();
   state.dayCounts={};
+  state.dayChoices={};
   try{
     await savePackageSettings(state);
     packageLastTotals=[];
@@ -1890,15 +1958,42 @@ function exportPackageTotalsCsv(){
     return msg($('packageMessage'),'Bereken eerst de pakketten voordat je exporteert.',true);
   }
 
-  // Excel-indeling: code, productnaam en aantal elk in een aparte cel/kolom.
-  const rows=[['Productcode','Productnaam','Aantal PCS']];
-  totals.forEach(t=>rows.push([t.code||'',t.name,String(t.qty||0)]));
-  const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const esc=v=>String(v??'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+
+  const rows=totals.map(t=>`
+    <tr>
+      <td style="mso-number-format:'\\@';">${esc(t.code||'')}</td>
+      <td>${esc(t.name)}</td>
+      <td style="mso-number-format:'0';">${Number(t.qty||0)}</td>
+    </tr>`).join('');
+
+  const html=`<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      table{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11pt}
+      th,td{border:1px solid #999;padding:5px 8px}
+      th{font-weight:bold;background:#eee}
+    </style>
+  </head>
+  <body>
+    <table>
+      <thead><tr><th>Productcode</th><th>Productnaam</th><th>Aantal PCS</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </body>
+  </html>`;
+
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=`pakket-gebruik-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download=`pakket-gebruik-${new Date().toISOString().slice(0,10)}.xls`;
   document.body.appendChild(a);
   a.click();
   a.remove();
