@@ -365,6 +365,26 @@ window.addEventListener('unhandledrejection',function(e){
   <div class="panel">
     <h2>📦 Pakketten beheren</h2>
     <p class="meta">Deze pagina is alleen intern. De pakketten verschijnen niet in de Catalogus en veranderen geen voorraad. MQS-producten zijn hier niet beschikbaar.</p>
+
+    <div class="unit-box" style="margin-bottom:16px">
+      <h3>Extra producten alleen voor pakketten</h3>
+      <p class="meta">Gebruik dit voor producten die niet in de Catalogus of winkel voorkomen.</p>
+      <div class="grid3">
+        <div>
+          <label>Productnaam</label>
+          <input id="packageCustomProductName" placeholder="Bijv. cadeauzakje">
+        </div>
+        <div>
+          <label>Productcode</label>
+          <input id="packageCustomProductCode" placeholder="Bijv. 12345">
+        </div>
+        <div class="category-add-btn-wrap">
+          <button id="addPackageCustomProductBtn" type="button" class="btn secondary">Toevoegen</button>
+        </div>
+      </div>
+      <div id="packageCustomProductList"></div>
+    </div>
+
     <div id="packageCards" class="package-grid"></div>
   </div>
 </section>
@@ -1494,10 +1514,16 @@ function normalizedPackageSettings(){
         name:String(saved.name||def.name),
         items:Array.isArray(saved.items)?saved.items.map(i=>({
           productId:String(i.productId||''),
+          customProductId:String(i.customProductId||''),
           qty:Math.max(0,Number(i.qty||0))
-        })).filter(i=>i.productId&&i.qty>0):[]
+        })).filter(i=>(i.productId||i.customProductId)&&i.qty>0):[]
       };
     }),
+    customProducts:Array.isArray(stored.customProducts)?stored.customProducts.map(p=>({
+      id:String(p.id||''),
+      name:String(p.name||'').trim(),
+      code:String(p.code||'').trim()
+    })).filter(p=>p.id&&p.name):[],
     history:Array.isArray(stored.history)?stored.history:[],
     dayCounts:stored.dayCounts&&typeof stored.dayCounts==='object'?stored.dayCounts:{}
   };
@@ -1510,6 +1536,110 @@ async function savePackageSettings(next){
     {...next,updatedAt:serverTimestamp()},
     {merge:true}
   );
+}
+
+
+function packageCustomProductOptions(selected=''){
+  const state=normalizedPackageSettings();
+  return '<option value="">Kies extra product</option>'+
+    state.customProducts
+      .slice()
+      .sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}))
+      .map(p=>`<option value="${safe(p.id)}" ${p.id===selected?'selected':''}>${safe(p.name)}${p.code?` — ${safe(p.code)}`:''}</option>`)
+      .join('');
+}
+
+async function addPackageCustomProduct(){
+  const name=String($('packageCustomProductName').value||'').trim().replace(/\s+/g,' ');
+  const code=String($('packageCustomProductCode').value||'').trim();
+  if(!name)return msg($('packageMessage'),'Vul een productnaam in.',true);
+
+  const state=normalizedPackageSettings();
+  if(state.customProducts.some(p=>p.name.toLowerCase()===name.toLowerCase())){
+    return msg($('packageMessage'),'Dit extra product bestaat al.',true);
+  }
+
+  state.customProducts.push({id:`custom-${Date.now()}`,name,code});
+  try{
+    await savePackageSettings(state);
+    $('packageCustomProductName').value='';
+    $('packageCustomProductCode').value='';
+    msg($('packageMessage'),`${name} toegevoegd aan pakketproducten.`);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Extra product opslaan mislukt: '+e.message,true);
+  }
+}
+
+async function renamePackageCustomProduct(id){
+  const state=normalizedPackageSettings();
+  const item=state.customProducts.find(p=>p.id===id);
+  if(!item)return;
+
+  const next=prompt('Nieuwe productnaam:',item.name);
+  if(next===null)return;
+  const clean=String(next||'').trim().replace(/\s+/g,' ');
+  if(!clean)return;
+
+  if(state.customProducts.some(p=>p.id!==id&&p.name.toLowerCase()===clean.toLowerCase())){
+    return msg($('packageMessage'),'Deze productnaam bestaat al.',true);
+  }
+
+  const nextCode=prompt('Productcode:',item.code||'');
+  if(nextCode===null)return;
+
+  item.name=clean;
+  item.code=String(nextCode||'').trim();
+  try{
+    await savePackageSettings(state);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Hernoemen mislukt: '+e.message,true);
+  }
+}
+
+async function deletePackageCustomProduct(id){
+  const state=normalizedPackageSettings();
+  const item=state.customProducts.find(p=>p.id===id);
+  if(!item)return;
+  if(!confirm(`Extra product "${item.name}" verwijderen?`))return;
+
+  state.customProducts=state.customProducts.filter(p=>p.id!==id);
+  state.packages.forEach(pkg=>{
+    pkg.items=pkg.items.filter(i=>i.customProductId!==id);
+  });
+
+  try{
+    await savePackageSettings(state);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Verwijderen mislukt: '+e.message,true);
+  }
+}
+
+function renderPackageCustomProducts(){
+  const box=$('packageCustomProductList');
+  if(!box)return;
+  const state=normalizedPackageSettings();
+  const list=state.customProducts.slice().sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}));
+
+  box.innerHTML=list.length?'':'<div class="meta">Nog geen extra pakketproducten.</div>';
+  for(const p of list){
+    const row=document.createElement('div');
+    row.className='customer-manage-row';
+    row.innerHTML=`
+      <div class="customer-name"><strong>${safe(p.name)}</strong>${p.code?`<div class="meta">Code: ${safe(p.code)}</div>`:''}</div>
+      <button type="button" class="btn light rename-custom-package-product" data-id="${safe(p.id)}">Hernoemen</button>
+      <button type="button" class="btn light delete-custom-package-product" data-id="${safe(p.id)}">Verwijderen</button>`;
+    box.appendChild(row);
+  }
+
+  box.querySelectorAll('.rename-custom-package-product').forEach(btn=>{
+    btn.onclick=()=>renamePackageCustomProduct(btn.dataset.id);
+  });
+  box.querySelectorAll('.delete-custom-package-product').forEach(btn=>{
+    btn.onclick=()=>deletePackageCustomProduct(btn.dataset.id);
+  });
 }
 
 function renderPackageSystem(){
@@ -1534,13 +1664,22 @@ function renderPackageSystem(){
 
     const list=card.querySelector('.package-recipe-list');
 
-    const addRecipeRow=(item={productId:'',qty:1})=>{
+    const addRecipeRow=(item={productId:'',customProductId:'',qty:1})=>{
       const row=document.createElement('div');
       row.className='package-recipe-row';
       row.innerHTML=`
-        <select class="package-product-select">${packageProductOptions(item.productId)}</select>
+        <div>
+          <label class="meta">Product uit Catalogus</label>
+          <select class="package-product-select">${packageProductOptions(item.productId)}</select>
+          <label class="meta" style="margin-top:6px">of extra product</label>
+          <select class="package-custom-product-select">${packageCustomProductOptions(item.customProductId)}</select>
+        </div>
         <input class="package-product-qty" type="number" min="1" step="1" value="${Math.max(1,Number(item.qty||1))}" title="Aantal PCS per pakket">
         <button type="button" class="btn light remove-package-product">Verwijder</button>`;
+      const catalogSel=row.querySelector('.package-product-select');
+      const customSel=row.querySelector('.package-custom-product-select');
+      catalogSel.onchange=()=>{if(catalogSel.value)customSel.value='';};
+      customSel.onchange=()=>{if(customSel.value)catalogSel.value='';};
       row.querySelector('.remove-package-product').onclick=()=>row.remove();
       list.appendChild(row);
     };
@@ -1554,8 +1693,9 @@ function renderPackageSystem(){
 
       const items=[...list.querySelectorAll('.package-recipe-row')].map(row=>({
         productId:row.querySelector('.package-product-select').value,
+        customProductId:row.querySelector('.package-custom-product-select').value,
         qty:Number(row.querySelector('.package-product-qty').value||0)
-      })).filter(i=>i.productId&&i.qty>0);
+      })).filter(i=>(i.productId||i.customProductId)&&i.qty>0);
 
       const latest=normalizedPackageSettings();
       const target=latest.packages.find(p=>p.id===pkg.id);
@@ -1582,6 +1722,7 @@ function renderPackageSystem(){
     countGrid.appendChild(countCard);
   }
 
+  renderPackageCustomProducts();
   renderPackageHistory();
 }
 
@@ -1594,18 +1735,39 @@ function calculatePackageTotalsFromCounts(counts){
     if(!made)continue;
 
     for(const item of pkg.items){
-      const p=products.find(x=>x.id===item.productId);
-      if(!p)continue;
-
       const used=made*Math.max(0,Number(item.qty||0));
-      const current=totals.get(item.productId)||{
-        productId:item.productId,
-        name:productDisplayName(p),
-        code:normalizedCodes(p).each,
-        qty:0
-      };
-      current.qty+=used;
-      totals.set(item.productId,current);
+      if(!used)continue;
+
+      if(item.productId){
+        const p=products.find(x=>x.id===item.productId);
+        if(!p)continue;
+        const key='catalog:'+item.productId;
+        const current=totals.get(key)||{
+          productId:item.productId,
+          customProductId:'',
+          name:productDisplayName(p),
+          code:normalizedCodes(p).each,
+          qty:0
+        };
+        current.qty+=used;
+        totals.set(key,current);
+        continue;
+      }
+
+      if(item.customProductId){
+        const custom=state.customProducts.find(x=>x.id===item.customProductId);
+        if(!custom)continue;
+        const key='custom:'+item.customProductId;
+        const current=totals.get(key)||{
+          productId:'',
+          customProductId:item.customProductId,
+          name:custom.name,
+          code:custom.code||'',
+          qty:0
+        };
+        current.qty+=used;
+        totals.set(key,current);
+      }
     }
   }
 
@@ -1728,9 +1890,9 @@ function exportPackageTotalsCsv(){
     return msg($('packageMessage'),'Bereken eerst de pakketten voordat je exporteert.',true);
   }
 
-  // Excel-indeling: productnaam en aantal altijd in aparte cellen/kolommen.
-  const rows=[['Productnaam','Aantal PCS']];
-  totals.forEach(t=>rows.push([t.name,String(t.qty||0)]));
+  // Excel-indeling: code, productnaam en aantal elk in een aparte cel/kolom.
+  const rows=[['Productcode','Productnaam','Aantal PCS']];
+  totals.forEach(t=>rows.push([t.code||'',t.name,String(t.qty||0)]));
   const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
@@ -2681,7 +2843,7 @@ function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalNam
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();}if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
-$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
+$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
 
 $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
 $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
