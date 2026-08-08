@@ -165,6 +165,50 @@ window.addEventListener('unhandledrejection',function(e){
     </div>
   </div>
 </div>
+
+<div id="warehouseOnlyBox" class="unit-box hidden">
+  <h3>MAGAZIJN – alleen intern</h3>
+  <p class="meta">Voorraad en EXP van het magazijn. Deze gegevens zijn apart van de winkel en komen nooit in de Catalogus of Nieuwe verkoop.</p>
+
+  <div class="grid2">
+    <div>
+      <label>Productnaam</label>
+      <input id="warehouseName" placeholder="Naam product">
+    </div>
+    <div>
+      <label>Barcode</label>
+      <input id="warehouseBarcode" inputmode="numeric" placeholder="Scan of typ barcode">
+    </div>
+  </div>
+
+  <div class="button-row">
+    <button id="warehouseScanBtn" type="button" class="btn secondary">Scan barcode</button>
+    <button id="warehouseStopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+  </div>
+  <div id="warehouseReader" class="hidden" style="margin-top:10px"></div>
+  <div id="warehouseScanMsg" class="message"></div>
+
+  <div class="grid3" style="margin-top:12px">
+    <div>
+      <label>EXP 1</label>
+      <input id="warehouseExpiry1" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 1</label>
+      <input id="warehouseStock1" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 2</label>
+      <input id="warehouseExpiry2" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 2</label>
+      <input id="warehouseStock2" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 3</label>
+      <input id="warehouseExpiry3" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 3</label>
+      <input id="warehouseStock3" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+  </div>
+</div>
 <div id="normalProductFields"><div class="grid2">
   <div><label>Productnaam</label><input id="name" placeholder="Bijv. Toppers Hoola Rings"></div>
     <div>
@@ -325,7 +369,7 @@ import {getFirestore,collection,doc,setDoc,addDoc,deleteDoc,onSnapshot,serverTim
 
 const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
 const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
-let products=[],sales=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
+let products=[],sales=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
 
@@ -627,6 +671,54 @@ function loadMQSBulkValues(){
   }
 }
 
+
+async function saveWarehouseProduct(){
+  const name=$('warehouseName').value.trim();
+  if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
+
+  const exp1=typedDateToISO($('warehouseExpiry1').value);
+  const exp2=typedDateToISO($('warehouseExpiry2').value);
+  const exp3=typedDateToISO($('warehouseExpiry3').value);
+
+  if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp3===null)return msg($('formMsg'),'EXP 3 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(!exp1&&!exp2&&!exp3)return msg($('formMsg'),'Vul minstens één EXP-datum in.',true);
+
+  const data={
+    name,
+    category:'MAGAZIJN',
+    barcode:$('warehouseBarcode').value.trim(),
+    expiryDate1:exp1,
+    expiryDate2:exp2,
+    expiryDate3:exp3,
+    expiryDate:([exp1,exp2,exp3].filter(Boolean).sort()[0]||''),
+    stockExp1:exp1?Number($('warehouseStock1').value||0):0,
+    stockExp2:exp2?Number($('warehouseStock2').value||0):0,
+    stockExp3:exp3?Number($('warehouseStock3').value||0):0,
+    internalOnly:true,
+    available:false,
+    price:0,priceEach:0,priceP12:0,priceCrt:0,
+    codeEach:'',codeP12:'',codeCrt:'',
+    photoData,
+    updatedAt:serverTimestamp()
+  };
+
+  try{
+    const editingId=$('editId').value.trim();
+    if(editingId){
+      await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});
+      msg($('formMsg'),'MAGAZIJN gegevens gewijzigd.');
+    }else{
+      await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+      msg($('formMsg'),'MAGAZIJN product toegevoegd.');
+    }
+    reset();
+  }catch(e){
+    msg($('formMsg'),e.message,true);
+  }
+}
+
 async function saveMakroProduct(){
   const name=$('makroName').value.trim();
   if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
@@ -729,6 +821,27 @@ async function saveMQSBulk(){
 }
 
 
+
+function isWarehouseCategory(){
+  return normalizeCategoryName($('cat').value)==='MAGAZIJN';
+}
+
+function updateInternalCategoryUI(){
+  const isMakro=isMakroCategory();
+  const isWarehouse=isWarehouseCategory();
+  const isMQS=isMQSCategory();
+
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('warehouseOnlyBox').classList.toggle('hidden',!isWarehouse);
+  $('mqsBulkBox').classList.toggle('hidden',!isMQS);
+  $('normalProductFields').classList.toggle('hidden',isMakro||isWarehouse||isMQS);
+
+  if(isMakro||isWarehouse){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
+}
+
 function isMakroCategory(){
   return normalizeCategoryName($('cat').value)==='MAKRO';
 }
@@ -750,12 +863,14 @@ function updateMQSWeightUI(){
   updateWeightUnitOptions();
   const isMQS=isMQSCategory();
   const isMakro=isMakroCategory();
+  const isWarehouse=isWarehouseCategory();
   $('mqsBulkBox').classList.toggle('hidden',!isMQS);
   $('makroOnlyBox').classList.toggle('hidden',!isMakro);
-  $('normalProductFields').classList.toggle('hidden',isMQS||isMakro);
+  $('warehouseOnlyBox').classList.toggle('hidden',!isWarehouse);
+  $('normalProductFields').classList.toggle('hidden',isMQS||isMakro||isWarehouse);
   $('toppersWeightNote').classList.toggle('hidden',!isToppersCategory());
   if(isMQS&&$('mqsProductName')?.value.trim())loadMQSBulkValues();
-  if(isMakro){
+  if(isMakro||isWarehouse){
     $('internalOnly').checked=true;
     $('available').checked=false;
   }
@@ -969,6 +1084,146 @@ function localProductForBarcode(code,category=''){
     String(p.barcode||'').trim()===barcode &&
     (!wantedCategory || normalizeCategoryName(p.category||'')===wantedCategory)
   )||null;
+}
+
+
+async function stopWarehouseScanner(){
+  if(warehouseQrCode){
+    try{await warehouseQrCode.stop();}catch{}
+    try{await warehouseQrCode.clear();}catch{}
+  }
+  warehouseQrCode=null;
+  warehouseScannerRunning=false;
+  $('warehouseReader').classList.add('hidden');
+  $('warehouseStopScanBtn').classList.add('hidden');
+}
+
+function fillWarehouseFromProduct(p,{useDates=true}={}){
+  if(!p)return;
+  $('warehouseName').value=p.name||'';
+  $('warehouseBarcode').value=p.barcode||'';
+
+  if(useDates){
+    $('warehouseExpiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');
+    $('warehouseExpiry2').value=isoToTypedDate(p.expiryDate2||'');
+    $('warehouseExpiry3').value=isoToTypedDate(p.expiryDate3||'');
+    $('warehouseStock1').value=p.stockExp1??'';
+    $('warehouseStock2').value=p.stockExp2??'';
+    $('warehouseStock3').value=p.stockExp3??'';
+  }else{
+    // Winkel-EXP wordt bewust NIET overgenomen naar MAGAZIJN.
+    $('warehouseExpiry1').value='';
+    $('warehouseExpiry2').value='';
+    $('warehouseExpiry3').value='';
+    $('warehouseStock1').value='';
+    $('warehouseStock2').value='';
+    $('warehouseStock3').value='';
+  }
+
+  photoData=p.photoData||'';
+  if(photoData){
+    $('preview').src=photoData;
+    $('preview').classList.remove('hidden');
+  }else{
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
+}
+
+async function handleWarehouseBarcode(decodedText){
+  const code=String(decodedText||'').trim();
+  if(!code)return;
+
+  $('warehouseBarcode').value=code;
+
+  // 1. Eerst exact bestaand MAGAZIJN-record: laad ALLES, inclusief magazijn-datums.
+  const warehouseExisting=products.find(p=>
+    normalizeCategoryName(p.category||'')==='MAGAZIJN' &&
+    String(p.barcode||'').trim()===code
+  );
+
+  if(warehouseExisting){
+    $('editId').value=warehouseExisting.id;
+    fillWarehouseFromProduct(warehouseExisting,{useDates:true});
+    setProductFormMode(true);
+    $('formTitle').textContent='MAGAZIJN product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    msg($('warehouseScanMsg'),'Bestaand MAGAZIJN-product gevonden. Pas alleen de EXP/voorraad aan en sla op.');
+    return;
+  }
+
+  // 2. Anders zoek hetzelfde product in winkel/andere categorie.
+  // Naam/foto/barcode worden overgenomen, maar NIET de winkel-datums.
+  const otherExisting=products.find(p=>
+    normalizeCategoryName(p.category||'')!=='MAGAZIJN' &&
+    String(p.barcode||'').trim()===code
+  );
+
+  $('editId').value='';
+  setProductFormMode(false);
+
+  if(otherExisting){
+    fillWarehouseFromProduct(otherExisting,{useDates:false});
+    msg($('warehouseScanMsg'),'Product uit winkel gevonden. Naam en foto zijn overgenomen; vul aparte MAGAZIJN EXP-datums en aantallen in.');
+    return;
+  }
+
+  // 3. Niet lokaal gevonden: zoek online naar naam.
+  await lookupProductOnlineByBarcode(
+    code,
+    {targetInput:$('warehouseName'),statusBox:$('warehouseScanMsg')}
+  );
+}
+
+async function startWarehouseScanner(){
+  if(!window.Html5Qrcode){
+    return msg($('warehouseScanMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
+  }
+
+  await stopScanner();
+  await stopMakroScanner();
+  await stopWarehouseScanner();
+
+  $('warehouseReader').classList.remove('hidden');
+  $('warehouseStopScanBtn').classList.remove('hidden');
+  msg($('warehouseScanMsg'),'Camera toestemming controleren…');
+
+  try{
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length)throw new Error('Geen camera gevonden.');
+
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    warehouseQrCode=new Html5Qrcode('warehouseReader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    await warehouseQrCode.start(
+      backCamera.id,
+      {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats,aspectRatio:1.777778},
+      async decodedText=>{
+        await handleWarehouseBarcode(decodedText);
+        await stopWarehouseScanner();
+      },
+      ()=>{}
+    );
+
+    warehouseScannerRunning=true;
+    msg($('warehouseScanMsg'),'Camera is open. Richt op de barcode.');
+  }catch(e){
+    console.warn('MAGAZIJN camera fout:',e);
+    await stopWarehouseScanner();
+    msg($('warehouseScanMsg'),'Camera kon niet worden geopend. Controleer cameratoestemming en probeer opnieuw.',true);
+  }
 }
 
 async function stopMakroScanner(){
@@ -1458,10 +1713,12 @@ function saveExtraCategories(list){
 }
 function allCategoryNames(){
   const fromProducts=products.map(p=>normalizeCategoryName(p.category||'OVERIG')).filter(Boolean);
-  const all=[...new Set([...fromProducts.map(normalizeCategoryName),...savedExtraCategories().map(normalizeCategoryName),'MAKRO','MQS','TOPPERS','OVERIG'])];
+  const all=[...new Set([...fromProducts.map(normalizeCategoryName),...savedExtraCategories().map(normalizeCategoryName),'MAKRO','MAGAZIJN','MQS','TOPPERS','OVERIG'])];
   return all.sort((a,b)=>{
     if(a==='MAKRO')return -1;
     if(b==='MAKRO')return 1;
+    if(a==='MAGAZIJN')return -1;
+    if(b==='MAGAZIJN')return 1;
     if(a==='MQS')return -1;
     if(b==='MQS')return 1;
     if(a==='TOPPERS')return -1;
@@ -1526,7 +1783,7 @@ async function renameCategory(oldName){
   }catch(e){msg($('categoryManagerMessage'),'Hernoemen mislukt: '+e.message,true);}
 }
 async function deleteCategory(name){
-  if(['MAKRO','MQS','TOPPERS','OVERIG'].includes(normalizeCategoryName(name))){
+  if(['MAKRO','MAGAZIJN','MQS','TOPPERS','OVERIG'].includes(normalizeCategoryName(name))){
     return msg($('categoryManagerMessage'),`${name} is een vaste categorie en kan niet worden verwijderd.`,true);
   }
   const affected=products.filter(p=>normalizeCategoryName(p.category)===name);
@@ -1868,6 +2125,17 @@ function edit(id){
   refreshCategorySelects();
   const cat=normalizeCategoryName(p.category||'OVERIG');
   $('cat').value=cat;
+  if(cat==='MAGAZIJN'){
+    clearNormalEditForm();
+    $('cat').value='MAGAZIJN';updateMQSWeightUI();
+    $('editId').value=id;setProductFormMode(true);
+    fillWarehouseFromProduct(p,{useDates:true});
+    $('formTitle').textContent='MAGAZIJN product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    document.querySelector('[data-tab="add"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   if(cat==='MAKRO'){
     clearNormalEditForm();
     $('cat').value='MAKRO';updateMQSWeightUI();
@@ -1940,8 +2208,8 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();}if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();}if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
 $('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;
@@ -1951,11 +2219,12 @@ $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hid
 $('addCategoryBtn').onclick=addCategory;
 
 
-['expiry1','expiry2','makroExpiry1','makroExpiry2','makroExpiry3'].forEach(id=>{
+['expiry1','expiry2','makroExpiry1','makroExpiry2','makroExpiry3','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3'].forEach(id=>{
   const el=$(id);
   if(el)el.addEventListener('input',()=>autoFormatDateTyping(el));
 });
 
+$('warehouseScanBtn').onclick=startWarehouseScanner;$('warehouseStopScanBtn').onclick=stopWarehouseScanner;
 $('makroScanBtn').onclick=startMakroScanner;$('makroStopScanBtn').onclick=stopMakroScanner;
 $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
 
@@ -1988,6 +2257,12 @@ $('mqsWeightPreset').onchange=()=>{
 
 $('scanBtn').onclick=startScanner;
 $('stopScanBtn').onclick=stopScanner;
+
+
+$('warehouseBarcode').addEventListener('change',async()=>{
+  const code=$('warehouseBarcode').value.trim();
+  if(code)await handleWarehouseBarcode(code);
+});
 
 $('makroBarcode').addEventListener('change',async()=>{
   const code=$('makroBarcode').value.trim();
@@ -2024,7 +2299,7 @@ window.addEventListener('scroll',()=>{
   $('scrollTopBtn').classList.toggle('top-hidden',window.scrollY<350);
 },{passive:true});
 
-$('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopMakroScanner();stopCatalogScanner();signOut(auth)};
+$('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopMakroScanner();stopWarehouseScanner();stopCatalogScanner();signOut(auth)};
 $('photoInput').onchange=async()=>{
   const f=$('photoInput').files?.[0];
   if(!f)return;
@@ -2032,7 +2307,7 @@ $('photoInput').onchange=async()=>{
   $('preview').src=photoData;
   $('preview').classList.remove('hidden');
 };
-$('saveBtn').onclick=async()=>{if(isMakroCategory())return saveMakroProduct();if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
+$('saveBtn').onclick=async()=>{if(isWarehouseCategory())return saveWarehouseProduct();if(isMakroCategory())return saveMakroProduct();if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
   const isMQS=isMQSCategory();
   const priceEach=Number($('priceEach').value||0);
   const priceP12=isMQS?0:Number($('priceP12').value||0);
