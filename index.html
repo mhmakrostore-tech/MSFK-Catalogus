@@ -241,7 +241,13 @@ window.addEventListener('unhandledrejection',function(e){
 <button id="stopScanBtn" type="button" class="btn light hidden" style="margin-top:8px">Stop scanner</button>
 <div id="foundBox" class="found-box hidden"></div></div>
 <label>Omschrijving</label><textarea id="notes" rows="3"></textarea>
-<label>Productfoto</label><input id="photoInput" type="file" accept="image/*" capture="environment"><img id="preview" class="preview hidden">
+<label>Productfoto</label>
+<input id="photoInput" type="file" accept="image/*" capture="environment">
+<div class="button-row" style="margin-top:8px">
+  <button id="readNameFromPhotoBtn" type="button" class="btn secondary">Naam opnieuw uit foto lezen</button>
+</div>
+<div id="photoNameStatus" class="message"></div>
+<img id="preview" class="preview hidden">
 <p><label><input id="available" type="checkbox" checked style="width:auto"> Beschikbaar</label></p>
 <p><label><input id="internalOnly" type="checkbox" style="width:auto"> Alleen intern / niet in catalogus</label></p>
 <p class="meta">Intern product: blijft zichtbaar bij Meldingen en Producten beheren, maar niet voor klanten in de Catalogus.</p>
@@ -326,6 +332,116 @@ const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),
 let products=[],sales=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
+
+let ocrLoadPromise=null;
+
+function getNameInputForCurrentCategory(){
+  const cat=normalizeCategoryName($('cat')?.value||'');
+  if(cat==='MAKRO')return $('makroName');
+  if(cat==='MQS')return $('mqsProductName');
+  return $('name');
+}
+
+function loadOCRLibrary(){
+  if(window.Tesseract)return Promise.resolve(window.Tesseract);
+  if(ocrLoadPromise)return ocrLoadPromise;
+
+  ocrLoadPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.async=true;
+    s.onload=()=>{
+      if(window.Tesseract)resolve(window.Tesseract);
+      else reject(new Error('Tekstherkenning kon niet starten.'));
+    };
+    s.onerror=()=>reject(new Error('Tekstherkenning kon niet worden geladen.'));
+    document.head.appendChild(s);
+  }).catch(err=>{
+    ocrLoadPromise=null;
+    throw err;
+  });
+
+  return ocrLoadPromise;
+}
+
+function cleanPhotoText(text){
+  return String(text||'')
+    .replace(/[|[\]{}<>_=~`^]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function isGoodProductNameLine(text){
+  if(!text || text.length<3 || text.length>70)return false;
+  if(/^\d+([.,]\d+)?\s*(g|gr|kg|ml|l|oz|pcs)?$/i.test(text))return false;
+  if(/^(net|weight|peso|contenido|ingredients?|nutrition|best before|expiry|exp|barcode|www\.|http)/i.test(text))return false;
+  const letters=(text.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+  return letters>=3;
+}
+
+function chooseBestNameFromOCR(data){
+  const lines=(data?.lines||[])
+    .map(line=>{
+      const text=cleanPhotoText(line.text);
+      const height=Math.max(1,(line.bbox?.y1||0)-(line.bbox?.y0||0));
+      const width=Math.max(1,(line.bbox?.x1||0)-(line.bbox?.x0||0));
+      const confidence=Number(line.confidence||0);
+      const letters=(text.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+      // Larger, clearer text on the front of the pack usually is the product/brand name.
+      const score=(height*2.4)+(Math.min(width,900)*0.02)+(confidence*0.7)+(letters*1.8);
+      return {text,score};
+    })
+    .filter(x=>isGoodProductNameLine(x.text))
+    .sort((a,b)=>b.score-a.score);
+
+  if(!lines.length)return '';
+
+  // If the two strongest lines are both short, combine them.
+  if(lines.length>1 && lines[0].text.length<28 && lines[1].text.length<28 && lines[1].score>lines[0].score*0.62){
+    const combined=`${lines[0].text} ${lines[1].text}`.replace(/\s+/g,' ').trim();
+    if(combined.length<=60)return combined;
+  }
+  return lines[0].text;
+}
+
+async function readProductNameFromSelectedPhoto(){
+  const file=$('photoInput').files?.[0];
+  if(!file && !photoData){
+    return msg($('photoNameStatus'),'Maak of kies eerst een foto.',true);
+  }
+
+  const target=getNameInputForCurrentCategory();
+  if(!target)return;
+
+  $('readNameFromPhotoBtn').disabled=true;
+  msg($('photoNameStatus'),'Productnaam uit foto lezen…');
+
+  try{
+    const OCR=await loadOCRLibrary();
+    const source=file||photoData;
+    const result=await OCR.recognize(source,'eng',{
+      logger:m=>{
+        if(m.status==='recognizing text'){
+          msg($('photoNameStatus'),`Productnaam lezen… ${Math.round((m.progress||0)*100)}%`);
+        }
+      }
+    });
+
+    const found=chooseBestNameFromOCR(result.data);
+    if(found){
+      target.value=found;
+      msg($('photoNameStatus'),`Gevonden: ${found} — je kunt de naam gewoon aanpassen.`);
+    }else{
+      msg($('photoNameStatus'),'Geen duidelijke naam gevonden. Probeer de voorkant scherper en dichterbij te fotograferen.',true);
+    }
+  }catch(e){
+    console.warn('Foto-naam herkenning niet beschikbaar:',e);
+    msg($('photoNameStatus'),'Naam lezen lukte niet. De app blijft gewoon werken; typ de naam handmatig.',true);
+  }finally{
+    $('readNameFromPhotoBtn').disabled=false;
+  }
+}
+
 async function imageData(file){const data=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)});const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=data});const max=700,s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.68)}
 
 
@@ -1682,7 +1798,7 @@ function setProductFormMode(editing){
 }
 
 function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
-  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
+  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';if($('photoNameStatus'))$('photoNameStatus').textContent='';
 }
 function edit(id){
   const p=products.find(x=>x.id===id);if(!p)return;
@@ -1771,6 +1887,7 @@ $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hid
 $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
 $('addCategoryBtn').onclick=addCategory;
 
+$('readNameFromPhotoBtn').onclick=()=>readProductNameFromSelectedPhoto();
 $('makroScanBtn').onclick=startMakroScanner;$('makroStopScanBtn').onclick=stopMakroScanner;
 $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
 
@@ -1817,7 +1934,15 @@ window.addEventListener('scroll',()=>{
 },{passive:true});
 
 $('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopMakroScanner();stopCatalogScanner();signOut(auth)};
-$('photoInput').onchange=async()=>{const f=$('photoInput').files?.[0];if(!f)return;photoData=await imageData(f);$('preview').src=photoData;$('preview').classList.remove('hidden')};
+$('photoInput').onchange=async()=>{
+  const f=$('photoInput').files?.[0];
+  if(!f)return;
+  photoData=await imageData(f);
+  $('preview').src=photoData;
+  $('preview').classList.remove('hidden');
+  // Lees automatisch de productnaam. Fouten hierin stoppen de app nooit.
+  readProductNameFromSelectedPhoto().catch(e=>console.warn('Naam uit foto overgeslagen:',e));
+};
 $('saveBtn').onclick=async()=>{if(isMakroCategory())return saveMakroProduct();if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
   const isMQS=isMQSCategory();
   const priceEach=Number($('priceEach').value||0);
