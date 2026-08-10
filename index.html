@@ -281,8 +281,11 @@ window.addEventListener('unhandledrejection',function(e){
     <input id="stockExp2" type="number" min="0" step="1" placeholder="Bijv. 12">
   </div>
 </div>
-<div class="button-row"><button id="scanBtn" type="button" class="btn secondary">Scan barcode met camera</button><button id="stopScanBtn" type="button" class="btn light hidden">Stop scanner</button></div><div id="reader" class="hidden"></div>
-<button id="stopScanBtn" type="button" class="btn light hidden" style="margin-top:8px">Stop scanner</button>
+<div class="button-row">
+  <button id="scanBtn" type="button" class="btn secondary">Scan barcode met camera</button>
+  <button id="stopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+</div>
+<div id="reader" class="hidden" style="margin-top:10px"></div>
 <div id="foundBox" class="found-box hidden"></div></div>
 <label>Omschrijving</label><textarea id="notes" rows="3"></textarea>
 <label>Productfoto</label>
@@ -1404,10 +1407,11 @@ async function startMakroScanner(){
 }
 
 async function stopScanner(){
-  if(html5QrCode&&scannerRunning){
+  if(html5QrCode){
     try{await html5QrCode.stop();}catch{}
     try{await html5QrCode.clear();}catch{}
   }
+  html5QrCode=null;
   scannerRunning=false;
   $('reader').classList.add('hidden');
   $('stopScanBtn').classList.add('hidden');
@@ -1416,44 +1420,93 @@ async function startScanner(){
   if(!window.Html5Qrcode){
     return msg($('formMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
   }
+
+  await stopMakroScanner();
+  await stopWarehouseScanner();
   await stopScanner();
+
   $('reader').classList.remove('hidden');
   $('stopScanBtn').classList.remove('hidden');
-  html5QrCode=new Html5Qrcode('reader');
-  const formats=[
-    Html5QrcodeSupportedFormats.EAN_13,
-    Html5QrcodeSupportedFormats.EAN_8,
-    Html5QrcodeSupportedFormats.UPC_A,
-    Html5QrcodeSupportedFormats.UPC_E,
-    Html5QrcodeSupportedFormats.CODE_128,
-    Html5QrcodeSupportedFormats.CODE_39
-  ];
+  msg($('formMsg'),'Camera toestemming controleren…');
+
   try{
+    // Zelfde cameramethode als bij MAKRO: eerst camera's opvragen.
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length){
+      throw new Error('Geen camera gevonden.');
+    }
+
+    // Gebruik bij voorkeur de achtercamera.
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    html5QrCode=new Html5Qrcode('reader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    msg($('formMsg'),'Camera openen…');
+
     await html5QrCode.start(
-      {facingMode:'environment'},
-      {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats},
+      backCamera.id,
+      {
+        fps:10,
+        qrbox:{width:280,height:150},
+        formatsToSupport:formats,
+        aspectRatio:1.777778
+      },
       async decodedText=>{
         $('barcode').value=decodedText;
-        if(isMakroCategory())$('makroBarcode').value=decodedText;
 
-        const local=localProductForBarcode(decodedText);
+        const currentCategory=normalizeCategoryName($('cat').value||'');
+        const local=products.find(p=>
+          String(p.barcode||'').trim()===String(decodedText).trim() &&
+          normalizeCategoryName(p.category||'')===currentCategory
+        ) || localProductForBarcode(decodedText);
+
         if(local){
           applySavedProduct(decodedText);
           msg($('formMsg'),'Bestaand product gevonden. Gegevens geladen.');
         }else{
-          await lookupProductOnlineByBarcode(decodedText,{targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')});
+          await lookupProductOnlineByBarcode(
+            decodedText,
+            {targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')}
+          );
         }
+
         await stopScanner();
       },
       ()=>{}
     );
+
     scannerRunning=true;
+    msg($('formMsg'),'Camera is open. Richt op de barcode.');
   }catch(e){
+    console.warn('Camera fout:',e);
     await stopScanner();
-    msg($('formMsg'),'Camera kon niet worden geopend. Geef Chrome toestemming voor de camera.',true);
+
+    let tekst='Camera kon niet worden geopend.';
+    const name=String(e?.name||'');
+    const message=String(e?.message||'');
+
+    if(/NotAllowed|Permission|denied/i.test(name+' '+message)){
+      tekst='Camera is geblokkeerd. Geef deze website toestemming voor Camera en probeer opnieuw.';
+    }else if(/NotFound|Geen camera/i.test(name+' '+message)){
+      tekst='Geen camera gevonden op dit apparaat.';
+    }else if(/NotReadable|TrackStart/i.test(name+' '+message)){
+      tekst='Camera is al in gebruik door een andere app. Sluit die app en probeer opnieuw.';
+    }
+
+    msg($('formMsg'),tekst,true);
   }
 }
-
 
 function productOptions(selected=''){
   return '<option value="">Kies product</option>'+products.filter(p=>p.internalOnly!==true).slice().sort(compareProductsByNameWeight)
