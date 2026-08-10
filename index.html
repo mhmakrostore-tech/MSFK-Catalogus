@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>MSFK Verkoop & EXP</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
@@ -43,6 +46,9 @@ window.addEventListener('unhandledrejection',function(e){
 <section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
+<div id="offlineStatus" class="hidden" style="padding:9px 14px;background:#fff7ed;color:#9a3412;font-weight:800;text-align:center;border-bottom:1px solid #fed7aa">
+  Offline modus — Catalogus wordt uit dit apparaat geladen.
+</div>
 <nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="packages">Pakketten</button><button data-tab="notifications">Meldingen</button></nav>
 <main>
 <section id="catalog" class="tab active">
@@ -449,6 +455,92 @@ const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),
 let products=[],sales=[],customers=[],packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
+
+const OFFLINE_DB_NAME='msfk-offline-v1';
+const OFFLINE_STORE='catalogProducts';
+
+function openOfflineDb(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window))return reject(new Error('IndexedDB niet beschikbaar'));
+    const req=indexedDB.open(OFFLINE_DB_NAME,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(OFFLINE_STORE)){
+        db.createObjectStore(OFFLINE_STORE,{keyPath:'id'});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function saveCatalogOffline(list){
+  try{
+    const db=await openOfflineDb();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(OFFLINE_STORE,'readwrite');
+      const store=tx.objectStore(OFFLINE_STORE);
+      store.clear();
+      (list||[]).forEach(p=>store.put(p));
+      tx.oncomplete=resolve;
+      tx.onerror=()=>reject(tx.error);
+      tx.onabort=()=>reject(tx.error);
+    });
+    db.close();
+    localStorage.setItem('msfkOfflineCatalogSavedAt',new Date().toISOString());
+  }catch(e){
+    console.warn('Offline catalogus opslaan mislukt:',e);
+  }
+}
+
+async function loadCatalogOffline(){
+  try{
+    const db=await openOfflineDb();
+    const list=await new Promise((resolve,reject)=>{
+      const tx=db.transaction(OFFLINE_STORE,'readonly');
+      const req=tx.objectStore(OFFLINE_STORE).getAll();
+      req.onsuccess=()=>resolve(req.result||[]);
+      req.onerror=()=>reject(req.error);
+    });
+    db.close();
+    return list;
+  }catch(e){
+    console.warn('Offline catalogus laden mislukt:',e);
+    return [];
+  }
+}
+
+function renderCatalogFromProducts(){
+  categories();
+  render();
+  renderExpiryAlerts();
+  refreshCategorySelects();
+  renderPackageSystem();
+  if(isMQSCategory())loadMQSBulkValues();
+  document.querySelectorAll('.sale-product').forEach(sel=>{
+    const v=sel.value;
+    sel.innerHTML=productOptions(v);
+  });
+}
+
+function updateOfflineStatus(){
+  const bar=$('offlineStatus');
+  if(!bar)return;
+  bar.classList.toggle('hidden',navigator.onLine);
+}
+
+async function loadOfflineCatalogIntoApp(){
+  const cached=await loadCatalogOffline();
+  if(!cached.length)return false;
+  products=cached;
+  renderCatalogFromProducts();
+  updateOfflineStatus();
+  return true;
+}
+
+window.addEventListener('online',updateOfflineStatus);
+window.addEventListener('offline',updateOfflineStatus);
+
 
 async function imageData(file){const data=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)});const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=data});const max=700,s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.68)}
 
@@ -3145,7 +3237,18 @@ $('saveBtn').onclick=async()=>{if(isWarehouseCategory())return saveWarehouseProd
   if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
   const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),stockExp1:exp1?Number($('stockExp1').value||0):0,stockExp2:exp2?Number($('stockExp2').value||0):0,category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,internalOnly:$('internalOnly').checked,photoData,updatedAt:serverTimestamp()};try{const editingId=$('editId').value.trim();if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
-onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));migrateAllToppersToUppercase().catch(e=>console.warn('TOPPERS migratie overgeslagen:',e));categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();renderPackageSystem();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();
+onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;updateOfflineStatus();loadOfflineCatalogIntoApp().catch(()=>{});onSnapshot(collection(db,'catalogProducts'),s=>{
+  products=s.docs.map(d=>({id:d.id,...d.data()}));
+  saveCatalogOffline(products);
+  migrateAllToppersToUppercase().catch(e=>console.warn('TOPPERS migratie overgeslagen:',e));
+  renderCatalogFromProducts();
+  maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));
+  updateOfflineStatus();
+},async e=>{
+  console.warn('Firestore catalogus niet bereikbaar:',e);
+  const loaded=await loadOfflineCatalogIntoApp();
+  if(!loaded)msg($('formMsg'),'Catalogus kon niet online of offline worden geladen.',true);
+});onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();
   const existingNames=[...new Set(sales.map(x=>cleanCustomerName(x.customerName)).filter(Boolean))];
   Promise.all(existingNames.map(name=>ensureCustomerExists(name))).catch(e=>console.warn('Klanten migreren overgeslagen:',e));},e=>msg($('saleMessage'),e.message,true));
 onSnapshot(collection(db,'customers'),s=>{
@@ -3168,5 +3271,15 @@ onSnapshot(doc(db,'publicSettings','packageSystem'),snap=>{
   <button id="catalogHomeBtn" class="floating-btn" type="button" title="Terug naar Catalogus" aria-label="Terug naar Catalogus">🏠</button>
   <button id="scrollTopBtn" class="floating-btn top-hidden" type="button" title="Naar boven" aria-label="Naar boven">↑</button>
 </div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js',{scope:'./'})
+      .then(function(reg){ console.log('Offline catalogus actief',reg.scope); })
+      .catch(function(err){ console.warn('Service worker niet actief',err); });
+  });
+}
+</script>
+
 </body>
 </html>
