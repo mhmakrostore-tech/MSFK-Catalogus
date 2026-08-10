@@ -125,6 +125,18 @@ window.addEventListener('unhandledrejection',function(e){
     <label>Productnaam</label>
     <input id="mqsProductName" placeholder="Bijv. Black Moss">
   </div>
+  <div class="grid2" style="margin:12px 0 16px">
+    <div>
+      <label>EXP 1</label>
+      <input id="mqsExpiry1" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+    </div>
+    <div>
+      <label>EXP 2</label>
+      <input id="mqsExpiry2" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+    </div>
+  </div>
+  <p class="meta">De EXP-datum geldt voor dit MQS-product en wordt bij alle ingevulde formaten opgeslagen.</p>
+
   <h3>MQS-formaten</h3>
   <p class="meta">Vul per formaat de eigen code, prijs en het aantal in een CRT in.</p>
   <table class="mqs-table">
@@ -758,6 +770,10 @@ function loadMQSBulkValues(){
   const kgProduct=map['kg']||{};
   $('mqsActualKg').value=kgProduct.actualWeightKg??'';
 
+  const expSource=matched.find(p=>p.expiryDate1||p.expiryDate2||p.expiryDate)||matched[0]||{};
+  $('mqsExpiry1').value=isoToTypedDate(expSource.expiryDate1||expSource.expiryDate||'');
+  $('mqsExpiry2').value=isoToTypedDate(expSource.expiryDate2||'');
+
   // Belangrijk: gebruik alleen de foto van DIT MQS-product.
   // Als de naam nieuw is en er nog geen product bestaat, moet de foto leeg zijn.
   const imageProduct=matched.find(p=>p.photoData);
@@ -864,6 +880,10 @@ async function saveMakroProduct(){
 async function saveMQSBulk(){
   const productName=String($('mqsProductName').value||'').trim();
   if(!productName)return msg($('formMsg'),'Vul de productnaam in.',true);
+  const exp1=typedDateToISO($('mqsExpiry1').value);
+  const exp2=typedDateToISO($('mqsExpiry2').value);
+  if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
   const rows=[
     {key:'mqs',format:'MQS',label:'MQS',weightValue:0,weightUnit:'gr',actualWeightKg:0,code:$('mqsCodeMqs').value.trim(),price:Number($('mqsPriceMqs').value||0),crt:Number($('mqsCrtMqs').value||0)},
     {key:'500',format:'500',label:'500 gr',weightValue:500,weightUnit:'gr',actualWeightKg:0,code:$('mqsCode500').value.trim(),price:Number($('mqsPrice500').value||0),crt:Number($('mqsCrt500').value||0)},
@@ -891,9 +911,9 @@ async function saveMQSBulk(){
         priceP12:0,
         priceCrt:0,
         unitsPerCarton:row.crt,
-        expiryDate:'',
-        expiryDate1:'',
-        expiryDate2:'',
+        expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),
+        expiryDate1:exp1,
+        expiryDate2:exp2,
         barcode:'',
         notes:'',
         available:true,
@@ -909,7 +929,8 @@ async function saveMQSBulk(){
     [
       'mqsCodeMqs','mqsPriceMqs','mqsCrtMqs',
       'mqsCode500','mqsPrice500','mqsCrt500',
-      'mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'
+      'mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg',
+      'mqsExpiry1','mqsExpiry2'
     ].forEach(id=>{const el=$(id);if(el)el.value='';});
     photoData='';
     if($('photoInput'))$('photoInput').value='';
@@ -3213,7 +3234,7 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(currentRole==='tablet'&&b.dataset.tab!=='catalog')return;
   if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}
@@ -3232,7 +3253,7 @@ $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hid
 $('addCategoryBtn').onclick=addCategory;
 
 
-['expiry1','expiry2','makroExpiry1','makroExpiry2','makroExpiry3','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3'].forEach(id=>{
+['expiry1','expiry2','mqsExpiry1','mqsExpiry2','makroExpiry1','makroExpiry2','makroExpiry3','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3'].forEach(id=>{
   const el=$(id);
   if(el)el.addEventListener('input',()=>autoFormatDateTyping(el));
 });
