@@ -1,0 +1,3172 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#c2185b">
+<title>MSFK Verkoop & EXP</title>
+<style>
+:root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
+.loading,.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card,.panel{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:28px}
+.login-card{width:min(450px,100%);text-align:center;border-top:7px solid var(--brand)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px clamp(14px,4vw,48px);background:linear-gradient(135deg,var(--brand),var(--dark));color:#fff}.top h1{margin:0}
+.tabs{display:flex;gap:9px;overflow:auto;padding:12px clamp(12px,4vw,48px);background:#fff;border-bottom:1px solid var(--border)}
+.tabs button{border:0;border-radius:999px;padding:10px 16px;background:#f1f3f5;font-weight:800;white-space:nowrap;cursor:pointer}.tabs button.active{background:var(--brand);color:#fff}
+main{width:min(1180px,100%);margin:auto;padding:22px 14px 50px}.tab{display:none}.tab.active{display:block}
+input,select,textarea{width:100%;border:1px solid #d1d5db;border-radius:12px;padding:12px 13px;font:inherit;background:#fff;outline:none}
+label{display:block;font-weight:700;margin:14px 0 7px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:1fr 150px 1fr;gap:14px}
+.btn{border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer}.primary{background:var(--brand);color:#fff}.secondary{background:#263238;color:#fff}.light{background:#eef0f3}.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.toolbar{display:grid;grid-template-columns:1fr 220px 220px;gap:10px;background:#fff;padding:14px;border-radius:18px;box-shadow:var(--shadow);margin-bottom:18px}.panel{margin-bottom:20px}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:17px}.card{overflow:hidden;background:#fff;border-radius:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.photo{aspect-ratio:1/1;background:#eef0f3;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.placeholder{width:100%;height:100%;display:grid;place-items:center;color:var(--muted)}
+.badge{position:absolute;top:10px;left:10px;background:#fff;padding:6px 9px;border-radius:99px;font-size:.77rem;font-weight:800}.body{padding:15px}.cat{font-size:.78rem;color:var(--brand);font-weight:800;text-transform:uppercase}
+.body h2{font-size:1.1rem;margin:5px 0}.meta{color:var(--muted);font-size:.9rem;line-height:1.45}.price{font-size:1.35rem;font-weight:900;color:var(--dark);margin-top:10px}.price-lines{display:grid;gap:5px;margin-top:10px}.price-line{display:flex;justify-content:space-between;gap:10px;padding:6px 8px;background:#f8fafc;border-radius:9px}.price-label{font-weight:800;color:var(--dark)}
+.preview{width:210px;height:210px;object-fit:cover;border-radius:15px;margin-top:10px}.scan-line{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:end}#reader{max-width:520px;margin:14px auto;background:#fff;border-radius:16px;overflow:hidden}.found-box{margin-top:10px;padding:12px;border-radius:12px;background:#ecfdf5;color:#166534;font-weight:700}.sales-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sale-items{display:grid;gap:10px;margin-top:14px}.sale-item{display:grid;grid-template-columns:minmax(180px,1fr) 120px 90px 120px auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--border);border-radius:12px;background:#fafafa}.history-card{background:#fff;border:1px solid var(--border);border-radius:15px;padding:14px;margin-bottom:12px}.history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.total-box{font-size:1.35rem;font-weight:900;color:var(--dark);margin-top:12px}.status-paid{color:#15803d;font-weight:800}.status-open{color:#b91c1c;font-weight:800}.alert-panel{background:#fff7ed;border:1px solid #fed7aa;border-radius:16px;padding:14px;margin-bottom:16px}.alert-panel h3{margin:0 0 8px;color:#9a3412}.alert-list{display:grid;gap:7px}.alert-item{display:grid;grid-template-columns:82px 1fr auto;gap:12px;align-items:center;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--border)}.alert-photo{width:82px;height:82px;object-fit:cover;border-radius:10px;background:#eef0f3}.alert-main{min-width:0}.alert-title{font-weight:900}.alert-exp{font-weight:900;color:#000;margin-top:4px}.alert-days{font-weight:800;margin-top:4px}.alert-stock{margin-top:4px;color:#111;font-size:.95rem}.alert-item.expired{border-left:6px solid #b91c1c}.alert-item.urgent{border-left:6px solid #ea580c}.alert-item.soon{border-left:6px solid #ca8a04}.alert-item.later{border-left:6px solid #15803d}@media(max-width:650px){.alert-item{grid-template-columns:68px 1fr}.alert-photo{width:68px;height:68px}.alert-action{grid-column:1/-1}}.notif-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.order-type-options{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 14px}.order-type-options label{display:flex;align-items:center;gap:7px;margin:0;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;font-weight:800}.order-type-options input{width:auto}.catalog-order-panel{margin-bottom:16px}.cart-summary{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:12px}.catalog-order-controls{display:grid;grid-template-columns:110px 85px;gap:8px;margin-top:12px}.mqs-variants{display:grid;gap:10px;margin-top:12px}.mqs-variant{border:1px solid var(--border);border-radius:12px;padding:10px;background:#fafafa}.mqs-variant-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:900}.mqs-variant-meta{font-size:.88rem;color:var(--muted);margin-top:4px}.mqs-order-row{display:grid;grid-template-columns:1fr 90px;gap:8px;margin-top:8px;align-items:center}.mqs-order-row input{padding:9px 10px}.product-admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.product-admin-actions .btn{padding:7px 9px;font-size:.82rem}.catalog-order-controls select,.catalog-order-controls input{padding:9px 10px}.editing-order-banner{padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:11px;margin-bottom:12px;font-weight:800;color:#9a3412}.unit-box{margin-top:16px;padding:15px;border:1px solid var(--border);border-radius:15px;background:#fafafa}.unit-box h3{margin:0 0 8px;color:var(--dark)}.mqs-table{width:100%;border-collapse:collapse;margin-top:10px}.mqs-table th,.mqs-table td{border:1px solid var(--border);padding:9px;text-align:left}.mqs-table th{background:#f8fafc}.mqs-table input{min-width:90px}@media(max-width:650px){.mqs-table{display:block;overflow-x:auto;white-space:nowrap}}.weight-row{display:grid;grid-template-columns:1fr 110px;gap:8px}.product-weight{font-weight:900;color:var(--text);margin-top:3px}.order-preview{margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px}.order-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.order-table{width:100%;border-collapse:collapse;margin-top:12px}.order-table th,.order-table td{border:1px solid var(--border);padding:9px;text-align:left}.order-table th{background:#f8fafc}.floating-actions{position:fixed;right:18px;bottom:18px;display:flex;gap:10px;z-index:9999}.floating-btn{width:52px;height:52px;border:0;border-radius:50%;background:var(--brand);color:#fff;font-size:1.35rem;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer;display:grid;place-items:center}.floating-btn:hover{background:var(--dark)}.floating-btn.top-hidden{opacity:0;pointer-events:none;transform:translateY(10px)}.floating-btn{transition:opacity .2s,transform .2s,background .2s}.category-top-box{margin-bottom:16px;padding:14px;border:1px solid var(--border);border-radius:14px;background:#f8fafc}.category-select-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}.category-manager{margin:0 0 18px;padding:15px;border:1px solid var(--border);border-radius:14px;background:#fff}.category-manager-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.category-manager-head h3{margin:0}.category-add-btn-wrap{display:flex;align-items:end}.category-manager-list-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}.category-manager-list-row:last-child{border-bottom:0}.edit-category-section{margin-bottom:16px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff}.edit-category-header{width:100%;border:0;background:#f8fafc;padding:13px 15px;font-weight:900;display:flex;justify-content:space-between;align-items:center;cursor:pointer}.edit-category-content{padding:12px}.edit-category-section.collapsed .edit-category-content{display:none}.edit-category-search{margin-bottom:10px}.edit-mqs-group{padding:10px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:#fafafa}.edit-mqs-variants{font-size:.9rem;color:var(--muted);margin:5px 0 8px}.customer-manage-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}.customer-manage-row:last-child{border-bottom:0}.package-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.package-card{border:1px solid var(--border);border-radius:15px;padding:14px;background:#fff}.package-card-head{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}.package-name-input{font-size:1.05rem;font-weight:900}.package-recipe-row{display:grid;grid-template-columns:1fr 86px auto;gap:8px;align-items:center;margin:8px 0}.package-count-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}.package-count-card{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fafafa}.package-count-card strong{display:block;margin-bottom:7px}.package-total-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}.package-history-card{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:#fafafa}@media(max-width:650px){.package-recipe-row{grid-template-columns:1fr 75px}.package-recipe-row .remove-package-product{grid-column:1/-1}}@media(max-width:650px){.customer-manage-row{grid-template-columns:1fr 1fr}.customer-manage-row .customer-name{grid-column:1/-1}}@media(max-width:650px){.category-select-row{grid-template-columns:1fr}.category-manager-list-row{grid-template-columns:1fr 1fr}.category-manager-list-row .cat-name{grid-column:1/-1}}.category-jumpbar{display:flex;gap:8px;overflow:auto;padding:10px 0 14px;scrollbar-width:thin}.category-jumpbar button{border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;white-space:nowrap;cursor:pointer}.category-section{margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.category-header{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;background:#fff;padding:16px 18px;font-size:1.05rem;font-weight:900;cursor:pointer;text-align:left}.category-header:hover{background:#fafafa}.category-content{padding:0 14px 16px}.category-search{margin-bottom:14px}.category-products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:17px}.category-chevron{font-size:1.1rem;transition:transform .2s}.category-section.collapsed .category-chevron{transform:rotate(-90deg)}.category-section.collapsed .category-content{display:none}@media(max-width:760px){.category-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}}@media(max-width:430px){.category-products{grid-template-columns:1fr}}@media print{body *{visibility:hidden}.order-preview,.order-preview *{visibility:visible}.order-preview{position:absolute;left:0;top:0;width:100%;border:0}.no-print{display:none!important}}@media(max-width:760px){.sales-grid{grid-template-columns:1fr}.sale-item{grid-template-columns:1fr 90px}.sale-item .wide{grid-column:1/-1}}.message{min-height:22px;margin-top:10px;font-weight:700}.row{display:grid;grid-template-columns:80px 1fr auto;gap:12px;align-items:center;padding:12px;background:#fff;border-radius:15px;border:1px solid var(--border);margin-bottom:10px}.row img{width:80px;height:80px;object-fit:cover;border-radius:12px}.actions{display:flex;gap:7px;flex-wrap:wrap}
+@media(max-width:760px){.toolbar,.grid2,.grid3{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.row{grid-template-columns:65px 1fr}.actions{grid-column:1/-1}}
+@media(max-width:430px){.product-grid{grid-template-columns:1fr}}
+.package-choice-group{margin-top:12px}.package-choice-group-name{font-weight:800}</style>
+</head>
+<body>
+<div id="startupError" style="display:none;margin:12px;padding:12px;border:2px solid #b91c1c;border-radius:10px;background:#fff;color:#b91c1c;font-weight:700"></div>
+<script>
+window.addEventListener('error',function(e){
+  var b=document.getElementById('startupError');
+  if(b){b.style.display='block';b.textContent='App-fout: '+(e.message||'Onbekende fout');}
+});
+window.addEventListener('unhandledrejection',function(e){
+  var b=document.getElementById('startupError');
+  if(b){b.style.display='block';b.textContent='App-fout: '+((e.reason&&e.reason.message)||e.reason||'Onbekende fout');}
+});
+</script>
+<div id="loading" class="loading">App laden…</div>
+<section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><div id="loginMsg" class="message"></div></div></section>
+<div id="app" class="hidden">
+<header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
+<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="packages">Pakketten</button><button data-tab="notifications">Meldingen</button></nav>
+<main>
+<section id="catalog" class="tab active">
+
+<div class="panel catalog-order-panel">
+  <h2>Bestelling in catalogus</h2>
+  <div class="sales-grid">
+    <div>
+      <label>Klantnaam</label>
+      <input id="catalogCustomerName" placeholder="Naam klant">
+    </div>
+    <div>
+      <label>Opmerking</label>
+      <input id="catalogOrderNote" placeholder="Optioneel">
+    </div>
+  </div>
+  <label>Bestelling plaatsen als</label>
+  <div class="order-type-options">
+    <label><input type="radio" name="catalogOrderType" value="E.C" checked> E.C</label>
+    <label><input type="radio" name="catalogOrderType" value="D.A"> D.A</label>
+    <label><input type="radio" name="catalogOrderType" value="D.A COOL"> D.A COOL</label>
+  </div>
+  <div id="catalogCartSummary" class="cart-summary">
+    <strong>Winkelmand: <span id="catalogCartCount">0</span> regels</strong>
+    <span>Totaal: $ <strong id="catalogCartTotal">0.00</strong></span>
+  </div>
+  <div class="button-row no-print">
+    <button id="saveCatalogOrderBtn" class="btn primary" type="button">Bestelling opslaan</button>
+    <button id="whatsappCatalogOrderBtn" class="btn secondary" type="button">Via WhatsApp</button>
+    <button id="printCatalogOrderBtn" class="btn secondary" type="button">Print / PDF</button>
+    <button id="clearCatalogOrderBtn" class="btn light" type="button">Winkelmand leegmaken</button>
+  </div>
+  <div id="catalogOrderMessage" class="message"></div>
+  <div id="orderPreview" class="order-preview hidden"></div>
+</div>
+
+<div id="catalogScanReader" class="hidden" style="max-width:520px;margin:0 auto 14px"></div>
+<button id="stopCatalogScanBtn" type="button" class="btn light hidden" style="margin-bottom:14px">Stop scanner</button>
+<div class="toolbar"><div class="scan-line"><input id="search" type="search" placeholder="Zoek product, code of barcode…"><button id="catalogScanBtn" type="button" class="btn secondary">Scan barcode</button></div><select id="category"><option value="all">Alle categorieën</option></select><select id="availability"><option value="available">Alleen beschikbaar</option><option value="all">Alles tonen</option><option value="soldout">Uitverkocht</option></select></div><div id="categoryJumpbar" class="category-jumpbar"></div><div id="grid"></div></section>
+<section id="add" class="tab">
+<div class="panel"><h2 id="formTitle">Nieuw product</h2><input id="editId" type="hidden">
+<div class="category-top-box">
+  <label>Categorie</label>
+  <div class="category-select-row">
+    <select id="cat"></select>
+    <button id="manageCategoriesBtn" type="button" class="btn light">Categorieën beheren</button>
+  </div>
+</div>
+
+<div id="categoryManager" class="category-manager hidden">
+  <div class="category-manager-head">
+    <h3>Categorieën beheren</h3>
+    <button id="closeCategoryManagerBtn" type="button" class="btn light">Sluiten</button>
+  </div>
+  <div class="grid2">
+    <div>
+      <label>Nieuwe categorie</label>
+      <input id="newCategoryName" placeholder="Bijv. DRANKEN">
+    </div>
+    <div class="category-add-btn-wrap">
+      <button id="addCategoryBtn" type="button" class="btn secondary">Categorie toevoegen</button>
+    </div>
+  </div>
+  <div id="categoryManagerList"></div>
+  <div id="categoryManagerMessage" class="message"></div>
+</div>
+
+
+<div id="mqsBulkBox" class="unit-box hidden">
+  <h3>MQS-product</h3>
+  <div style="margin-bottom:12px">
+    <label>Productnaam</label>
+    <input id="mqsProductName" placeholder="Bijv. Black Moss">
+  </div>
+  <h3>MQS-formaten</h3>
+  <p class="meta">Vul per formaat de eigen code, prijs en het aantal in een CRT in.</p>
+  <table class="mqs-table">
+    <thead>
+      <tr><th>Formaat</th><th>Werkelijk gewicht</th><th>EACH Code</th><th>EACH Prijs $</th><th>CRT aantal</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>MQS</strong></td><td>—</td><td><input id="mqsCodeMqs"></td><td><input id="mqsPriceMqs" type="number" min="0" step="0.01"></td><td><input id="mqsCrtMqs" type="number" min="0"></td></tr>
+      <tr><td><strong>500 gr</strong></td><td>500 gr (vast)</td><td><input id="mqsCode500"></td><td><input id="mqsPrice500" type="number" min="0" step="0.01"></td><td><input id="mqsCrt500" type="number" min="0"></td></tr>
+      <tr><td><strong>KG</strong></td><td><input id="mqsActualKg" type="number" min="0" step="0.001" placeholder="Bijv. 0.950"> KG</td><td><input id="mqsCodeKg"></td><td><input id="mqsPriceKg" type="number" min="0" step="0.01"></td><td><input id="mqsCrtKg" type="number" min="0"></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div id="makroOnlyBox" class="unit-box hidden">
+  <h3>MAKRO – alleen intern</h3>
+  <p class="meta">Alleen foto, barcode en EXP/voorraad. Dit product komt nooit in de Catalogus of Nieuwe verkoop.</p>
+  <div class="grid2">
+    <div>
+      <label>Productnaam</label>
+      <input id="makroName" placeholder="Naam product">
+    </div>
+    <div>
+      <label>Barcode</label>
+      <input id="makroBarcode" inputmode="numeric" placeholder="Scan of typ barcode">
+    </div>
+  </div>
+  <div class="button-row">
+    <button id="makroScanBtn" type="button" class="btn secondary">Scan barcode</button>
+    <button id="makroStopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+  </div>
+  <div id="makroReader" class="hidden" style="margin-top:10px"></div>
+  <div id="makroScanMsg" class="message"></div><p class="meta">Na scannen zoekt de app eerst in MSFK en daarna automatisch online naar de productnaam.</p>
+  <div class="grid3" style="margin-top:12px">
+    <div>
+      <label>EXP 1</label><input id="makroExpiry1" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 1</label><input id="makroStock1" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 2</label><input id="makroExpiry2" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 2</label><input id="makroStock2" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 3</label><input id="makroExpiry3" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 3</label><input id="makroStock3" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+  </div>
+</div>
+
+<div id="warehouseOnlyBox" class="unit-box hidden">
+  <h3>MAGAZIJN – alleen intern</h3>
+  <p class="meta">Voorraad en EXP van het magazijn. Deze gegevens zijn apart van de winkel en komen nooit in de Catalogus of Nieuwe verkoop.</p>
+
+  <div class="grid2">
+    <div>
+      <label>Productnaam</label>
+      <input id="warehouseName" placeholder="Naam product">
+    </div>
+    <div>
+      <label>Barcode</label>
+      <input id="warehouseBarcode" inputmode="numeric" placeholder="Scan of typ barcode">
+    </div>
+  </div>
+
+  <div class="button-row">
+    <button id="warehouseScanBtn" type="button" class="btn secondary">Scan barcode</button>
+    <button id="warehouseStopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+  </div>
+  <div id="warehouseReader" class="hidden" style="margin-top:10px"></div>
+  <div id="warehouseScanMsg" class="message"></div>
+
+  <div class="grid3" style="margin-top:12px">
+    <div>
+      <label>EXP 1</label>
+      <input id="warehouseExpiry1" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 1</label>
+      <input id="warehouseStock1" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 2</label>
+      <input id="warehouseExpiry2" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 2</label>
+      <input id="warehouseStock2" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+    <div>
+      <label>EXP 3</label>
+      <input id="warehouseExpiry3" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+      <label>Aantal bij EXP 3</label>
+      <input id="warehouseStock3" type="number" min="0" step="1" placeholder="PCS">
+    </div>
+  </div>
+</div>
+<div id="normalProductFields"><div class="grid2">
+  <div><label>Productnaam</label><input id="name" placeholder="Bijv. Toppers Hoola Rings"></div>
+    <div>
+      <label>Gewicht</label>
+      <div class="weight-row">
+        <input id="weightValue" type="number" min="0" step="0.01" placeholder="Bijv. 210">
+        <select id="weightUnit">
+          <option value="gr">gr</option>
+          <option value="kg">kg</option>
+          <option value="ml">ml</option>
+          <option value="l">l</option>
+          <option value="pcs">pcs</option>
+        </select>
+      </div>
+      <div id="toppersWeightNote" class="hidden meta" style="margin-top:6px">Voor TOPPERS zijn alleen gr en oz beschikbaar.</div>
+      <div id="mqsWeightWrap" class="hidden" style="margin-top:8px">
+        <label style="margin-top:0">MQS formaat</label>
+        <select id="mqsWeightPreset">
+          <option value="">Kies formaat</option><option value="MQS">MQS</option>
+          <option value="500|gr">500 gr</option>
+          <option value="1|kg">1 KG</option>
+          <option value="1.25|kg">1.250 KG</option>
+          <option value="1.5|kg">1.5 KG</option>
+          <option value="3|kg">3 KG</option>
+        </select>
+      </div>
+    </div>
+  <div>
+    <label>Barcode</label>
+    <input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Scan of typ barcode">
+    <div id="toppersScannerBox" class="hidden" style="margin-top:8px">
+      <div class="button-row">
+        <button id="toppersScanBtn" type="button" class="btn secondary">Scan barcode met camera</button>
+        <button id="toppersStopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+      </div>
+      <div id="toppersReader" class="hidden" style="margin-top:10px"></div>
+      <div id="toppersScanMsg" class="message"></div>
+    </div>
+    <div id="otherCategoryScanBox" style="margin-top:8px">
+      <button id="otherCategoryScanBtn" type="button" class="btn secondary">Scan barcode met camera</button>
+    </div>
+  </div>
+</div>
+
+<div class="unit-box">
+  <h3>EACH</h3>
+  <div class="grid2">
+    <div><label>EACH Code</label><input id="codeEach" placeholder="Code per stuk"></div>
+    <div><label>EACH Prijs $</label><input id="priceEach" type="number" min="0" step="0.01"></div>
+  </div>
+  <div id="mqsPriceTools" class="hidden" style="margin-top:12px">
+    <button id="applyMQSPriceBtn" type="button" class="btn secondary">Prijs toepassen op alle MQS-formaten</button>
+    <div id="mqsPriceMessage" class="message"></div>
+  </div>
+</div>
+
+<div id="p12Box" class="unit-box">
+  <h3>P12</h3>
+  <div class="grid2">
+    <div><label>P12 Code</label><input id="codeP12" placeholder="Code per 12"></div>
+    <div><label>P12 Prijs $</label><input id="priceP12" type="number" min="0" step="0.01"></div>
+  </div>
+</div>
+
+<div id="crtBox" class="unit-box">
+  <h3>CRT</h3>
+  <div class="grid3">
+    <div><label>CRT Code</label><input id="codeCrt" placeholder="Code per karton"></div>
+    <div><label>CRT Prijs $</label><input id="priceCrt" type="number" min="0" step="0.01"></div>
+    <div><label>Aantal per CRT</label><input id="unitsPerCarton" type="number" min="1" placeholder="Bijv. 72"></div>
+  </div>
+</div>
+<div class="grid2">
+  <div id="expiry1Wrap">
+    <label>EXP 1</label>
+    <input id="expiry1" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+    <label>Voorraad bij EXP 1</label>
+    <input id="stockExp1" type="number" min="0" step="1" placeholder="Bijv. 24">
+  </div>
+  <div id="expiry2Wrap">
+    <label>EXP 2</label>
+    <input id="expiry2" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" maxlength="10">
+    <label>Voorraad bij EXP 2</label>
+    <input id="stockExp2" type="number" min="0" step="1" placeholder="Bijv. 12">
+  </div>
+</div>
+<div id="genericScannerBox">
+  <div class="button-row">
+    <button id="scanBtn" type="button" class="btn secondary">Scan barcode met camera</button>
+    <button id="stopScanBtn" type="button" class="btn light hidden">Stop scanner</button>
+  </div>
+  <div id="reader" class="hidden" style="margin-top:10px"></div>
+</div>
+<div id="foundBox" class="found-box hidden"></div></div>
+<label>Omschrijving</label><textarea id="notes" rows="3"></textarea>
+<label>Productfoto</label>
+<input id="photoInput" type="file" accept="image/*" capture="environment">
+<img id="preview" class="preview hidden">
+<p><label><input id="available" type="checkbox" checked style="width:auto"> Beschikbaar</label></p>
+<p><label><input id="internalOnly" type="checkbox" style="width:auto"> Alleen intern / niet in catalogus</label></p>
+<p class="meta">Intern product: blijft zichtbaar bij Meldingen en Producten beheren, maar niet voor klanten in de Catalogus.</p>
+<button id="saveBtn" class="btn primary">Opslaan</button> <button id="cancelBtn" class="btn light hidden">Annuleren</button><div id="formMsg" class="message"></div></div>
+<div class="panel"><h2>Producten beheren</h2><div id="list"></div></div>
+</section>
+
+<section id="sale" class="tab">
+  <div class="panel">
+    <h2>Nieuwe verkoop</h2>
+    <div class="sales-grid">
+      <div><label>Klantnaam</label><input id="saleCustomerName" placeholder="Naam klant" list="customerSuggestions" autocomplete="off"><datalist id="customerSuggestions"></datalist></div>
+      <div><label>Opmerking</label><input id="saleNote" placeholder="Optioneel"></div>
+    </div>
+    <label>Bestelling plaatsen als</label>
+    <div class="order-type-options">
+      <label><input type="radio" name="orderType" value="E.C" checked> E.C</label>
+      <label><input type="radio" name="orderType" value="D.A"> D.A</label>
+      <label><input type="radio" name="orderType" value="D.A COOL"> D.A COOL</label>
+    </div>
+    <div id="saleItems" class="sale-items"></div>
+    <button id="addSaleItemBtn" class="btn light" type="button" style="margin-top:12px">Productregel toevoegen</button>
+    <div class="total-box">Totaal: $ <span id="saleTotal">0.00</span></div>
+    <div class="button-row">
+      <button id="saveSaleBtn" class="btn primary" type="button">Verkoop opslaan</button>
+      <button id="whatsappSaleBtn" class="btn secondary" type="button">Bestelling via WhatsApp</button>
+    </div>
+    <div id="saleMessage" class="message"></div>
+  </div>
+</section>
+
+<section id="customers" class="tab">
+  <div class="panel">
+    <h2>Klanten</h2>
+    <p class="meta">Opgeslagen klantnamen verschijnen automatisch zodra je bij Nieuwe verkoop begint te typen.</p>
+    <div id="customerManagerList"></div>
+    <div id="customerManagerMsg" class="message"></div>
+  </div>
+  <div class="panel">
+    <h2>Verkoophistorie</h2>
+    <div class="toolbar" style="grid-template-columns:1fr auto">
+      <input id="customerSearch" type="search" placeholder="Zoek klant…">
+      <button id="deleteAllOrdersBtn" type="button" class="btn light">Alle bestellingen verwijderen</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</section>
+
+
+
+
+<section id="packages" class="tab">
+  <div class="panel">
+    <h2>Aantal gemaakte pakketten</h2>
+    <p class="meta">Vul alleen in hoeveel van ieder pakket je hebt gemaakt. De gebruikte producten worden automatisch bij elkaar opgeteld.</p>
+    <div id="packageCountGrid" class="package-count-grid"></div>
+    <div class="button-row">
+      <button id="calculatePackagesBtn" type="button" class="btn primary">Berekenen & opslaan</button>
+      <button id="newPackageDayBtn" type="button" class="btn light">Nieuwe dag starten</button>
+      <button id="exportPackageCsvBtn" type="button" class="btn secondary">Exporteer voor Excel</button>
+    </div>
+    <div id="packageMessage" class="message"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Totaal gebruikte producten</h2>
+    <div id="packageTotals" class="package-totals"><div class="meta">Nog niets berekend.</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pakketgeschiedenis</h2>
+    <div id="packageHistory"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📦 Pakketten beheren</h2>
+    <p class="meta">Deze pagina is alleen intern. De pakketten verschijnen niet in de Catalogus en veranderen geen voorraad. MQS-producten zijn hier niet beschikbaar.</p>
+
+    <div class="unit-box" style="margin-bottom:16px">
+      <h3>Extra producten alleen voor pakketten</h3>
+      <p class="meta">Gebruik dit voor producten die niet in de Catalogus of winkel voorkomen.</p>
+      <div class="grid3">
+        <div>
+          <label>Productnaam</label>
+          <input id="packageCustomProductName" placeholder="Bijv. cadeauzakje">
+        </div>
+        <div>
+          <label>Productcode</label>
+          <input id="packageCustomProductCode" placeholder="Bijv. 12345">
+        </div>
+        <div class="category-add-btn-wrap">
+          <button id="addPackageCustomProductBtn" type="button" class="btn secondary">Toevoegen</button>
+        </div>
+      </div>
+      <div id="packageCustomProductList"></div>
+    </div>
+
+    <div id="packageCards" class="package-grid"></div>
+  </div>
+</section>
+<section id="notifications" class="tab">
+  <div class="panel">
+    <h2>Meldingen voor EXP</h2>
+    <p class="meta">De app controleert producten wanneer je de app opent. Je krijgt maximaal één browsermelding per dag.</p>
+    <div class="sales-grid">
+      <div>
+        <label>Melding vanaf</label>
+        <select id="notificationDays">
+          <option value="30">30 dagen vóór EXP</option>
+          <option value="14">14 dagen vóór EXP</option>
+          <option value="7">7 dagen vóór EXP</option>
+        </select>
+      </div>
+      <div>
+        <label>Browsermelding</label>
+        <div class="notif-row">
+          <button id="enableNotificationsBtn" class="btn secondary" type="button">Meldingen inschakelen</button>
+          <span id="notificationStatus" class="meta"></span>
+        </div>
+      </div>
+    </div>
+    <div id="notificationMessage" class="message"></div>
+    <hr style="margin:18px 0">
+    <div id="expiryAlertPanel" class="alert-panel hidden">
+      <h3>Producten met EXP die binnenkort vervallen</h3>
+      <div id="expiryAlertList" class="alert-list"></div>
+    </div>
+  </div>
+</section>
+
+</main></div>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+import {getFirestore,collection,doc,setDoc,addDoc,deleteDoc,onSnapshot,serverTimestamp,runTransaction} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
+const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
+let products=[],sales=[],customers=[],packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
+const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
+
+async function imageData(file){const data=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)});const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=data});const max=700,s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.68)}
+
+
+
+
+function getProductCode(p){
+  return String(p.productCode||p.code||'').trim();
+}
+function catalogOrderType(){
+  return document.querySelector('input[name="catalogOrderType"]:checked')?.value||'E.C';
+}
+function catalogCartItems(){
+  return Object.entries(catalogCart).map(([productId,item])=>{
+    const product=products.find(p=>p.id===productId);
+    if(!product)return null;
+    const unitType=item.unitType||'each';
+    const qty=Number(item.qty||0);
+    const price=productPriceForUnit(product,unitType);
+    return {
+      productId,
+      productCode:codeForUnit(product,unitType),
+      name:productDisplayName(product),
+      unitType,
+      qty,
+      price
+    };
+  }).filter(item=>item&&item.qty>0&&item.price>0);
+}
+function updateCatalogCart(){
+  const items=catalogCartItems();
+  $('catalogCartCount').textContent=items.length;
+  $('catalogCartTotal').textContent=items.reduce((sum,item)=>sum+item.qty*item.price,0).toFixed(2);buildOrderPreview();
+}
+function setCatalogCartItem(productId,unitType,qty){
+  qty=Number(qty||0);
+  if(qty<=0)delete catalogCart[productId];
+  else catalogCart[productId]={unitType,qty};
+  updateCatalogCart();
+}
+function clearCatalogOrder(){
+  catalogCart={};
+  editingSaleId='';
+  $('catalogCustomerName').value='';
+  $('catalogOrderNote').value='';
+  const ec=document.querySelector('input[name="catalogOrderType"][value="E.C"]');
+  if(ec)ec.checked=true;
+  document.querySelectorAll('.catalog-order-qty').forEach(input=>input.value='');
+  document.querySelectorAll('.catalog-order-unit').forEach(select=>select.value='each');
+  updateCatalogCart();
+  msg($('catalogOrderMessage'),'Winkelmand is leeggemaakt.');
+}
+function orderNumber(){
+  const now=new Date();
+  return `MSFK-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+}
+function buildOrderPreview(){
+  const items=catalogCartItems();
+  if(!items.length){$('orderPreview').classList.add('hidden');$('orderPreview').innerHTML='';return;}
+  const customer=$('catalogCustomerName').value.trim()||'Klant';
+  const number=editingSaleId?`BESTELLING-${editingSaleId.slice(0,6).toUpperCase()}`:orderNumber();
+  const date=new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'});
+  const rows=items.map(item=>{
+    const product=products.find(p=>p.id===item.productId);
+    const unitLabel=item.unitType==='crt'?`CRT${product?.unitsPerCarton?` (${product.unitsPerCarton})`:''}`:item.unitType.toUpperCase();
+    return `<tr><td>${safe(item.productCode||'')}</td><td>${safe(item.name)}</td><td>${unitLabel}</td><td>${item.qty}</td><td>$ ${item.price.toFixed(2)}</td><td>$ ${(item.qty*item.price).toFixed(2)}</td></tr>`;
+  }).join('');
+  const total=items.reduce((s,i)=>s+i.qty*i.price,0);
+  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderType())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>`;
+  $('orderPreview').classList.remove('hidden');
+}
+function printCatalogOrder(){buildOrderPreview();if(!$('orderPreview').classList.contains('hidden'))window.print();}
+function buildCatalogWhatsAppText(){
+  const customerName=$('catalogCustomerName').value.trim()||'Klant';
+  const items=catalogCartItems();
+  if(!items.length){
+    msg($('catalogOrderMessage'),'Vul bij minstens één product een aantal in.',true);
+    return '';
+  }
+  const lines=['*Bestelling MSFK*',`Bestelnummer: ${orderNumber()}`,`Datum: ${new Date().toLocaleDateString('nl-NL')}`,`Klant: ${customerName}`,`Bestelling: ${catalogOrderType()}`,''];
+  items.forEach(item=>{
+    const code=item.productCode?`[${item.productCode}] `:'';
+    lines.push(`${item.qty} × ${item.unitType.toUpperCase()} ${code}${item.name} — $ ${(item.qty*item.price).toFixed(2)}`);
+  });
+  const total=items.reduce((sum,item)=>sum+item.qty*item.price,0);
+  lines.push('',`*Totaal: $ ${total.toFixed(2)}*`);
+  const note=$('catalogOrderNote').value.trim();
+  if(note)lines.push(`Opmerking: ${note}`);
+  return lines.join('\n');
+}
+function sendCatalogOrderWhatsApp(){
+  const text=buildCatalogWhatsAppText();
+  if(!text)return;
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener');
+}
+async function saveCatalogOrder(){
+  const customerName=$('catalogCustomerName').value.trim();
+  const items=catalogCartItems();
+  if(!customerName)return msg($('catalogOrderMessage'),'Vul de klantnaam in.',true);
+  if(!items.length)return msg($('catalogOrderMessage'),'Vul bij minstens één product een aantal in.',true);
+  const total=items.reduce((sum,item)=>sum+item.qty*item.price,0);
+  const data={
+    orderNumber:editingSaleId?(sales.find(s=>s.id===editingSaleId)?.orderNumber||orderNumber()):orderNumber(),
+    customerName,
+    orderType:catalogOrderType(),
+    note:$('catalogOrderNote').value.trim(),
+    items,
+    total,
+    updatedAt:serverTimestamp()
+  };
+  try{
+    if(editingSaleId){
+      await setDoc(doc(db,'sales',editingSaleId),data,{merge:true});
+      msg($('catalogOrderMessage'),'Bestelling aangepast.');
+    }else{
+      await addDoc(collection(db,'sales'),{...data,createdAt:serverTimestamp()});
+      msg($('catalogOrderMessage'),'Bestelling opgeslagen.');
+    }
+    clearCatalogOrder();
+  }catch(e){
+    msg($('catalogOrderMessage'),'Opslaan mislukt: '+e.message,true);
+  }
+}
+function editSavedOrder(id){
+  const sale=sales.find(s=>s.id===id);
+  if(!sale)return;
+  editingSaleId=id;
+  $('catalogCustomerName').value=sale.customerName||'';
+  $('catalogOrderNote').value=sale.note||'';
+  const orderRadio=document.querySelector(`input[name="catalogOrderType"][value="${sale.orderType||'E.C'}"]`);
+  if(orderRadio)orderRadio.checked=true;
+  catalogCart={};
+  (sale.items||[]).forEach(item=>{
+    if(item.productId)catalogCart[item.productId]={unitType:item.unitType||'each',qty:Number(item.qty||0)};
+  });
+  document.querySelector('[data-tab="catalog"]').click();
+  render();
+  updateCatalogCart();
+  msg($('catalogOrderMessage'),`Bestelling van ${sale.customerName||'klant'} wordt bewerkt.`);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+function normalizedWeight(p){
+  const value=Number(p.weightValue||0);
+  const unit=String(p.weightUnit||'').toLowerCase();
+  if(!value)return {value:0,unit,base:0,type:''};
+  if(unit==='kg')return {value,unit,base:value*1000,type:'mass'};
+  if(unit==='gr')return {value,unit,base:value,type:'mass'};
+  if(unit==='l')return {value,unit,base:value*1000,type:'volume'};
+  if(unit==='ml')return {value,unit,base:value,type:'volume'};
+  if(unit==='oz')return {value,unit,base:value*28.3495,type:'mass'};
+  if(unit==='pcs')return {value,unit,base:value,type:'count'};
+  return {value,unit,base:value,type:unit};
+}
+function weightText(p){
+  const w=normalizedWeight(p);
+  if(!w.value)return '';
+  if(w.unit==='kg'){
+    if(w.value===1)return '1 KG';
+    if(w.value===1.25)return '1.250 KG';
+    if(w.value===1.5)return '1.5 KG';
+    if(w.value===3)return '3 KG';
+  }
+  if(w.unit==='gr'&&w.value===500)return '500 gr';
+  if(w.unit==='oz')return `${Number(w.value).toLocaleString('nl-NL')} oz`;
+  return `${Number(w.value).toLocaleString('nl-NL')} ${w.unit}`;
+}
+function productDisplayName(p){
+  const isMQS=String(p.category||'').trim().toUpperCase()==='MQS';
+  if(isMQS){
+    const base=String(p.name||'').trim();
+    const key=mqsFormatKeyForDisplay(p);
+    let format='MQS';
+    if(key==='500')format='500 gr';
+    else if(key==='kg'){
+      const actual=Number(p.actualWeightKg||0);
+      format=actual>0?`KG – ${Number(actual).toLocaleString('nl-NL',{maximumFractionDigits:3})} KG`:'KG';
+    }
+    if(!base||base.toUpperCase()==='MQS')return format;
+    return `${base} ${format}`.trim();
+  }
+  return `${p.name||''}${weightText(p)?' '+weightText(p):''}`.trim();
+}
+function mqsFormatKeyForDisplay(p){
+  const stored=String(p.mqsFormat||'').toUpperCase();
+  if(stored==='MQS')return 'mqs';
+  if(stored==='500')return '500';
+  if(stored==='KG')return 'kg';
+  const w=normalizedWeight(p);
+  if(!w.value)return 'mqs';
+  if(w.unit==='gr'&&w.value===500)return '500';
+  if(w.unit==='kg')return 'kg';
+  return '';
+}
+function compareProductsByNameWeight(a,b){
+  const aMQS=String(a.category||'').trim().toUpperCase()==='MQS';
+  const bMQS=String(b.category||'').trim().toUpperCase()==='MQS';
+  if(aMQS&&bMQS){
+    const order={mqs:0,'500':1,kg:2};
+    const ai=order[mqsFormatKeyForDisplay(a)]??999;
+    const bi=order[mqsFormatKeyForDisplay(b)]??999;
+    return ai-bi;
+  }
+  const nameCompare=String(a.name||'').localeCompare(String(b.name||''),'nl',{sensitivity:'base'});
+  if(nameCompare!==0)return nameCompare;
+  const wa=normalizedWeight(a),wb=normalizedWeight(b);
+  if(wa.type!==wb.type)return String(wa.type).localeCompare(String(wb.type),'nl');
+  if(wa.base!==wb.base)return wa.base-wb.base;
+  return productDisplayName(a).localeCompare(productDisplayName(b),'nl',{sensitivity:'base'});
+}
+
+
+
+function isToppersCategory(){
+  return normalizeCategoryName($('cat').value)==='TOPPERS';
+}
+function updateWeightUnitOptions(){
+  const select=$('weightUnit');
+  const current=select.value;
+  const toppers=isToppersCategory();
+  const options=toppers
+    ? [['gr','gr'],['oz','oz']]
+    : [['gr','gr'],['kg','kg'],['ml','ml'],['l','l'],['pcs','pcs']];
+  select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
+  if(options.some(([value])=>value===current))select.value=current;
+  else select.value='gr';
+}
+
+
+async function applyMQSPriceToAll(){
+  const price=Number($('priceEach').value||0);
+  if(price<=0)return msg($('mqsPriceMessage'),'Vul eerst een geldige EACH-prijs in.',true);
+
+  const mqsProducts=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS');
+  if(!mqsProducts.length)return msg($('mqsPriceMessage'),'Er zijn nog geen opgeslagen MQS-producten gevonden.',true);
+
+  if(!confirm(`Prijs $ ${price.toFixed(2)} toepassen op ${mqsProducts.length} MQS-formaten?`))return;
+
+  try{
+    await Promise.all(
+      mqsProducts.map(p=>setDoc(
+        doc(db,'catalogProducts',p.id),
+        {price:price,priceEach:price,updatedAt:serverTimestamp()},
+        {merge:true}
+      ))
+    );
+    msg($('mqsPriceMessage'),`Prijs $ ${price.toFixed(2)} is toegepast op alle ${mqsProducts.length} MQS-formaten.`);
+  }catch(e){
+    msg($('mqsPriceMessage'),'Bijwerken mislukt: '+e.message,true);
+  }
+}
+
+
+function mqsFormatKey(p){
+  const stored=String(p.mqsFormat||'').toUpperCase();
+  if(stored==='MQS')return 'mqs';
+  if(stored==='500')return '500';
+  if(stored==='KG')return 'kg';
+
+  const label=productDisplayName(p).toUpperCase();
+  if(label==='MQS')return 'mqs';
+  if(label==='500 GR')return '500';
+  if(label==='KG'||label==='1 KG'||label.startsWith('KG – '))return 'kg';
+  return '';
+}
+function loadMQSBulkValues(){
+  const map={};
+  const wanted=String($('mqsProductName')?.value||'').trim().toLowerCase();
+  const matched=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&wanted&&String(p.name||'').trim().toLowerCase()===wanted);
+  matched.forEach(p=>{const key=mqsFormatKey(p);if(key)map[key]=p;});
+
+  const fill=(key,codeId,priceId,crtId)=>{
+    const p=map[key]||{};
+    $(codeId).value=p.codeEach||p.productCode||'';
+    $(priceId).value=p.priceEach??p.price??'';
+    $(crtId).value=p.unitsPerCarton??'';
+  };
+  fill('mqs','mqsCodeMqs','mqsPriceMqs','mqsCrtMqs');
+  fill('500','mqsCode500','mqsPrice500','mqsCrt500');
+  fill('kg','mqsCodeKg','mqsPriceKg','mqsCrtKg');
+  const kgProduct=map['kg']||{};
+  $('mqsActualKg').value=kgProduct.actualWeightKg??'';
+
+  // Belangrijk: gebruik alleen de foto van DIT MQS-product.
+  // Als de naam nieuw is en er nog geen product bestaat, moet de foto leeg zijn.
+  const imageProduct=matched.find(p=>p.photoData);
+  if(imageProduct?.photoData){
+    photoData=imageProduct.photoData;
+    $('preview').src=photoData;
+    $('preview').classList.remove('hidden');
+  }else{
+    photoData='';
+    $('photoInput').value='';
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
+}
+
+
+async function saveWarehouseProduct(){
+  const name=$('warehouseName').value.trim();
+  if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
+
+  const exp1=typedDateToISO($('warehouseExpiry1').value);
+  const exp2=typedDateToISO($('warehouseExpiry2').value);
+  const exp3=typedDateToISO($('warehouseExpiry3').value);
+
+  if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp3===null)return msg($('formMsg'),'EXP 3 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(!exp1&&!exp2&&!exp3)return msg($('formMsg'),'Vul minstens één EXP-datum in.',true);
+
+  const data={
+    name,
+    category:'MAGAZIJN',
+    barcode:$('warehouseBarcode').value.trim(),
+    expiryDate1:exp1,
+    expiryDate2:exp2,
+    expiryDate3:exp3,
+    expiryDate:([exp1,exp2,exp3].filter(Boolean).sort()[0]||''),
+    stockExp1:exp1?Number($('warehouseStock1').value||0):0,
+    stockExp2:exp2?Number($('warehouseStock2').value||0):0,
+    stockExp3:exp3?Number($('warehouseStock3').value||0):0,
+    internalOnly:true,
+    available:false,
+    price:0,priceEach:0,priceP12:0,priceCrt:0,
+    codeEach:'',codeP12:'',codeCrt:'',
+    photoData,
+    updatedAt:serverTimestamp()
+  };
+
+  try{
+    const editingId=$('editId').value.trim();
+    if(editingId){
+      await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});
+      msg($('formMsg'),'MAGAZIJN gegevens gewijzigd.');
+    }else{
+      await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+      msg($('formMsg'),'MAGAZIJN product toegevoegd.');
+    }
+    reset();
+  }catch(e){
+    msg($('formMsg'),e.message,true);
+  }
+}
+
+async function saveMakroProduct(){
+  const name=$('makroName').value.trim();
+  if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
+
+  const exp1=typedDateToISO($('makroExpiry1').value);
+  const exp2=typedDateToISO($('makroExpiry2').value);
+  const exp3=typedDateToISO($('makroExpiry3').value);
+  if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp3===null)return msg($('formMsg'),'EXP 3 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(!exp1&&!exp2&&!exp3)return msg($('formMsg'),'Vul minstens één EXP-datum in.',true);
+
+  const data={
+    name,
+    category:'MAKRO',
+    barcode:$('makroBarcode').value.trim(),
+    expiryDate1:exp1,
+    expiryDate2:exp2,
+    expiryDate3:exp3,
+    expiryDate:([exp1,exp2,exp3].filter(Boolean).sort()[0]||''),
+    stockExp1:exp1?Number($('makroStock1').value||0):0,
+    stockExp2:exp2?Number($('makroStock2').value||0):0,
+    stockExp3:exp3?Number($('makroStock3').value||0):0,
+    internalOnly:true,
+    available:false,
+    price:0,priceEach:0,priceP12:0,priceCrt:0,
+    codeEach:'',codeP12:'',codeCrt:'',
+    photoData,
+    updatedAt:serverTimestamp()
+  };
+
+  try{
+    const editingId=$('editId').value.trim();
+    if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});
+    else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+    msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'MAKRO product toegevoegd.');
+    reset();
+  }catch(e){msg($('formMsg'),e.message,true);}
+}
+
+async function saveMQSBulk(){
+  const productName=String($('mqsProductName').value||'').trim();
+  if(!productName)return msg($('formMsg'),'Vul de productnaam in.',true);
+  const rows=[
+    {key:'mqs',format:'MQS',label:'MQS',weightValue:0,weightUnit:'gr',actualWeightKg:0,code:$('mqsCodeMqs').value.trim(),price:Number($('mqsPriceMqs').value||0),crt:Number($('mqsCrtMqs').value||0)},
+    {key:'500',format:'500',label:'500 gr',weightValue:500,weightUnit:'gr',actualWeightKg:0,code:$('mqsCode500').value.trim(),price:Number($('mqsPrice500').value||0),crt:Number($('mqsCrt500').value||0)},
+    {key:'kg',format:'KG',label:'KG',weightValue:1,weightUnit:'kg',actualWeightKg:Number($('mqsActualKg').value||0),code:$('mqsCodeKg').value.trim(),price:Number($('mqsPriceKg').value||0),crt:Number($('mqsCrtKg').value||0)}
+  ];
+  if(rows.every(r=>!r.code&&r.price<=0&&r.crt<=0))return msg($('formMsg'),'Vul minstens één MQS-formaat in.',true);
+  try{
+    for(const row of rows){
+      if(!row.code&&row.price<=0&&row.crt<=0)continue;
+      const lookupName=(editingMQSOriginalName||productName).trim().toLowerCase();
+      const existing=products.find(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===lookupName&&mqsFormatKey(p)===row.key);
+      const data={
+        name:productName,
+        category:'MQS',
+        mqsFormat:row.format,
+        actualWeightKg:row.actualWeightKg,
+        weightValue:row.weightValue,
+        weightUnit:row.weightUnit,
+        productCode:row.code,
+        codeEach:row.code,
+        codeP12:'',
+        codeCrt:'',
+        price:row.price,
+        priceEach:row.price,
+        priceP12:0,
+        priceCrt:0,
+        unitsPerCarton:row.crt,
+        expiryDate:'',
+        expiryDate1:'',
+        expiryDate2:'',
+        barcode:'',
+        notes:'',
+        available:true,
+        photoData:photoData||existing?.photoData||'',
+        updatedAt:serverTimestamp()
+      };
+      if(existing)await setDoc(doc(db,'catalogProducts',existing.id),data,{merge:true});
+      else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+    }
+    msg($('formMsg'),editingMQSOriginalName?`${productName} gewijzigd.`:`${productName} opgeslagen.`);editingMQSOriginalName='';setProductFormMode(false);
+    // Maak het MQS-formulier leeg voor het volgende nieuwe product.
+    if($('mqsProductName'))$('mqsProductName').value='';
+    [
+      'mqsCodeMqs','mqsPriceMqs','mqsCrtMqs',
+      'mqsCode500','mqsPrice500','mqsCrt500',
+      'mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'
+    ].forEach(id=>{const el=$(id);if(el)el.value='';});
+    photoData='';
+    if($('photoInput'))$('photoInput').value='';
+    if($('preview')){
+      $('preview').removeAttribute('src');
+      $('preview').classList.add('hidden');
+    }
+  }catch(e){
+    msg($('formMsg'),'Opslaan mislukt: '+e.message,true);
+  }
+}
+
+
+
+function isWarehouseCategory(){
+  return normalizeCategoryName($('cat').value)==='MAGAZIJN';
+}
+
+function updateInternalCategoryUI(){
+  const isMakro=isMakroCategory();
+  const isWarehouse=isWarehouseCategory();
+  const isMQS=isMQSCategory();
+
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('warehouseOnlyBox').classList.toggle('hidden',!isWarehouse);
+  $('mqsBulkBox').classList.toggle('hidden',!isMQS);
+  $('normalProductFields').classList.toggle('hidden',isMakro||isWarehouse||isMQS);
+
+  if(isMakro||isWarehouse){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
+}
+
+function isMakroCategory(){
+  return normalizeCategoryName($('cat').value)==='MAKRO';
+}
+function updateMakroUI(){
+  const isMakro=isMakroCategory();
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('normalProductFields').classList.toggle('hidden',isMakro||isMQSCategory());
+  $('mqsBulkBox').classList.toggle('hidden',!isMQSCategory());
+  if(isMakro){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
+}
+
+function isMQSCategory(){
+  return normalizeCategoryName($('cat').value)==='MQS';
+}
+function updateMQSWeightUI(){
+  updateWeightUnitOptions();
+  const isMQS=isMQSCategory();
+  const isMakro=isMakroCategory();
+  const isWarehouse=isWarehouseCategory();
+  $('mqsBulkBox').classList.toggle('hidden',!isMQS);
+  $('makroOnlyBox').classList.toggle('hidden',!isMakro);
+  $('warehouseOnlyBox').classList.toggle('hidden',!isWarehouse);
+  $('normalProductFields').classList.toggle('hidden',isMQS||isMakro||isWarehouse);
+  const isToppers=isToppersCategory();
+  $('toppersWeightNote').classList.toggle('hidden',!isToppers);
+  $('toppersScannerBox').classList.toggle('hidden',!isToppers);
+  $('otherCategoryScanBox').classList.toggle('hidden',isToppers||isMQS||isMakro||isWarehouse);
+  $('genericScannerBox').classList.toggle('hidden',isToppers);
+  if(isMQS&&$('mqsProductName')?.value.trim())loadMQSBulkValues();
+  if(isMakro||isWarehouse){
+    $('internalOnly').checked=true;
+    $('available').checked=false;
+  }
+}
+
+function productExpiryEntries(p){
+  const entries=[];
+  if(p.expiryDate1)entries.push({expiryDate:p.expiryDate1,expiryStock:Number(p.stockExp1||0),expirySlot:1});
+  if(p.expiryDate2)entries.push({expiryDate:p.expiryDate2,expiryStock:Number(p.stockExp2||0),expirySlot:2});
+  if(p.expiryDate3)entries.push({expiryDate:p.expiryDate3,expiryStock:Number(p.stockExp3||0),expirySlot:3});
+  if(!p.expiryDate1&&!p.expiryDate2&&!p.expiryDate3&&p.expiryDate)entries.push({expiryDate:p.expiryDate,expiryStock:Number(p.stockExp1||0),expirySlot:1});
+
+  // If both batches happen to have the same EXP date, show one line with combined stock.
+  const merged={};
+  for(const e of entries){
+    if(!merged[e.expiryDate])merged[e.expiryDate]={...e};
+    else merged[e.expiryDate].expiryStock+=e.expiryStock;
+  }
+  return Object.values(merged).sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));
+}
+function productExpiryDates(p){
+  return productExpiryEntries(p).map(e=>e.expiryDate);
+}
+function nearestExpiryDate(p){
+  const dates=productExpiryDates(p);
+  if(!dates.length)return '';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const upcoming=dates.filter(d=>new Date(d+'T00:00:00')>=today);
+  return (upcoming.length?upcoming:dates).sort()[0];
+}
+function secondExpiryDate(p){
+  const first=nearestExpiryDate(p);
+  return productExpiryDates(p).find(d=>d!==first)||'';
+}
+
+function typedDateToISO(value){
+  const raw=String(value||'').trim();
+  if(!raw)return '';
+
+  // Accept DD-MM-YYYY, DD/MM/YYYY, DD.MM.YYYY
+  const m=raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if(m){
+    const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
+    const d=new Date(year,month-1,day);
+    if(d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day){
+      return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+    return null;
+  }
+
+  // Also keep accepting YYYY-MM-DD if pasted.
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(iso){
+    const year=Number(iso[1]),month=Number(iso[2]),day=Number(iso[3]);
+    const d=new Date(year,month-1,day);
+    if(d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day)return raw;
+  }
+  return null;
+}
+
+function isoToTypedDate(value){
+  const raw=String(value||'').trim();
+  if(!raw)return '';
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return raw;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+function autoFormatDateTyping(input){
+  let v=String(input.value||'').replace(/\D/g,'').slice(0,8);
+  if(v.length>4)v=v.slice(0,2)+'-'+v.slice(2,4)+'-'+v.slice(4);
+  else if(v.length>2)v=v.slice(0,2)+'-'+v.slice(2);
+  input.value=v;
+}
+
+function formatDate(dateStr){
+  if(!dateStr)return '';
+  const parts=String(dateStr).split('-');
+  if(parts.length!==3)return dateStr;
+  const [year,month,day]=parts;
+  const months=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  const monthName=months[Number(month)-1];
+  if(!monthName)return dateStr;
+  return `${Number(day)} ${monthName} ${year}`;
+}
+
+function normalizedCodes(p){
+  return {each:String(p.codeEach??p.productCode??p.code??'').trim(),p12:String(p.codeP12??'').trim(),crt:String(p.codeCrt??'').trim()};
+}
+function codeForUnit(p,unitType){
+  const codes=normalizedCodes(p);
+  return unitType==='p12'?codes.p12:unitType==='crt'?codes.crt:codes.each;
+}
+function normalizedPrices(p){
+  return {
+    each: Number(p.priceEach ?? p.price ?? 0),
+    p12: Number(p.priceP12 ?? 0),
+    crt: Number(p.priceCrt ?? 0),
+    unitsPerCarton: Number(p.unitsPerCarton ?? 0)
+  };
+}
+function productPriceForUnit(p, unitType){
+  const prices=normalizedPrices(p);
+  if(unitType==='p12') return prices.p12;
+  if(unitType==='crt') return prices.crt;
+  return prices.each;
+}
+function stockUnitsForSale(unitType, quantity, product){
+  if(unitType==='p12') return quantity*12;
+  if(unitType==='crt') return quantity*Math.max(1,Number(product.unitsPerCarton||0));
+  return quantity;
+}
+function productPriceHtml(p){
+  const pr=normalizedPrices(p), lines=[];
+  if(pr.each>0) lines.push(`<div class="price-line"><span class="price-label">EACH</span><strong>$ ${pr.each.toFixed(2)}</strong></div>`);
+  if(pr.p12>0) lines.push(`<div class="price-line"><span class="price-label">P12</span><strong>$ ${pr.p12.toFixed(2)}</strong></div>`);
+  if(pr.crt>0) lines.push(`<div class="price-line"><span class="price-label">CRT${pr.unitsPerCarton?` (${pr.unitsPerCarton} stuks)`:''}</span><strong>$ ${pr.crt.toFixed(2)}</strong></div>`);
+  return `<div class="price-lines">${lines.join('')||'<div class="meta">Geen prijs ingevuld</div>'}</div>`;
+}
+
+function newestProductForBarcode(code){
+  const matches=products.filter(p=>String(p.barcode||'').trim()===String(code||'').trim());
+  if(!matches.length)return null;
+  return matches.sort((a,b)=>{
+    const at=a.updatedAt?.seconds||a.createdAt?.seconds||0;
+    const bt=b.updatedAt?.seconds||b.createdAt?.seconds||0;
+    return bt-at;
+  })[0];
+}
+function applySavedProduct(code){
+  const p=newestProductForBarcode(code);
+  const box=$('foundBox');
+  if(!p){
+    box.classList.add('hidden');
+    box.textContent='';
+    return false;
+  }
+  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
+  
+  $('cat').value=p.category||'';
+  $('notes').value=p.notes||'';
+  $('available').checked=p.available!==false;
+  photoData=p.photoData||'';
+  if(photoData){
+    $('preview').src=photoData;
+    $('preview').classList.remove('hidden');
+  }else{
+    $('preview').src='';
+    $('preview').classList.add('hidden');
+  }
+  const pr=normalizedPrices(p);box.textContent=`Eerder opgeslagen product gevonden: ${p.name||'product'}${pr.each?` · EACH $ ${pr.each.toFixed(2)}`:''}${pr.p12?` · P12 $ ${pr.p12.toFixed(2)}`:''}${pr.crt?` · CRT $ ${pr.crt.toFixed(2)}`:''}${nearestExpiryDate(p)?' · laatste EXP '+formatDate(nearestExpiryDate(p)):''}`;
+  box.classList.remove('hidden');
+  msg($('formMsg'),'Productgegevens automatisch ingevuld.');
+  return true;
+}
+
+
+async function lookupProductOnlineByBarcode(barcode,{targetInput=null,statusBox=null}={}){
+  const code=String(barcode||'').trim();
+  if(!code)return null;
+
+  const status=statusBox||$('formMsg');
+  if(status)msg(status,'Barcode online zoeken…');
+
+  try{
+    const url=`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}?fields=product_name,product_name_en,brands`;
+    const response=await fetch(url,{method:'GET',headers:{'Accept':'application/json'}});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    const data=await response.json();
+
+    if(Number(data?.status)!==1 || !data?.product){
+      if(status)msg(status,'Barcode gescand, maar productnaam niet online gevonden.');
+      return null;
+    }
+
+    const product=data.product||{};
+    const name=String(product.product_name||product.product_name_en||'').trim();
+    const brands=String(product.brands||'').trim();
+
+    let finalName=name;
+    if(brands && name && !name.toLowerCase().includes(brands.toLowerCase().split(',')[0].trim())){
+      finalName=`${brands.split(',')[0].trim()} ${name}`.trim();
+    }else if(!finalName && brands){
+      finalName=brands.split(',')[0].trim();
+    }
+
+    if(!finalName){
+      if(status)msg(status,'Product gevonden, maar er staat geen duidelijke productnaam online.');
+      return product;
+    }
+
+    const target=targetInput||getNameInputForCurrentCategory();
+    if(target){
+      target.value=finalName;
+      if(status)msg(status,`Online gevonden: ${finalName}. Je kunt de naam nog aanpassen.`);
+    }
+    return product;
+  }catch(e){
+    console.warn('Online barcode zoeken mislukt:',e);
+    if(status)msg(status,'Online productnaam kon niet worden gevonden. Je kunt de naam handmatig invullen.',true);
+    return null;
+  }
+}
+
+function localProductForBarcode(code,category=''){
+  const barcode=String(code||'').trim();
+  const wantedCategory=normalizeCategoryName(category||'');
+  return products.find(p=>
+    String(p.barcode||'').trim()===barcode &&
+    (!wantedCategory || normalizeCategoryName(p.category||'')===wantedCategory)
+  )||null;
+}
+
+
+async function stopWarehouseScanner(){
+  if(warehouseQrCode){
+    try{await warehouseQrCode.stop();}catch{}
+    try{await warehouseQrCode.clear();}catch{}
+  }
+  warehouseQrCode=null;
+  warehouseScannerRunning=false;
+  $('warehouseReader').classList.add('hidden');
+  $('warehouseStopScanBtn').classList.add('hidden');
+}
+
+function fillWarehouseFromProduct(p,{useDates=true}={}){
+  if(!p)return;
+  $('warehouseName').value=p.name||'';
+  $('warehouseBarcode').value=p.barcode||'';
+
+  if(useDates){
+    $('warehouseExpiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');
+    $('warehouseExpiry2').value=isoToTypedDate(p.expiryDate2||'');
+    $('warehouseExpiry3').value=isoToTypedDate(p.expiryDate3||'');
+    $('warehouseStock1').value=p.stockExp1??'';
+    $('warehouseStock2').value=p.stockExp2??'';
+    $('warehouseStock3').value=p.stockExp3??'';
+  }else{
+    // Winkel-EXP wordt bewust NIET overgenomen naar MAGAZIJN.
+    $('warehouseExpiry1').value='';
+    $('warehouseExpiry2').value='';
+    $('warehouseExpiry3').value='';
+    $('warehouseStock1').value='';
+    $('warehouseStock2').value='';
+    $('warehouseStock3').value='';
+  }
+
+  photoData=p.photoData||'';
+  if(photoData){
+    $('preview').src=photoData;
+    $('preview').classList.remove('hidden');
+  }else{
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
+}
+
+async function handleWarehouseBarcode(decodedText){
+  const code=String(decodedText||'').trim();
+  if(!code)return;
+
+  $('warehouseBarcode').value=code;
+
+  // 1. Eerst exact bestaand MAGAZIJN-record: laad ALLES, inclusief magazijn-datums.
+  const warehouseExisting=products.find(p=>
+    normalizeCategoryName(p.category||'')==='MAGAZIJN' &&
+    String(p.barcode||'').trim()===code
+  );
+
+  if(warehouseExisting){
+    $('editId').value=warehouseExisting.id;
+    fillWarehouseFromProduct(warehouseExisting,{useDates:true});
+    setProductFormMode(true);
+    $('formTitle').textContent='MAGAZIJN product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    msg($('warehouseScanMsg'),'Bestaand MAGAZIJN-product gevonden. Pas alleen de EXP/voorraad aan en sla op.');
+    return;
+  }
+
+  // 2. Anders zoek hetzelfde product in winkel/andere categorie.
+  // Naam/foto/barcode worden overgenomen, maar NIET de winkel-datums.
+  const otherExisting=products.find(p=>
+    normalizeCategoryName(p.category||'')!=='MAGAZIJN' &&
+    String(p.barcode||'').trim()===code
+  );
+
+  $('editId').value='';
+  setProductFormMode(false);
+
+  if(otherExisting){
+    fillWarehouseFromProduct(otherExisting,{useDates:false});
+    msg($('warehouseScanMsg'),'Product uit winkel gevonden. Naam en foto zijn overgenomen; vul aparte MAGAZIJN EXP-datums en aantallen in.');
+    return;
+  }
+
+  // 3. Niet lokaal gevonden: zoek online naar naam.
+  await lookupProductOnlineByBarcode(
+    code,
+    {targetInput:$('warehouseName'),statusBox:$('warehouseScanMsg')}
+  );
+}
+
+async function startWarehouseScanner(){
+  if(!window.Html5Qrcode){
+    return msg($('warehouseScanMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
+  }
+
+  await stopScanner();
+  await stopMakroScanner();
+  await stopWarehouseScanner();
+
+  $('warehouseReader').classList.remove('hidden');
+  $('warehouseStopScanBtn').classList.remove('hidden');
+  msg($('warehouseScanMsg'),'Camera toestemming controleren…');
+
+  try{
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length)throw new Error('Geen camera gevonden.');
+
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    warehouseQrCode=new Html5Qrcode('warehouseReader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    await warehouseQrCode.start(
+      backCamera.id,
+      {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats,aspectRatio:1.777778},
+      async decodedText=>{
+        await handleWarehouseBarcode(decodedText);
+        await stopWarehouseScanner();
+      },
+      ()=>{}
+    );
+
+    warehouseScannerRunning=true;
+    msg($('warehouseScanMsg'),'Camera is open. Richt op de barcode.');
+  }catch(e){
+    console.warn('MAGAZIJN camera fout:',e);
+    await stopWarehouseScanner();
+    msg($('warehouseScanMsg'),'Camera kon niet worden geopend. Controleer cameratoestemming en probeer opnieuw.',true);
+  }
+}
+
+async function stopMakroScanner(){
+  if(makroQrCode){
+    try{await makroQrCode.stop();}catch{}
+    try{await makroQrCode.clear();}catch{}
+  }
+  makroQrCode=null;
+  makroScannerRunning=false;
+  $('makroReader').classList.add('hidden');
+  $('makroStopScanBtn').classList.add('hidden');
+}
+async function startMakroScanner(){
+  if(!window.Html5Qrcode){
+    return msg($('makroScanMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
+  }
+
+  await stopScanner();
+  await stopMakroScanner();
+
+  $('makroReader').classList.remove('hidden');
+  $('makroStopScanBtn').classList.remove('hidden');
+  msg($('makroScanMsg'),'Camera toestemming controleren…');
+
+  try{
+    // Dit vraagt op Samsung/Android eerst expliciet cameratoestemming.
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length){
+      throw new Error('Geen camera gevonden.');
+    }
+
+    // Kies bij voorkeur de achtercamera.
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    makroQrCode=new Html5Qrcode('makroReader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    msg($('makroScanMsg'),'Camera openen…');
+
+    await makroQrCode.start(
+      backCamera.id,
+      {
+        fps:10,
+        qrbox:{width:280,height:150},
+        formatsToSupport:formats,
+        aspectRatio:1.777778
+      },
+      async decodedText=>{
+        $('makroBarcode').value=decodedText;
+        msg($('makroScanMsg'),'Barcode gescand: '+decodedText);
+
+        const existing=localProductForBarcode(decodedText,'MAKRO');
+        if(existing){
+          $('editId').value=existing.id;
+          $('makroName').value=existing.name||'';
+          $('makroExpiry1').value=isoToTypedDate(existing.expiryDate1||existing.expiryDate||'');
+          $('makroExpiry2').value=isoToTypedDate(existing.expiryDate2||'');
+          $('makroExpiry3').value=isoToTypedDate(existing.expiryDate3||'');
+          $('makroStock1').value=existing.stockExp1??'';
+          $('makroStock2').value=existing.stockExp2??'';
+          $('makroStock3').value=existing.stockExp3??'';
+          photoData=existing.photoData||'';
+
+          if(photoData){
+            $('preview').src=photoData;
+            $('preview').classList.remove('hidden');
+          }else{
+            $('preview').removeAttribute('src');
+            $('preview').classList.add('hidden');
+          }
+
+          setProductFormMode(true);
+          $('formTitle').textContent='MAKRO product aanpassen';
+          $('cancelBtn').classList.remove('hidden');
+          msg($('makroScanMsg'),'Bestaand MAKRO-product gevonden. Gegevens geladen.');
+        }else{
+          $('editId').value='';
+          setProductFormMode(false);
+          await lookupProductOnlineByBarcode(
+            decodedText,
+            {targetInput:$('makroName'),statusBox:$('makroScanMsg')}
+          );
+        }
+
+        await stopMakroScanner();
+      },
+      ()=>{}
+    );
+
+    makroScannerRunning=true;
+    msg($('makroScanMsg'),'Camera is open. Richt op de barcode.');
+  }catch(e){
+    console.warn('MAKRO camera fout:',e);
+    await stopMakroScanner();
+
+    let tekst='Camera kon niet worden geopend.';
+    const name=String(e?.name||'');
+    const message=String(e?.message||'');
+
+    if(/NotAllowed|Permission|denied/i.test(name+' '+message)){
+      tekst='Camera is geblokkeerd. Geef deze website toestemming voor Camera en probeer opnieuw.';
+    }else if(/NotFound|Geen camera/i.test(name+' '+message)){
+      tekst='Geen camera gevonden op dit apparaat.';
+    }else if(/NotReadable|TrackStart/i.test(name+' '+message)){
+      tekst='Camera is al in gebruik door een andere app. Sluit die app en probeer opnieuw.';
+    }
+
+    msg($('makroScanMsg'),tekst,true);
+  }
+}
+
+
+async function stopToppersScanner(){
+  if(toppersQrCode){
+    try{await toppersQrCode.stop();}catch{}
+    try{await toppersQrCode.clear();}catch{}
+  }
+  toppersQrCode=null;
+  toppersScannerRunning=false;
+  $('toppersReader').classList.add('hidden');
+  $('toppersStopScanBtn').classList.add('hidden');
+}
+
+async function startToppersScanner(){
+  if(!window.Html5Qrcode){
+    return msg($('toppersScanMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
+  }
+
+  await stopScanner();
+  await stopMakroScanner();
+  await stopWarehouseScanner();
+  await stopToppersScanner();
+
+  $('toppersReader').classList.remove('hidden');
+  $('toppersStopScanBtn').classList.remove('hidden');
+  msg($('toppersScanMsg'),'Camera toestemming controleren…');
+
+  try{
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length)throw new Error('Geen camera gevonden.');
+
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    toppersQrCode=new Html5Qrcode('toppersReader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    msg($('toppersScanMsg'),'Camera openen…');
+
+    await toppersQrCode.start(
+      backCamera.id,
+      {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats,aspectRatio:1.777778},
+      async decodedText=>{
+        $('barcode').value=decodedText;
+        msg($('toppersScanMsg'),'Barcode gescand: '+decodedText);
+
+        const existing=products.find(p=>
+          normalizeCategoryName(p.category||'')==='TOPPERS' &&
+          String(p.barcode||'').trim()===String(decodedText).trim()
+        );
+
+        if(existing){
+          applySavedProduct(decodedText);
+          msg($('toppersScanMsg'),'Bestaand TOPPERS-product gevonden. Gegevens geladen.');
+        }else{
+          await lookupProductOnlineByBarcode(
+            decodedText,
+            {targetInput:$('name'),statusBox:$('toppersScanMsg')}
+          );
+        }
+
+        await stopToppersScanner();
+      },
+      ()=>{}
+    );
+
+    toppersScannerRunning=true;
+    msg($('toppersScanMsg'),'Camera is open. Richt op de barcode.');
+  }catch(e){
+    console.warn('TOPPERS camera fout:',e);
+    await stopToppersScanner();
+
+    let tekst='Camera kon niet worden geopend.';
+    const name=String(e?.name||'');
+    const message=String(e?.message||'');
+
+    if(/NotAllowed|Permission|denied/i.test(name+' '+message)){
+      tekst='Camera is geblokkeerd. Geef deze website toestemming voor Camera en probeer opnieuw.';
+    }else if(/NotFound|Geen camera/i.test(name+' '+message)){
+      tekst='Geen camera gevonden op dit apparaat.';
+    }else if(/NotReadable|TrackStart/i.test(name+' '+message)){
+      tekst='Camera is al in gebruik door een andere app. Sluit die app en probeer opnieuw.';
+    }
+
+    msg($('toppersScanMsg'),tekst,true);
+  }
+}
+
+async function stopScanner(){
+  if(html5QrCode){
+    try{await html5QrCode.stop();}catch{}
+    try{await html5QrCode.clear();}catch{}
+  }
+  html5QrCode=null;
+  scannerRunning=false;
+  $('reader').classList.add('hidden');
+  $('stopScanBtn').classList.add('hidden');
+}
+async function startScanner(){
+  if(!window.Html5Qrcode){
+    return msg($('formMsg'),'Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.',true);
+  }
+
+  await stopMakroScanner();
+  await stopWarehouseScanner();
+  await stopScanner();
+
+  $('reader').classList.remove('hidden');
+  $('stopScanBtn').classList.remove('hidden');
+  msg($('formMsg'),'Camera toestemming controleren…');
+
+  try{
+    // Zelfde cameramethode als bij MAKRO: eerst camera's opvragen.
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length){
+      throw new Error('Geen camera gevonden.');
+    }
+
+    // Gebruik bij voorkeur de achtercamera.
+    const backCamera=
+      cameras.find(c=>/back|rear|environment|achter/i.test(c.label||'')) ||
+      cameras[cameras.length-1];
+
+    html5QrCode=new Html5Qrcode('reader');
+
+    const formats=[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39
+    ];
+
+    msg($('formMsg'),'Camera openen…');
+
+    await html5QrCode.start(
+      backCamera.id,
+      {
+        fps:10,
+        qrbox:{width:280,height:150},
+        formatsToSupport:formats,
+        aspectRatio:1.777778
+      },
+      async decodedText=>{
+        $('barcode').value=decodedText;
+
+        const currentCategory=normalizeCategoryName($('cat').value||'');
+        const local=products.find(p=>
+          String(p.barcode||'').trim()===String(decodedText).trim() &&
+          normalizeCategoryName(p.category||'')===currentCategory
+        ) || localProductForBarcode(decodedText);
+
+        if(local){
+          applySavedProduct(decodedText);
+          msg($('formMsg'),'Bestaand product gevonden. Gegevens geladen.');
+        }else{
+          await lookupProductOnlineByBarcode(
+            decodedText,
+            {targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')}
+          );
+        }
+
+        await stopScanner();
+      },
+      ()=>{}
+    );
+
+    scannerRunning=true;
+    msg($('formMsg'),'Camera is open. Richt op de barcode.');
+  }catch(e){
+    console.warn('Camera fout:',e);
+    await stopScanner();
+
+    let tekst='Camera kon niet worden geopend.';
+    const name=String(e?.name||'');
+    const message=String(e?.message||'');
+
+    if(/NotAllowed|Permission|denied/i.test(name+' '+message)){
+      tekst='Camera is geblokkeerd. Geef deze website toestemming voor Camera en probeer opnieuw.';
+    }else if(/NotFound|Geen camera/i.test(name+' '+message)){
+      tekst='Geen camera gevonden op dit apparaat.';
+    }else if(/NotReadable|TrackStart/i.test(name+' '+message)){
+      tekst='Camera is al in gebruik door een andere app. Sluit die app en probeer opnieuw.';
+    }
+
+    msg($('formMsg'),tekst,true);
+  }
+}
+
+function productOptions(selected=''){
+  return '<option value="">Kies product</option>'+products.filter(p=>p.internalOnly!==true).slice().sort(compareProductsByNameWeight)
+    .map(p=>{const pr=normalizedPrices(p);const shown=pr.each||pr.p12||pr.crt;return `<option value="${p.id}" ${p.id===selected?'selected':''}>${safe(productDisplayName(p))} — vanaf $ ${Number(shown||0).toFixed(2)}</option>`;}).join('');
+}
+function addSaleItem(item={productId:'',qty:1,price:''}){
+  const row=document.createElement('div'); row.className='sale-item';
+  row.innerHTML=`<div class="wide"><label>Product</label><select class="sale-product">${productOptions(item.productId)}</select></div>
+  <div><label>Verkoopeenheid</label><select class="sale-unit"><option value="each">EACH</option><option value="p12">P12</option><option value="crt">CRT</option></select></div>
+  <div><label>Aantal</label><input class="sale-qty" type="number" min="1" value="${Number(item.qty||1)}"></div>
+  <div><label>Prijs $</label><input class="sale-price" type="number" min="0" step="0.01" value="${item.price!==''?Number(item.price).toFixed(2):''}"></div>
+  <button type="button" class="btn light sale-remove">Verwijder</button>`;
+  $('saleItems').appendChild(row);
+  const sel=row.querySelector('.sale-product'),unit=row.querySelector('.sale-unit'),qty=row.querySelector('.sale-qty'),price=row.querySelector('.sale-price');
+  unit.value=item.unitType||'each';
+  const refreshPrice=()=>{const p=products.find(x=>x.id===sel.value);if(!p)return;const chosen=productPriceForUnit(p,unit.value);price.value=chosen>0?chosen.toFixed(2):'';updateSaleTotal();};
+  sel.onchange=refreshPrice;unit.onchange=refreshPrice;
+  qty.oninput=updateSaleTotal; price.oninput=updateSaleTotal;
+  row.querySelector('.sale-remove').onclick=()=>{row.remove();updateSaleTotal();};
+  updateSaleTotal();
+}
+function getSaleItems(){
+  return [...document.querySelectorAll('.sale-item')].map(row=>{
+    const productId=row.querySelector('.sale-product').value,p=products.find(x=>x.id===productId);
+    const unitType=row.querySelector('.sale-unit').value,qty=Number(row.querySelector('.sale-qty').value||0);
+    return {productId,productCode:codeForUnit(p||{},unitType),name:p?productDisplayName(p):'',unitType,qty,stockUnits:stockUnitsForSale(unitType,qty,p||{}),price:Number(row.querySelector('.sale-price').value||0)};
+  }).filter(x=>x.productId&&x.qty>0&&Number.isFinite(x.price));
+}
+function updateSaleTotal(){$('saleTotal').textContent=getSaleItems().reduce((s,x)=>s+x.qty*x.price,0).toFixed(2);}
+function resetSale(){$('saleCustomerName').value='';$('saleNote').value='';const first=document.querySelector('input[name="orderType"][value="E.C"]');if(first)first.checked=true;$('saleItems').innerHTML='';addSaleItem();}
+
+
+const DEFAULT_PACKAGES=[
+  {id:'fp159',name:'FP 1.59',items:[]},
+  {id:'fp225',name:'FP 2.25',items:[]},
+  {id:'fp170',name:'FP 1.70',items:[]},
+  {id:'fp239',name:'FP 2.39',items:[]}
+];
+
+function packageProductOptions(selected=''){
+  const available=products
+    .filter(p=>p.internalOnly!==true && normalizeCategoryName(p.category||'')!=='MQS')
+    .slice()
+    .sort(compareProductsByNameWeight);
+
+  return '<option value="">Kies product</option>'+
+    available.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${safe(productDisplayName(p))}${normalizedCodes(p).each?` — ${safe(normalizedCodes(p).each)}`:''}</option>`).join('');
+}
+
+function normalizedPackageSettings(){
+  const stored=packageSettings||{};
+  const storedPackages=Array.isArray(stored.packages)?stored.packages:[];
+  const normalizeItem=i=>({productId:String(i?.productId||''),customProductId:String(i?.customProductId||''),qty:Math.max(0,Number(i?.qty||0))});
+  return {
+    packages:DEFAULT_PACKAGES.map(def=>{
+      const saved=storedPackages.find(p=>p.id===def.id)||{};
+      let choiceGroups=[];
+      if(Array.isArray(saved.choiceGroups)){
+        choiceGroups=saved.choiceGroups.map((g,gi)=>({
+          id:String(g?.id||`group-${gi+1}`),
+          name:String(g?.name||`Keuzegroep ${gi+1}`).trim()||`Keuzegroep ${gi+1}`,
+          items:Array.isArray(g?.items)?g.items.map(normalizeItem).filter(i=>(i.productId||i.customProductId)&&i.qty>0):[]
+        }));
+      }else if(Array.isArray(saved.choiceItems)&&saved.choiceItems.length){
+        choiceGroups=[{id:'legacy-choice-1',name:'Keuze 1',items:saved.choiceItems.map(normalizeItem).filter(i=>(i.productId||i.customProductId)&&i.qty>0)}];
+      }
+      return {
+        id:def.id,
+        name:String(saved.name||def.name),
+        items:Array.isArray(saved.items)?saved.items.map(normalizeItem).filter(i=>(i.productId||i.customProductId)&&i.qty>0):[],
+        choiceGroups
+      };
+    }),
+    customProducts:Array.isArray(stored.customProducts)?stored.customProducts.map(p=>({id:String(p.id||''),name:String(p.name||'').trim(),code:String(p.code||'').trim()})).filter(p=>p.id&&p.name):[],
+    history:Array.isArray(stored.history)?stored.history:[],
+    dayCounts:stored.dayCounts&&typeof stored.dayCounts==='object'?stored.dayCounts:{},
+    dayChoices:stored.dayChoices&&typeof stored.dayChoices==='object'?stored.dayChoices:{}
+  };
+}
+
+async function savePackageSettings(next){
+  packageSettings=next;
+  await setDoc(
+    doc(db,'publicSettings','packageSystem'),
+    {...next,updatedAt:serverTimestamp()},
+    {merge:true}
+  );
+}
+
+
+function packageCustomProductOptions(selected=''){
+  const state=normalizedPackageSettings();
+  return '<option value="">Kies extra product</option>'+
+    state.customProducts
+      .slice()
+      .sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}))
+      .map(p=>`<option value="${safe(p.id)}" ${p.id===selected?'selected':''}>${safe(p.name)}${p.code?` — ${safe(p.code)}`:''}</option>`)
+      .join('');
+}
+
+async function addPackageCustomProduct(){
+  const name=String($('packageCustomProductName').value||'').trim().replace(/\s+/g,' ');
+  const code=String($('packageCustomProductCode').value||'').trim();
+  if(!name)return msg($('packageMessage'),'Vul een productnaam in.',true);
+
+  const state=normalizedPackageSettings();
+  if(state.customProducts.some(p=>p.name.toLowerCase()===name.toLowerCase())){
+    return msg($('packageMessage'),'Dit extra product bestaat al.',true);
+  }
+
+  state.customProducts.push({id:`custom-${Date.now()}`,name,code});
+  try{
+    await savePackageSettings(state);
+    $('packageCustomProductName').value='';
+    $('packageCustomProductCode').value='';
+    msg($('packageMessage'),`${name} toegevoegd aan pakketproducten.`);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Extra product opslaan mislukt: '+e.message,true);
+  }
+}
+
+async function renamePackageCustomProduct(id){
+  const state=normalizedPackageSettings();
+  const item=state.customProducts.find(p=>p.id===id);
+  if(!item)return;
+
+  const next=prompt('Nieuwe productnaam:',item.name);
+  if(next===null)return;
+  const clean=String(next||'').trim().replace(/\s+/g,' ');
+  if(!clean)return;
+
+  if(state.customProducts.some(p=>p.id!==id&&p.name.toLowerCase()===clean.toLowerCase())){
+    return msg($('packageMessage'),'Deze productnaam bestaat al.',true);
+  }
+
+  const nextCode=prompt('Productcode:',item.code||'');
+  if(nextCode===null)return;
+
+  item.name=clean;
+  item.code=String(nextCode||'').trim();
+  try{
+    await savePackageSettings(state);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Hernoemen mislukt: '+e.message,true);
+  }
+}
+
+async function deletePackageCustomProduct(id){
+  const state=normalizedPackageSettings();
+  const item=state.customProducts.find(p=>p.id===id);
+  if(!item)return;
+  if(!confirm(`Extra product "${item.name}" verwijderen?`))return;
+
+  state.customProducts=state.customProducts.filter(p=>p.id!==id);
+  state.packages.forEach(pkg=>{
+    pkg.items=pkg.items.filter(i=>i.customProductId!==id);
+    (pkg.choiceGroups||[]).forEach(group=>{group.items=group.items.filter(i=>i.customProductId!==id);});
+  });
+
+  try{
+    await savePackageSettings(state);
+    renderPackageSystem();
+  }catch(e){
+    msg($('packageMessage'),'Verwijderen mislukt: '+e.message,true);
+  }
+}
+
+function renderPackageCustomProducts(){
+  const box=$('packageCustomProductList');
+  if(!box)return;
+  const state=normalizedPackageSettings();
+  const list=state.customProducts.slice().sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}));
+
+  box.innerHTML=list.length?'':'<div class="meta">Nog geen extra pakketproducten.</div>';
+  for(const p of list){
+    const row=document.createElement('div');
+    row.className='customer-manage-row';
+    row.innerHTML=`
+      <div class="customer-name"><strong>${safe(p.name)}</strong>${p.code?`<div class="meta">Code: ${safe(p.code)}</div>`:''}</div>
+      <button type="button" class="btn light rename-custom-package-product" data-id="${safe(p.id)}">Hernoemen</button>
+      <button type="button" class="btn light delete-custom-package-product" data-id="${safe(p.id)}">Verwijderen</button>`;
+    box.appendChild(row);
+  }
+
+  box.querySelectorAll('.rename-custom-package-product').forEach(btn=>{
+    btn.onclick=()=>renamePackageCustomProduct(btn.dataset.id);
+  });
+  box.querySelectorAll('.delete-custom-package-product').forEach(btn=>{
+    btn.onclick=()=>deletePackageCustomProduct(btn.dataset.id);
+  });
+}
+
+function renderPackageSystem(){
+  if(!$('packageCards'))return;
+  const state=normalizedPackageSettings(),cards=$('packageCards'),countGrid=$('packageCountGrid');
+  cards.innerHTML='';countGrid.innerHTML='';
+
+  const productLabel=item=>{
+    if(item.productId){const p=products.find(x=>x.id===item.productId);return p?productDisplayName(p):'Onbekend product';}
+    if(item.customProductId){const cp=state.customProducts.find(x=>x.id===item.customProductId);return cp?cp.name:'Onbekend extra product';}
+    return 'Keuzeproduct';
+  };
+
+  for(const pkg of state.packages){
+    const card=document.createElement('div');card.className='package-card';card.dataset.packageId=pkg.id;
+    card.innerHTML=`<div class="package-card-head"><input class="package-name-input" value="${safe(pkg.name)}"><button type="button" class="btn secondary save-package-recipe">Opslaan</button></div>
+      <h4 style="margin:10px 0 4px">Vaste producten</h4><div class="package-recipe-list"></div><button type="button" class="btn light add-package-product">+ Vast product toevoegen</button>
+      <hr style="margin:16px 0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><div><h4 style="margin:0">Keuzegroepen</h4><div class="meta">Bijv. Chips = Balls of Curls. Snoep = Jello of Candy.</div></div><button type="button" class="btn light add-choice-group">+ Keuzegroep toevoegen</button></div><div class="package-choice-groups"></div>`;
+    const fixedList=card.querySelector('.package-recipe-list'),groupsBox=card.querySelector('.package-choice-groups');
+
+    const addProductRow=(container,item={productId:'',customProductId:'',qty:1})=>{
+      const row=document.createElement('div');row.className='package-recipe-row';
+      row.innerHTML=`<div><label class="meta">Product uit Catalogus</label><select class="package-product-select">${packageProductOptions(item.productId)}</select><label class="meta" style="margin-top:6px">of extra product</label><select class="package-custom-product-select">${packageCustomProductOptions(item.customProductId)}</select></div><div><label class="meta">PCS per pakket</label><input class="package-product-qty" type="number" min="1" step="1" value="${Math.max(1,Number(item.qty||1))}"></div><button type="button" class="btn light remove-package-product">Verwijder</button>`;
+      const a=row.querySelector('.package-product-select'),b=row.querySelector('.package-custom-product-select');
+      a.onchange=()=>{if(a.value)b.value='';};b.onchange=()=>{if(b.value)a.value='';};
+      row.querySelector('.remove-package-product').onclick=()=>row.remove();container.appendChild(row);
+    };
+
+    const addChoiceGroup=(group=null)=>{
+      const g=group||{id:`group-${Date.now()}-${Math.random().toString(16).slice(2)}`,name:'Nieuwe keuzegroep',items:[]};
+      const el=document.createElement('div');el.className='unit-box package-choice-group';el.dataset.groupId=g.id;
+      el.innerHTML=`<div class="package-card-head"><input class="package-choice-group-name" value="${safe(g.name||'Keuzegroep')}" placeholder="Bijv. Chips"><button type="button" class="btn light remove-choice-group">Groep verwijderen</button></div><div class="meta" style="margin-bottom:8px">Deze groep moet dagelijks samen gelijk zijn aan het aantal gemaakte pakketten.</div><div class="package-choice-group-items"></div><button type="button" class="btn light add-choice-product">+ Product aan groep toevoegen</button>`;
+      const itemsBox=el.querySelector('.package-choice-group-items');(g.items||[]).forEach(i=>addProductRow(itemsBox,i));
+      el.querySelector('.add-choice-product').onclick=()=>addProductRow(itemsBox);
+      el.querySelector('.remove-choice-group').onclick=()=>{if(confirm('Deze keuzegroep verwijderen?'))el.remove();};
+      groupsBox.appendChild(el);
+    };
+
+    pkg.items.forEach(i=>addProductRow(fixedList,i));(pkg.choiceGroups||[]).forEach(g=>addChoiceGroup(g));
+    card.querySelector('.add-package-product').onclick=()=>addProductRow(fixedList);
+    card.querySelector('.add-choice-group').onclick=()=>addChoiceGroup();
+
+    card.querySelector('.save-package-recipe').onclick=async()=>{
+      const name=cleanCustomerName(card.querySelector('.package-name-input').value);if(!name)return msg($('packageMessage'),'Vul een pakketnaam in.',true);
+      const readRows=container=>[...container.children].filter(el=>el.classList.contains('package-recipe-row')).map(row=>({productId:row.querySelector('.package-product-select').value,customProductId:row.querySelector('.package-custom-product-select').value,qty:Number(row.querySelector('.package-product-qty').value||0)})).filter(i=>(i.productId||i.customProductId)&&i.qty>0);
+      const items=readRows(fixedList);
+      const choiceGroups=[...groupsBox.children].filter(el=>el.classList.contains('package-choice-group')).map((el,gi)=>({id:el.dataset.groupId||`group-${Date.now()}-${gi}`,name:cleanCustomerName(el.querySelector('.package-choice-group-name').value)||`Keuzegroep ${gi+1}`,items:readRows(el.querySelector('.package-choice-group-items'))})).filter(g=>g.items.length);
+      const latest=normalizedPackageSettings(),target=latest.packages.find(p=>p.id===pkg.id);target.name=name;target.items=items;target.choiceGroups=choiceGroups;
+      try{await savePackageSettings(latest);msg($('packageMessage'),`${name} opgeslagen.`);renderPackageSystem();}catch(e){msg($('packageMessage'),'Pakket opslaan mislukt: '+e.message,true);}
+    };
+    cards.appendChild(card);
+
+    const countCard=document.createElement('div');countCard.className='package-count-card';
+    const groupsHtml=(pkg.choiceGroups||[]).map(group=>{
+      const inputs=(group.items||[]).map((item,index)=>`<div style="margin-top:7px"><label>${safe(productLabel(item))}</label><input class="package-choice-count" data-package-id="${safe(pkg.id)}" data-group-id="${safe(group.id)}" data-choice-index="${index}" type="number" min="0" step="1" value="${Number(state.dayChoices?.[pkg.id]?.[group.id]?.[index]||0)}" placeholder="Aantal"></div>`).join('');
+      return `<div class="unit-box" style="margin-top:10px;padding:10px"><strong>${safe(group.name)}</strong>${inputs}<div class="meta package-choice-check" data-package-id="${safe(pkg.id)}" data-group-id="${safe(group.id)}" style="margin-top:6px"></div></div>`;
+    }).join('');
+    countCard.innerHTML=`<strong>${safe(pkg.name)}</strong><label>Aantal gemaakt</label><input class="package-made-count" data-package-id="${safe(pkg.id)}" type="number" min="0" step="1" value="${Number(state.dayCounts[pkg.id]||0)}">${groupsHtml}`;
+    countGrid.appendChild(countCard);
+  }
+
+  const updateChecks=()=>{
+    document.querySelectorAll('.package-choice-check').forEach(check=>{
+      const pkgId=check.dataset.packageId,groupId=check.dataset.groupId;
+      const madeInput=[...document.querySelectorAll('.package-made-count')].find(i=>i.dataset.packageId===pkgId);
+      const made=Number(madeInput?.value||0);
+      const assigned=[...document.querySelectorAll('.package-choice-count')].filter(i=>i.dataset.packageId===pkgId&&i.dataset.groupId===groupId).reduce((s,i)=>s+Number(i.value||0),0);
+      check.textContent=`Verdeling: ${assigned} / ${made}`;check.style.color=assigned===made?'#15803d':'#b45309';
+    });
+  };
+  document.querySelectorAll('.package-made-count,.package-choice-count').forEach(i=>i.addEventListener('input',updateChecks));updateChecks();
+  renderPackageCustomProducts();renderPackageHistory();
+}
+
+function addPackageTotal(totals,state,item,used){
+  if(!used)return;
+
+  if(item.productId){
+    const p=products.find(x=>x.id===item.productId);
+    if(!p)return;
+    const key='catalog:'+item.productId;
+    const current=totals.get(key)||{
+      productId:item.productId,
+      customProductId:'',
+      name:productDisplayName(p),
+      code:normalizedCodes(p).each,
+      qty:0
+    };
+    current.qty+=used;
+    totals.set(key,current);
+    return;
+  }
+
+  if(item.customProductId){
+    const custom=state.customProducts.find(x=>x.id===item.customProductId);
+    if(!custom)return;
+    const key='custom:'+item.customProductId;
+    const current=totals.get(key)||{
+      productId:'',
+      customProductId:item.customProductId,
+      name:custom.name,
+      code:custom.code||'',
+      qty:0
+    };
+    current.qty+=used;
+    totals.set(key,current);
+  }
+}
+
+function calculatePackageTotalsFromCounts(counts,choiceCounts={}){
+  const state=normalizedPackageSettings(),totals=new Map();
+  for(const pkg of state.packages){
+    const made=Math.max(0,Number(counts[pkg.id]||0));if(!made)continue;
+    for(const item of pkg.items)addPackageTotal(totals,state,item,made*Math.max(0,Number(item.qty||0)));
+    for(const group of (pkg.choiceGroups||[])){
+      (group.items||[]).forEach((item,index)=>{
+        const assigned=Math.max(0,Number(choiceCounts?.[pkg.id]?.[group.id]?.[index]||0));
+        addPackageTotal(totals,state,item,assigned*Math.max(0,Number(item.qty||0)));
+      });
+    }
+  }
+  return [...totals.values()].sort((a,b)=>a.name.localeCompare(b.name,'nl',{sensitivity:'base'}));
+}
+
+function renderPackageTotals(totals=packageLastTotals){
+  const box=$('packageTotals');
+  if(!box)return;
+  if(!totals.length){
+    box.innerHTML='<div class="meta">Nog niets berekend.</div>';
+    return;
+  }
+  box.innerHTML=totals.map(item=>`
+    <div class="package-total-row">
+      <span>${safe(item.name)}${item.code?` <span class="meta">[${safe(item.code)}]</span>`:''}</span>
+      <strong>${Number(item.qty||0)} PCS</strong>
+    </div>`).join('');
+}
+
+async function calculateAndSavePackages(){
+  const counts={},choiceCounts={};
+  document.querySelectorAll('.package-made-count').forEach(i=>{counts[i.dataset.packageId]=Math.max(0,Number(i.value||0));});
+  document.querySelectorAll('.package-choice-count').forEach(i=>{
+    const p=i.dataset.packageId,g=i.dataset.groupId,n=Number(i.dataset.choiceIndex);
+    if(!choiceCounts[p])choiceCounts[p]={};if(!choiceCounts[p][g])choiceCounts[p][g]={};
+    choiceCounts[p][g][n]=Math.max(0,Number(i.value||0));
+  });
+  if(!Object.values(counts).some(v=>v>0))return msg($('packageMessage'),'Vul bij minstens één pakket het aantal gemaakt in.',true);
+  const checkState=normalizedPackageSettings();
+  for(const pkg of checkState.packages){
+    const made=Math.max(0,Number(counts[pkg.id]||0));if(!made)continue;
+    for(const group of (pkg.choiceGroups||[])){
+      const assigned=(group.items||[]).reduce((sum,item,index)=>sum+Math.max(0,Number(choiceCounts?.[pkg.id]?.[group.id]?.[index]||0)),0);
+      if(assigned!==made)return msg($('packageMessage'),`${pkg.name} – ${group.name}: verdeling is ${assigned}, maar aantal gemaakt is ${made}. Vul de groep precies tot ${made}.`,true);
+    }
+  }
+  const totals=calculatePackageTotalsFromCounts(counts,choiceCounts);
+  if(!totals.length)return msg($('packageMessage'),'Er zijn nog geen producten aan de gekozen pakketten toegevoegd.',true);
+  const state=normalizedPackageSettings(),packageNames={};state.packages.forEach(p=>packageNames[p.id]=p.name);
+  const historyEntry={id:`pkg-${Date.now()}`,createdAtISO:new Date().toISOString(),counts,choiceCounts,packageNames,totals:totals.map(x=>({...x}))};
+  state.dayCounts=counts;state.dayChoices=choiceCounts;state.history=[historyEntry,...state.history].slice(0,200);
+  try{await savePackageSettings(state);packageLastTotals=totals;renderPackageTotals(totals);renderPackageHistory();msg($('packageMessage'),'Pakketten berekend en in geschiedenis opgeslagen.');}
+  catch(e){msg($('packageMessage'),'Pakketberekening opslaan mislukt: '+e.message,true);}
+}
+
+async function startNewPackageDay(){
+  const state=normalizedPackageSettings();
+  state.dayCounts={};
+  state.dayChoices={};
+  try{
+    await savePackageSettings(state);
+    packageLastTotals=[];
+    renderPackageSystem();
+    renderPackageTotals([]);
+    msg($('packageMessage'),'Nieuwe dag gestart. Alle gemaakte aantallen staan weer op 0.');
+  }catch(e){
+    msg($('packageMessage'),'Nieuwe dag starten mislukt: '+e.message,true);
+  }
+}
+
+async function deletePackageHistoryEntry(id){
+  if(!confirm('Deze pakketregistratie verwijderen?'))return;
+  const state=normalizedPackageSettings();
+  state.history=state.history.filter(h=>h.id!==id);
+  try{
+    await savePackageSettings(state);
+    renderPackageHistory();
+  }catch(e){
+    msg($('packageMessage'),'Geschiedenis verwijderen mislukt: '+e.message,true);
+  }
+}
+
+function renderPackageHistory(){
+  const box=$('packageHistory');
+  if(!box)return;
+  const state=normalizedPackageSettings();
+  if(!state.history.length){
+    box.innerHTML='<div class="meta">Nog geen pakketgeschiedenis.</div>';
+    return;
+  }
+
+  box.innerHTML=state.history.map(h=>{
+    const date=new Date(h.createdAtISO||Date.now()).toLocaleString('nl-NL');
+    const made=Object.entries(h.counts||{})
+      .filter(([,qty])=>Number(qty)>0)
+      .map(([id,qty])=>`${safe(h.packageNames?.[id]||id)}: ${Number(qty)}`)
+      .join(' · ');
+    const totalLines=(h.totals||[]).map(t=>`${safe(t.name)}: ${Number(t.qty||0)} PCS`).join('<br>');
+    return `<div class="package-history-card">
+      <strong>${safe(date)}</strong>
+      <div class="meta" style="margin-top:5px">${made||'Geen aantallen'}</div>
+      <div style="margin-top:8px">${totalLines}</div>
+      <div class="button-row"><button type="button" class="btn light delete-package-history" data-id="${safe(h.id)}">Verwijderen</button></div>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('.delete-package-history').forEach(btn=>{
+    btn.onclick=()=>deletePackageHistoryEntry(btn.dataset.id);
+  });
+}
+
+function exportPackageTotalsCsv(){
+  const totals=packageLastTotals.length?packageLastTotals:[];
+  if(!totals.length){
+    return msg($('packageMessage'),'Bereken eerst de pakketten voordat je exporteert.',true);
+  }
+
+  const esc=v=>String(v??'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+
+  const rows=totals.map(t=>`
+    <tr>
+      <td style="mso-number-format:'\\@';">${esc(t.code||'')}</td>
+      <td>${esc(t.name)}</td>
+      <td style="mso-number-format:'0';">${Number(t.qty||0)}</td>
+    </tr>`).join('');
+
+  const html=`<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      table{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11pt}
+      th,td{border:1px solid #999;padding:5px 8px}
+      th{font-weight:bold;background:#eee}
+    </style>
+  </head>
+  <body>
+    <table>
+      <thead><tr><th>Productcode</th><th>Productnaam</th><th>Aantal PCS</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </body>
+  </html>`;
+
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`pakket-gebruik-${new Date().toISOString().slice(0,10)}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function normalizeCustomerKey(name){
+  return String(name||'').trim().replace(/\s+/g,' ').toLowerCase();
+}
+
+function cleanCustomerName(name){
+  return String(name||'').trim().replace(/\s+/g,' ');
+}
+
+function customerDocId(name){
+  return encodeURIComponent(normalizeCustomerKey(name)).replace(/%/g,'_');
+}
+
+async function ensureCustomerExists(name){
+  const clean=cleanCustomerName(name);
+  if(!clean)return;
+  const id=customerDocId(clean);
+  await setDoc(
+    doc(db,'customers',id),
+    {name:clean,nameKey:normalizeCustomerKey(clean),updatedAt:serverTimestamp()},
+    {merge:true}
+  );
+}
+
+function renderCustomerSuggestions(){
+  const list=$('customerSuggestions');
+  if(!list)return;
+  const names=customers
+    .map(c=>cleanCustomerName(c.name))
+    .filter(Boolean)
+    .sort((a,b)=>a.localeCompare(b,'nl',{sensitivity:'base'}));
+  list.innerHTML=names.map(name=>`<option value="${safe(name)}"></option>`).join('');
+}
+
+function renderCustomerManager(){
+  const box=$('customerManagerList');
+  if(!box)return;
+
+  const sorted=customers.slice().sort((a,b)=>
+    cleanCustomerName(a.name).localeCompare(cleanCustomerName(b.name),'nl',{sensitivity:'base'})
+  );
+
+  box.innerHTML=sorted.length?'':'<div class="meta">Nog geen klanten opgeslagen.</div>';
+
+  for(const c of sorted){
+    const row=document.createElement('div');
+    row.className='customer-manage-row';
+    row.innerHTML=`
+      <div class="customer-name"><strong>${safe(cleanCustomerName(c.name))}</strong></div>
+      <button type="button" class="btn light rename-customer" data-id="${c.id}">Hernoemen</button>
+      <button type="button" class="btn light delete-customer" data-id="${c.id}">Verwijderen</button>`;
+    box.appendChild(row);
+  }
+
+  box.querySelectorAll('.rename-customer').forEach(btn=>{
+    btn.onclick=()=>renameCustomer(btn.dataset.id);
+  });
+  box.querySelectorAll('.delete-customer').forEach(btn=>{
+    btn.onclick=()=>deleteCustomer(btn.dataset.id);
+  });
+}
+
+async function renameCustomer(id){
+  const current=customers.find(c=>c.id===id);
+  if(!current)return;
+
+  const next=cleanCustomerName(prompt('Nieuwe klantnaam:',current.name||''));
+  if(!next||normalizeCustomerKey(next)===normalizeCustomerKey(current.name))return;
+
+  const existing=customers.find(c=>normalizeCustomerKey(c.name)===normalizeCustomerKey(next));
+  if(existing){
+    return msg($('customerManagerMsg'),'Deze klantnaam bestaat al.',true);
+  }
+
+  try{
+    const newId=customerDocId(next);
+    await setDoc(doc(db,'customers',newId),{
+      name:next,
+      nameKey:normalizeCustomerKey(next),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+
+    await deleteDoc(doc(db,'customers',id));
+
+    // Bestaande verkoophistorie krijgt dezelfde nieuwe klantnaam.
+    const affected=sales.filter(s=>normalizeCustomerKey(s.customerName)===normalizeCustomerKey(current.name));
+    await Promise.all(
+      affected.map(s=>setDoc(
+        doc(db,'sales',s.id),
+        {customerName:next},
+        {merge:true}
+      ))
+    );
+
+    msg($('customerManagerMsg'),`Klant hernoemd naar ${next}.`);
+  }catch(e){
+    msg($('customerManagerMsg'),'Hernoemen mislukt: '+e.message,true);
+  }
+}
+
+async function deleteCustomer(id){
+  const current=customers.find(c=>c.id===id);
+  if(!current)return;
+
+  if(!confirm(`Klant "${current.name}" uit de klantenlijst verwijderen? De bestaande bestelhistorie blijft behouden.`))return;
+
+  try{
+    await deleteDoc(doc(db,'customers',id));
+    msg($('customerManagerMsg'),`Klant ${current.name} verwijderd uit de klantenlijst.`);
+  }catch(e){
+    msg($('customerManagerMsg'),'Verwijderen mislukt: '+e.message,true);
+  }
+}
+
+async function saveSale(){
+  const customerName=cleanCustomerName($('saleCustomerName').value),items=getSaleItems();
+  if(!customerName)return msg($('saleMessage'),'Vul klantnaam in.',true);
+  if(!items.length)return msg($('saleMessage'),'Voeg minstens één product toe.',true);
+  const total=items.reduce((s,x)=>s+x.qty*x.price,0);
+  try{
+    await ensureCustomerExists(customerName);
+    await addDoc(collection(db,'sales'),{
+      customerName,
+      orderType:document.querySelector('input[name="orderType"]:checked')?.value||'E.C',
+      note:$('saleNote').value.trim(),
+      items,total,createdAt:serverTimestamp()
+    });
+    msg($('saleMessage'),'Bestelling opgeslagen.'); resetSale();
+  }catch(e){msg($('saleMessage'),'Opslaan mislukt: '+e.message,true);}
+}
+
+async function deleteSavedOrder(id){
+  const order=sales.find(s=>s.id===id);
+  if(!order)return;
+
+  const customer=order.customerName||'Onbekende klant';
+  const ok=confirm(`Bestelling van "${customer}" verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
+  if(!ok)return;
+
+  try{
+    await deleteDoc(doc(db,'sales',id));
+    msg($('customerManagerMsg'),'Bestelling verwijderd.');
+  }catch(e){
+    msg($('customerManagerMsg'),'Bestelling verwijderen mislukt: '+e.message,true);
+  }
+}
+
+async function deleteAllSavedOrders(){
+  if(!sales.length)return;
+
+  const ok=confirm(`Alle ${sales.length} opgeslagen/verzonden bestellingen verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
+  if(!ok)return;
+
+  const really=confirm('Weet je het zeker? Alle bestelhistorie wordt verwijderd.');
+  if(!really)return;
+
+  try{
+    await Promise.all(sales.map(s=>deleteDoc(doc(db,'sales',s.id))));
+    msg($('customerManagerMsg'),'Alle bestellingen zijn verwijderd.');
+  }catch(e){
+    msg($('customerManagerMsg'),'Niet alle bestellingen konden worden verwijderd: '+e.message,true);
+  }
+}
+
+function renderHistory(){
+  const q=$('customerSearch').value.toLowerCase();
+  const list=sales.filter(s=>(`${s.customerName||''}`).toLowerCase().includes(q))
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  $('historyList').innerHTML=list.length?'':'<div class="meta">Nog geen verkopen.</div>';
+  for(const s of list){
+    const card=document.createElement('div'); card.className='history-card';
+    const d=s.createdAt?.toDate?.(),date=d?d.toLocaleString('nl-NL'):'Bezig met opslaan…';
+    const items=(s.items||[]).map(i=>`${Number(i.qty||0)} × ${(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`).join('<br>');
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div></div><div class="meta" style="margin-top:10px">${items}</div><div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
+      <button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>
+      <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">Bestelling verwijderen</button>
+    </div>`;
+    $('historyList').appendChild(card);
+  }
+  $('historyList').querySelectorAll('.edit-saved-order').forEach(button=>button.onclick=()=>editSavedOrder(button.dataset.sale));
+  $('historyList').querySelectorAll('.delete-saved-order').forEach(button=>button.onclick=()=>deleteSavedOrder(button.dataset.sale));
+}
+
+function buildWhatsAppText(){
+  const customerName=$('saleCustomerName').value.trim()||'Klant';
+  const orderType=document.querySelector('input[name="orderType"]:checked')?.value||'E.C';
+  const items=getSaleItems();
+  if(!items.length){
+    msg($('saleMessage'),'Voeg minstens één product toe.',true);
+    return '';
+  }
+  const lines=[
+    '*Bestelling MSFK*',
+    `Klant: ${customerName}`,
+    `Bestelling: ${orderType}`,
+    ''
+  ];
+  items.forEach(i=>{
+    lines.push(`${i.qty} × ${i.unitType?.toUpperCase()||'EACH'} ${i.productCode?`[${i.productCode}] `:''}${i.name} — $ ${(i.qty*i.price).toFixed(2)}`);
+  });
+  const total=items.reduce((s,x)=>s+x.qty*x.price,0);
+  lines.push('',`*Totaal: $ ${total.toFixed(2)}*`);
+  const note=$('saleNote').value.trim();
+  if(note) lines.push(`Opmerking: ${note}`);
+  return lines.join('\n');
+}
+
+function sendSaleToWhatsApp(){
+  const text=buildWhatsAppText();
+  if(!text)return;
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  window.open(url,'_blank','noopener');
+}
+
+
+function expiryDaysLeft(dateStr){
+  if(!dateStr)return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const expiry=new Date(dateStr+'T00:00:00');
+  return Math.ceil((expiry-today)/86400000);
+}
+function getExpiringProducts(){
+  const threshold=Number(localStorage.getItem('msfkNotificationDays')||30);
+  return products
+    .flatMap(p=>productExpiryEntries(p).map(entry=>({...p,...entry,daysLeft:expiryDaysLeft(entry.expiryDate)})))
+    .filter(p=>p.daysLeft!==null && p.daysLeft<=threshold)
+    .sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate)||productDisplayName(a).localeCompare(productDisplayName(b),'nl',{sensitivity:'base'}));
+}
+function renderExpiryAlerts(){
+  const list=getExpiringProducts().slice().sort((a,b)=>{
+    const da=String(a.expiryDate||''),dbb=String(b.expiryDate||'');
+    if(da!==dbb)return da.localeCompare(dbb);
+    return productDisplayName(a).localeCompare(productDisplayName(b),'nl',{sensitivity:'base'});
+  });
+  const panel=$('expiryAlertPanel'),box=$('expiryAlertList');
+  panel.classList.toggle('hidden',!list.length);
+  box.innerHTML='';
+
+  for(const p of list){
+    const row=document.createElement('div');
+    row.className='alert-item';
+    if(p.daysLeft<0)row.classList.add('expired');
+    else if(p.daysLeft<=7)row.classList.add('urgent');
+    else if(p.daysLeft<=30)row.classList.add('soon');
+    else row.classList.add('later');
+
+    const daysText=p.daysLeft<0
+      ? `${Math.abs(p.daysLeft)} dagen verlopen`
+      : p.daysLeft===0
+        ? 'Verloopt vandaag'
+        : `Nog ${p.daysLeft} dagen`;
+
+    row.innerHTML=`
+      ${p.photoData?`<img class="alert-photo" src="${p.photoData}" alt="">`:'<div class="alert-photo placeholder">Geen foto</div>'}
+      <div class="alert-main">
+        <div class="alert-title">${safe(productDisplayName(p))}</div>
+        <div class="alert-exp">EXP: ${safe(formatDate(p.expiryDate))}</div>
+        <div class="alert-stock"><strong>Voorraad: ${Number(p.expiryStock||0)} PCS</strong></div>
+        <div class="alert-days">${daysText}</div>
+      </div>
+      <div class="alert-action">
+        <button type="button" class="btn light open-alert-product" data-id="${p.id}">Open product</button>
+      </div>`;
+    box.appendChild(row);
+  }
+
+  box.querySelectorAll('.open-alert-product').forEach(button=>{
+    button.onclick=()=>{
+      const p=products.find(x=>x.id===button.dataset.id);
+      if(!p)return;
+      document.querySelector('[data-tab="catalog"]').click();
+      $('search').value=p.barcode||p.name||'';
+      render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    };
+  });
+}
+
+function updateNotificationStatus(){
+  const status=$('notificationStatus');
+  if(!('Notification' in window)){status.textContent='Niet ondersteund op dit apparaat';return;}
+  if(Notification.permission==='granted')status.textContent='Ingeschakeld';
+  else if(Notification.permission==='denied')status.textContent='Geblokkeerd in browserinstellingen';
+  else status.textContent='Nog niet ingeschakeld';
+}
+async function enableNotifications(){
+  if(!('Notification' in window))return msg($('notificationMessage'),'Browsermeldingen worden niet ondersteund.',true);
+  try{
+    const permission=await Notification.requestPermission();
+    updateNotificationStatus();
+    if(permission==='granted'){
+      msg($('notificationMessage'),'Meldingen zijn ingeschakeld.');
+      await maybeShowExpiryNotification(true);
+    }else{
+      msg($('notificationMessage'),'Toestemming voor meldingen is niet gegeven.',true);
+    }
+  }catch(e){
+    console.warn('Meldingen inschakelen mislukt:',e);
+    msg($('notificationMessage'),'Meldingen konden op dit apparaat niet worden gestart. De meldingenpagina blijft wel werken.',true);
+  }
+}
+async function maybeShowExpiryNotification(force=false){
+  renderExpiryAlerts();
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+
+  const list=getExpiringProducts();
+  if(!list.length)return;
+
+  const today=new Date().toISOString().slice(0,10);
+  const last=localStorage.getItem('msfkLastExpiryNotification');
+  if(!force && last===today)return;
+
+  const expired=list.filter(p=>p.daysLeft<0).length;
+  const soon=list.filter(p=>p.daysLeft>=0).length;
+  const parts=[];
+  if(expired)parts.push(`${expired} verlopen`);
+  if(soon)parts.push(`${soon} verlopen binnenkort`);
+
+  const title='MSFK EXP-melding';
+  const options={body:parts.join(' · '),icon:'./icon.svg'};
+
+  try{
+    // Android/Samsung Internet vereist showNotification via een Service Worker.
+    if('serviceWorker' in navigator){
+      const registration=await navigator.serviceWorker.getRegistration();
+      if(registration&&registration.showNotification){
+        await registration.showNotification(title,options);
+        localStorage.setItem('msfkLastExpiryNotification',today);
+        return;
+      }
+    }
+
+    // Desktopbrowsers ondersteunen meestal de gewone Notification-constructor.
+    const isAndroid=/Android/i.test(navigator.userAgent||'');
+    if(!isAndroid){
+      new Notification(title,options);
+      localStorage.setItem('msfkLastExpiryNotification',today);
+      return;
+    }
+
+    // Op Android zonder actieve Service Worker: geen fout tonen.
+    console.info('Geen actieve Service Worker voor systeemmelding. Meldingen blijven zichtbaar op de pagina Meldingen.');
+  }catch(e){
+    console.warn('Systeemmelding niet beschikbaar op dit apparaat:',e);
+  }
+}
+
+
+async function stopCatalogScanner(){
+  if(catalogQrCode&&catalogScannerRunning){
+    try{await catalogQrCode.stop();}catch{}
+    try{await catalogQrCode.clear();}catch{}
+  }
+  catalogScannerRunning=false;
+  $('catalogScanReader').classList.add('hidden');
+  $('stopCatalogScanBtn').classList.add('hidden');
+}
+async function startCatalogScanner(){
+  if(!window.Html5Qrcode){
+    alert('Scanner kon niet worden geladen. Controleer internet en probeer opnieuw.');
+    return;
+  }
+  await stopCatalogScanner();
+  $('catalogScanReader').classList.remove('hidden');
+  $('stopCatalogScanBtn').classList.remove('hidden');
+  catalogQrCode=new Html5Qrcode('catalogScanReader');
+  const formats=[
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,
+    Html5QrcodeSupportedFormats.UPC_A,
+    Html5QrcodeSupportedFormats.UPC_E,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39
+  ];
+  try{
+    await catalogQrCode.start(
+      {facingMode:'environment'},
+      {fps:10,qrbox:{width:280,height:150},formatsToSupport:formats},
+      async decodedText=>{
+        $('search').value=decodedText;
+        render();
+        await stopCatalogScanner();
+        const match=products.find(p=>String(p.barcode||'').trim()===String(decodedText).trim());
+        if(!match){
+          alert('Geen opgeslagen product gevonden met deze barcode.');
+        }
+      },
+      ()=>{}
+    );
+    catalogScannerRunning=true;
+  }catch(e){
+    await stopCatalogScanner();
+    alert('Camera kon niet worden geopend. Geef Chrome toestemming voor de camera.');
+  }
+}
+
+
+
+
+
+async function migrateAllToppersToUppercase(){
+  const affected=products.filter(p=>{
+    const raw=String(p.category||'').trim();
+    return raw.toLowerCase()==='toppers' && raw!=='TOPPERS';
+  });
+
+  if(affected.length){
+    try{
+      await Promise.all(
+        affected.map(p=>setDoc(
+          doc(db,'catalogProducts',p.id),
+          {category:'TOPPERS',updatedAt:serverTimestamp()},
+          {merge:true}
+        ))
+      );
+      console.info(`${affected.length} product(en) verplaatst naar TOPPERS.`);
+    }catch(e){
+      console.warn('TOPPERS migratie mislukt:',e);
+    }
+  }
+
+  const cleaned=savedExtraCategories().filter(c=>String(c||'').trim().toUpperCase()!=='TOPPERS');
+  saveExtraCategories(cleaned);
+}
+
+function normalizeCategoryName(name){
+  return String(name||'').trim().replace(/\s+/g,' ').toUpperCase();
+}
+function savedExtraCategories(){
+  try{
+    const arr=JSON.parse(localStorage.getItem('msfkExtraCategories')||'[]');
+    return Array.isArray(arr)?arr.map(normalizeCategoryName).filter(Boolean):[];
+  }catch{return []}
+}
+function saveExtraCategories(list){
+  const clean=[...new Set(list.map(normalizeCategoryName).filter(Boolean))];
+  localStorage.setItem('msfkExtraCategories',JSON.stringify(clean));
+}
+function allCategoryNames(){
+  const fromProducts=products.map(p=>normalizeCategoryName(p.category||'OVERIG')).filter(Boolean);
+  const all=[...new Set([...fromProducts.map(normalizeCategoryName),...savedExtraCategories().map(normalizeCategoryName),'MAKRO','MAGAZIJN','MQS','TOPPERS','OVERIG'])];
+  return all.sort((a,b)=>{
+    if(a==='MAKRO')return -1;
+    if(b==='MAKRO')return 1;
+    if(a==='MAGAZIJN')return -1;
+    if(b==='MAGAZIJN')return 1;
+    if(a==='MQS')return -1;
+    if(b==='MQS')return 1;
+    if(a==='TOPPERS')return -1;
+    if(b==='TOPPERS')return 1;
+    return a.localeCompare(b,'nl',{sensitivity:'base'});
+  });
+}
+function refreshCategorySelects(){
+  const names=allCategoryNames();
+  const current=$('cat')?.value||'';
+  if($('cat')){
+    $('cat').innerHTML=names.map(c=>`<option value="${safe(c)}">${safe(c)}</option>`).join('');
+    if(names.includes(current))$('cat').value=current;
+    else $('cat').value=names[0]||'OVERIG';
+  }
+  if($('category')){
+    const currentFilter=$('category').value||'all';
+    $('category').innerHTML='<option value="all">Alle categorieën</option>'+names.map(c=>`<option value="${safe(c)}">${safe(c)}</option>`).join('');
+    if(currentFilter==='all'||names.includes(currentFilter))$('category').value=currentFilter;
+  }
+  renderCategoryManager();
+  updateMQSWeightUI();
+}
+function renderCategoryManager(){
+  if(!$('categoryManagerList'))return;
+  const names=allCategoryNames();
+  $('categoryManagerList').innerHTML='';
+  for(const name of names){
+    const row=document.createElement('div');
+    row.className='category-manager-list-row';
+    const count=products.filter(p=>normalizeCategoryName(p.category)===name).length;
+    row.innerHTML=`<div class="cat-name"><strong>${safe(name)}</strong> <span class="meta">(${count} producten)</span></div>
+      <button type="button" class="btn light rename-category" data-name="${safe(name)}">Hernoemen</button>
+      <button type="button" class="btn light delete-category" data-name="${safe(name)}">Verwijderen</button>`;
+    $('categoryManagerList').appendChild(row);
+  }
+  $('categoryManagerList').querySelectorAll('.rename-category').forEach(btn=>btn.onclick=()=>renameCategory(btn.dataset.name));
+  $('categoryManagerList').querySelectorAll('.delete-category').forEach(btn=>btn.onclick=()=>deleteCategory(btn.dataset.name));
+}
+async function addCategory(){
+  const name=normalizeCategoryName($('newCategoryName').value);
+  if(!name)return msg($('categoryManagerMessage'),'Vul een categorienaam in.',true);
+  const extras=savedExtraCategories();
+  if(!extras.includes(name))saveExtraCategories([...extras,name]);
+  $('newCategoryName').value='';
+  refreshCategorySelects();
+  $('cat').value=name;
+  updateMQSWeightUI();
+  msg($('categoryManagerMessage'),`Categorie ${name} toegevoegd.`);
+}
+async function renameCategory(oldName){
+  const next=normalizeCategoryName(prompt(`Nieuwe naam voor ${oldName}:`,oldName));
+  if(!next||next===oldName)return;
+  try{
+    const affected=products.filter(p=>normalizeCategoryName(p.category)===oldName);
+    await Promise.all(affected.map(p=>setDoc(doc(db,'catalogProducts',p.id),{category:next,updatedAt:serverTimestamp()},{merge:true})));
+    let extras=savedExtraCategories().filter(c=>c!==oldName);
+    if(!extras.includes(next))extras.push(next);
+    saveExtraCategories(extras);
+    refreshCategorySelects();
+    msg($('categoryManagerMessage'),`${oldName} is hernoemd naar ${next}.`);
+  }catch(e){msg($('categoryManagerMessage'),'Hernoemen mislukt: '+e.message,true);}
+}
+async function deleteCategory(name){
+  if(['MAKRO','MAGAZIJN','MQS','TOPPERS','OVERIG'].includes(normalizeCategoryName(name))){
+    return msg($('categoryManagerMessage'),`${name} is een vaste categorie en kan niet worden verwijderd.`,true);
+  }
+  const affected=products.filter(p=>normalizeCategoryName(p.category)===name);
+  if(affected.length){
+    return msg($('categoryManagerMessage'),`Categorie ${name} bevat nog ${affected.length} product(en). Hernoem/verplaats die eerst.`,true);
+  }
+  if(!confirm(`Categorie ${name} verwijderen?`))return;
+  saveExtraCategories(savedExtraCategories().filter(c=>c!==name));
+  refreshCategorySelects();
+  msg($('categoryManagerMessage'),`Categorie ${name} verwijderd.`);
+}
+
+function categories(){refreshCategorySelects();}
+
+function mqsVariantLabel(p){
+  const key=mqsFormatKeyForDisplay(p);
+  if(key==='mqs')return 'MQS';
+  if(key==='500')return '500 gr';
+  if(key==='kg'){
+    const actual=Number(p.actualWeightKg||0);
+    return actual>0?`KG – ${Number(actual).toLocaleString('nl-NL',{maximumFractionDigits:3})} KG`:'KG';
+  }
+  return 'MQS';
+}
+function mqsGroupKey(p){
+  return String(p.name||'').trim().toLowerCase();
+}
+function mqsGroupDisplayName(group){
+  return String(group?.[0]?.name||'MQS').trim()||'MQS';
+}
+async function deleteMQSGroupByName(name){
+  const items=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===String(name||'').trim().toLowerCase());
+  if(!items.length)return;
+  if(!confirm(`MQS product "${name}" met ${items.length} formaat/formaten verwijderen?`))return;
+  try{
+    await Promise.all(items.map(p=>deleteDoc(doc(db,'catalogProducts',p.id))));
+  }catch(e){
+    alert('Verwijderen mislukt: '+e.message);
+  }
+}
+
+function render(){
+  const q=$('search').value.toLowerCase(),selectedCategory=$('category').value,a=$('availability').value;
+  const filtered=products.filter(p=>{
+    const t=`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''} ${p.category||''}`.toLowerCase();
+    return p.internalOnly!==true&&(!q||t.includes(q))&&(selectedCategory==='all'||(p.category||'OVERIG')===selectedCategory)&&(a==='all'||(a==='available'?p.available!==false:p.available===false));
+  });
+
+  const groups={};
+  for(const p of filtered){
+    const category=(p.category||'OVERIG').trim()||'Overig';
+    (groups[category]??=[]).push(p);
+  }
+
+  const categoryNames=Object.keys(groups).sort((x,y)=>{if(x.toUpperCase()==='MQS')return -1;if(y.toUpperCase()==='MQS')return 1;return x.localeCompare(y,'nl');});
+  $('grid').innerHTML='';
+  $('categoryJumpbar').innerHTML='';
+
+  for(const category of categoryNames){
+    groups[category].sort(compareProductsByNameWeight);
+
+    const isMQSCategoryView=category.toUpperCase()==='MQS';
+    const mqsGrouped=isMQSCategoryView
+      ? Object.values(groups[category].reduce((acc,p)=>{const k=mqsGroupKey(p);(acc[k]??=[]).push(p);return acc;},{}))
+          .sort((a,b)=>mqsGroupDisplayName(a).localeCompare(mqsGroupDisplayName(b),'nl',{sensitivity:'base'}))
+      : null;
+
+    const shownCount=isMQSCategoryView?mqsGrouped.length:groups[category].length;
+    const safeId='cat-'+category.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+
+    const jump=document.createElement('button');
+    jump.type='button';
+    jump.textContent=`${category} (${shownCount})`;
+    jump.onclick=()=>document.getElementById(safeId)?.scrollIntoView({behavior:'smooth',block:'start'});
+    $('categoryJumpbar').appendChild(jump);
+
+    const section=document.createElement('section');
+    section.id=safeId;
+    section.className='category-section';
+    if(localStorage.getItem('msfkCategory:'+category)==='closed')section.classList.add('collapsed');
+
+    section.innerHTML=`<button type="button" class="category-header">
+      <span>${safe(category)} (${shownCount})</span>
+      <span class="category-chevron">▼</span>
+    </button>
+    <div class="category-content">
+      <input class="category-search" type="search" placeholder="Zoek in ${safe(category)}…">
+      <div class="category-products"></div>
+    </div>`;
+
+    const container=section.querySelector('.category-products');
+
+    const renderProductsInCategory=(term='')=>{
+      container.innerHTML='';
+
+      if(isMQSCategoryView){
+        const visibleGroups=mqsGrouped.filter(group=>{
+          const hay=group.map(p=>`${p.name||''} ${mqsVariantLabel(p)} ${normalizedCodes(p).each}`).join(' ').toLowerCase();
+          return hay.includes(term.toLowerCase());
+        });
+
+        for(const group of visibleGroups){
+          group.sort((a,b)=>{
+            const order={mqs:0,'500':1,kg:2};
+            return (order[mqsFormatKeyForDisplay(a)]??99)-(order[mqsFormatKeyForDisplay(b)]??99);
+          });
+
+          const first=group[0];
+          const imageProduct=group.find(p=>p.photoData)||first;
+          const card=document.createElement('article');
+          card.className='card';
+
+          const variantsHtml=group.map(p=>{
+            const current=catalogCart[p.id]||{unitType:'each',qty:''};
+            const price=Number(p.priceEach??p.price??0);
+            const code=normalizedCodes(p).each;
+            const crt=Number(p.unitsPerCarton||0);
+            return `<div class="mqs-variant" data-mqs-product="${p.id}">
+              <div class="mqs-variant-head">
+                <span>${safe(mqsVariantLabel(p))}</span>
+                <strong>$ ${price.toFixed(2)}</strong>
+              </div>
+              <div class="mqs-variant-meta">
+                ${code?`Code: ${safe(code)}${crt?' · ':''}`:''}${crt?`CRT: ${crt} PCS`:''}
+              </div>
+              <div class="mqs-order-row">
+                <span>Aantal</span>
+                <input class="mqs-order-qty" data-product="${p.id}" type="number" min="0" step="1" placeholder="0" value="${current.qty||''}">
+              </div>
+            </div>`;
+          }).join('');
+
+          card.innerHTML=`<div class="photo">${imageProduct.photoData?`<img src="${imageProduct.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${group.every(p=>p.available===false)?'Uitverkocht':'Beschikbaar'}</span></div>
+            <div class="body">
+              <div class="cat">MQS</div>
+              <h2>${safe(mqsGroupDisplayName(group))}</h2>
+              <div class="mqs-variants">${variantsHtml}</div>
+              <div class="product-admin-actions">
+                <button type="button" class="btn light edit-mqs-group">Bewerken</button>
+                <button type="button" class="btn light duplicate-mqs-group">Dupliceren</button>
+                <button type="button" class="btn light delete-mqs-group">Verwijderen</button>
+              </div>
+            </div>`;
+
+          container.appendChild(card);
+
+          card.querySelectorAll('.mqs-order-qty').forEach(input=>{
+            input.oninput=()=>setCatalogCartItem(input.dataset.product,'each',input.value);
+          });
+          card.querySelector('.edit-mqs-group').onclick=()=>edit(first.id);
+          card.querySelector('.duplicate-mqs-group').onclick=()=>duplicateProduct(first.id);
+          card.querySelector('.delete-mqs-group').onclick=()=>deleteMQSGroupByName(mqsGroupDisplayName(group));
+        }
+        return;
+      }
+
+      const visible=groups[category].filter(p=>(`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()));
+
+      for(const p of visible){
+        const current=catalogCart[p.id]||{unitType:'each',qty:''};
+        const prices=normalizedPrices(p);
+        const options=[
+          prices.each>0?'<option value="each">EACH</option>':'',
+          prices.p12>0?'<option value="p12">P12</option>':'',
+          prices.crt>0?'<option value="crt">CRT</option>':''
+        ].join('');
+
+        const card=document.createElement('article');
+        card.className='card';
+        card.innerHTML=`<div class="photo">${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div>
+          <div class="body">
+            <div class="cat">${safe(p.category||'OVERIG')}</div>
+            <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
+            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line">EXP: ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}</div>
+            ${productPriceHtml(p)}
+            <div class="catalog-order-controls">
+              <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
+              <input class="catalog-order-qty" data-product="${p.id}" type="number" min="0" step="1" placeholder="Aantal" value="${current.qty||''}">
+            </div>
+            <div class="product-admin-actions">
+              <button type="button" class="btn light edit-product-card" data-id="${p.id}">Bewerken</button>
+              <button type="button" class="btn light duplicate-product-card" data-id="${p.id}">Dupliceren</button>
+              <button type="button" class="btn light delete-product-card" data-id="${p.id}">Verwijderen</button>
+            </div>
+          </div>`;
+
+        container.appendChild(card);
+
+        const unit=card.querySelector('.catalog-order-unit');
+        const qty=card.querySelector('.catalog-order-qty');
+
+        if([...unit.options].some(o=>o.value===current.unitType))unit.value=current.unitType;
+        else if(unit.options.length)unit.value=unit.options[0].value;
+
+        const sync=()=>setCatalogCartItem(p.id,unit.value,qty.value);
+        unit.onchange=sync;
+        qty.oninput=sync;
+        card.querySelector('.edit-product-card').onclick=()=>edit(p.id);
+        card.querySelector('.duplicate-product-card').onclick=()=>duplicateProduct(p.id);
+        card.querySelector('.delete-product-card').onclick=()=>deleteProductById(p.id);
+      }
+    };
+
+    section.querySelector('.category-header').onclick=()=>{
+      section.classList.toggle('collapsed');
+      localStorage.setItem('msfkCategory:'+category,section.classList.contains('collapsed')?'closed':'open');
+    };
+    section.querySelector('.category-search').oninput=e=>renderProductsInCategory(e.target.value);
+
+    renderProductsInCategory();
+    $('grid').appendChild(section);
+  }
+
+  if(!categoryNames.length)$('grid').innerHTML='<div class="empty">Geen producten gevonden.</div>';
+
+  updateCatalogCart();
+  renderList();
+}
+function renderList(){
+  const root=$('list');
+  root.innerHTML='';
+
+  const byCategory={};
+  for(const p of products){
+    const category=(p.category||'OVERIG').trim()||'OVERIG';
+    (byCategory[category]??=[]).push(p);
+  }
+
+  const categoryNames=Object.keys(byCategory).sort((a,b)=>{
+    if(a.toUpperCase()==='MQS')return -1;
+    if(b.toUpperCase()==='MQS')return 1;
+    return a.localeCompare(b,'nl',{sensitivity:'base'});
+  });
+
+  for(const category of categoryNames){
+    const section=document.createElement('section');
+    section.className='edit-category-section collapsed';
+
+    const isMQS=category.toUpperCase()==='MQS';
+    const count=isMQS
+      ? new Set(byCategory[category].map(p=>String(p.name||'').trim().toLowerCase())).size
+      : byCategory[category].length;
+
+    section.innerHTML=`<button type="button" class="edit-category-header">
+      <span>${safe(category)} (${count})</span>
+      <span>▼</span>
+    </button>
+    <div class="edit-category-content">
+      <input class="edit-category-search" type="search" placeholder="Zoek in ${safe(category)}…">
+      <div class="edit-category-items"></div>
+    </div>`;
+
+    const itemsBox=section.querySelector('.edit-category-items');
+    const search=section.querySelector('.edit-category-search');
+
+    const renderItems=(term='')=>{
+      itemsBox.innerHTML='';
+
+      if(isMQS){
+        const groups={};
+        byCategory[category].forEach(p=>{
+          const key=String(p.name||'').trim().toLowerCase();
+          (groups[key]??=[]).push(p);
+        });
+
+        const grouped=Object.values(groups)
+          .filter(group=>group.some(p=>(`${p.name||''} ${mqsVariantLabel(p)} ${normalizedCodes(p).each}`).toLowerCase().includes(term.toLowerCase())))
+          .sort((a,b)=>mqsGroupDisplayName(a).localeCompare(mqsGroupDisplayName(b),'nl',{sensitivity:'base'}));
+
+        for(const group of grouped){
+          group.sort((a,b)=>{
+            const order={mqs:0,'500':1,kg:2};
+            return (order[mqsFormatKeyForDisplay(a)]??99)-(order[mqsFormatKeyForDisplay(b)]??99);
+          });
+
+          const first=group[0];
+          const row=document.createElement('div');
+          row.className='edit-mqs-group';
+          row.innerHTML=`<strong>${safe(mqsGroupDisplayName(group))}</strong>
+            <div class="edit-mqs-variants">${group.map(p=>safe(mqsVariantLabel(p))).join(' · ')}</div>
+            <div class="button-row">
+              <button type="button" class="btn light edit-one">Bewerken</button>
+              <button type="button" class="btn light duplicate-one">Dupliceren</button>
+              <button type="button" class="btn light delete-one">Verwijderen</button>
+            </div>`;
+          row.querySelector('.edit-one').onclick=()=>edit(first.id);
+          row.querySelector('.duplicate-one').onclick=()=>duplicateProduct(first.id);
+          row.querySelector('.delete-one').onclick=()=>deleteMQSGroupByName(mqsGroupDisplayName(group));
+          itemsBox.appendChild(row);
+        }
+        return;
+      }
+
+      const visible=byCategory[category]
+        .filter(p=>(`${productDisplayName(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()))
+        .sort(compareProductsByNameWeight);
+
+      for(const p of visible){
+        const row=document.createElement('div');
+        row.className='row';
+        row.innerHTML=`${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}
+          <div><strong>${safe(productDisplayName(p))}</strong>
+            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${nearestExpiryDate(p)?`EXP: ${safe(formatDate(nearestExpiryDate(p)))}`:''}</div>
+          </div>
+          <div class="actions">
+            <button class="btn light edit-one">Bewerken</button>
+            <button class="btn light duplicate-one">Dupliceren</button>
+            <button class="btn light delete-one">Verwijderen</button>
+          </div>`;
+        row.querySelector('.edit-one').onclick=()=>edit(p.id);
+        row.querySelector('.duplicate-one').onclick=()=>duplicateProduct(p.id);
+        row.querySelector('.delete-one').onclick=()=>deleteProductById(p.id);
+        itemsBox.appendChild(row);
+      }
+    };
+
+    section.querySelector('.edit-category-header').onclick=()=>section.classList.toggle('collapsed');
+    search.oninput=e=>renderItems(e.target.value);
+    renderItems();
+
+    root.appendChild(section);
+  }
+}
+async function deleteProductById(id){
+  const p=products.find(x=>x.id===id);if(!p)return;
+  if(confirm(`Product verwijderen: ${productDisplayName(p)}?`))await deleteDoc(doc(db,'catalogProducts',id));
+}
+
+function setProductFormMode(editing){
+  if($('saveBtn'))$('saveBtn').textContent=editing?'Wijzigingen opslaan':'Product toevoegen';
+  if(!editing&&$('formTitle'))$('formTitle').textContent='Nieuw product';
+}
+
+function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
+  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
+}
+function edit(id){
+  const p=products.find(x=>x.id===id);if(!p)return;
+  refreshCategorySelects();
+  const cat=normalizeCategoryName(p.category||'OVERIG');
+  $('cat').value=cat;
+  if(cat==='MAGAZIJN'){
+    clearNormalEditForm();
+    $('cat').value='MAGAZIJN';updateMQSWeightUI();
+    $('editId').value=id;setProductFormMode(true);
+    fillWarehouseFromProduct(p,{useDates:true});
+    $('formTitle').textContent='MAGAZIJN product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    document.querySelector('[data-tab="add"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if(cat==='MAKRO'){
+    clearNormalEditForm();
+    $('cat').value='MAKRO';updateMQSWeightUI();
+    $('editId').value=id;setProductFormMode(true);
+    $('makroName').value=p.name||'';
+    $('makroBarcode').value=p.barcode||'';
+    $('makroExpiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');
+    $('makroExpiry2').value=isoToTypedDate(p.expiryDate2||'');
+    $('makroExpiry3').value=isoToTypedDate(p.expiryDate3||'');
+    $('makroStock1').value=p.stockExp1??'';
+    $('makroStock2').value=p.stockExp2??'';
+    $('makroStock3').value=p.stockExp3??'';
+    photoData=p.photoData||'';
+    if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+    $('formTitle').textContent='MAKRO product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    document.querySelector('[data-tab="add"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if(cat==='MQS'){
+    // MQS is edited as a product group. Load the group matching this exact product name.
+    clearNormalEditForm();
+    $('cat').value='MQS';updateMQSWeightUI();
+    editingMQSOriginalName=String(p.name||'').trim();
+    $('mqsProductName').value=p.name||'';
+    loadMQSBulkValues();
+    setProductFormMode(true);
+    photoData=p.photoData||'';
+    if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
+    $('formTitle').textContent='MQS product aanpassen';
+    $('cancelBtn').classList.remove('hidden');
+    document.querySelector('[data-tab="add"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  $('editId').value=id;setProductFormMode(true);
+  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;
+  $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';
+  updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
+  $('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
+  photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+  updateMQSWeightUI();
+  $('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
+}
+function duplicateProduct(id){
+  const p=products.find(x=>x.id===id);if(!p)return;
+  refreshCategorySelects();
+  const cat=normalizeCategoryName(p.category||'OVERIG');
+  $('cat').value=cat;
+  if(cat==='MQS'){
+    clearNormalEditForm();editingMQSOriginalName='';setProductFormMode(false);$('cat').value='MQS';updateMQSWeightUI();
+    const sourceName=p.name||'';
+    $('mqsProductName').value=sourceName;
+    loadMQSBulkValues();
+    // Copy the values but make it a new product group. Codes are cleared to prevent accidental duplicates.
+    $('mqsProductName').value=sourceName+' KOPIE';
+    ['mqsCodeMqs','mqsCode500','mqsCodeKg'].forEach(id=>$(id).value='');
+    photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
+    $('formTitle').textContent='MQS product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  $('editId').value='';editingMQSOriginalName='';setProductFormMode(false);
+  $('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';
+  $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
+  photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+  updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
+}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
+$('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
+$('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
+$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
+
+$('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
+$('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
+$('addCategoryBtn').onclick=addCategory;
+
+
+['expiry1','expiry2','makroExpiry1','makroExpiry2','makroExpiry3','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3'].forEach(id=>{
+  const el=$(id);
+  if(el)el.addEventListener('input',()=>autoFormatDateTyping(el));
+});
+
+$('warehouseScanBtn').onclick=startWarehouseScanner;$('warehouseStopScanBtn').onclick=stopWarehouseScanner;
+$('makroScanBtn').onclick=startMakroScanner;$('makroStopScanBtn').onclick=stopMakroScanner;
+$('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
+
+$('mqsProductName').addEventListener('change',loadMQSBulkValues);
+$('mqsProductName').addEventListener('input',()=>{
+  const wanted=String($('mqsProductName').value||'').trim().toLowerCase();
+  const exists=products.some(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===wanted);
+  if(!exists){
+    photoData='';
+    $('photoInput').value='';
+    $('preview').removeAttribute('src');
+    $('preview').classList.add('hidden');
+  }
+});
+$('cat').addEventListener('input',updateMQSWeightUI);
+$('cat').addEventListener('change',()=>{
+  if(!isToppersCategory())stopToppersScanner();
+  updateMQSWeightUI();
+});
+$('mqsWeightPreset').onchange=()=>{
+  const selected=String($('mqsWeightPreset').value||'');
+  if(selected==='MQS'){
+    $('weightValue').value='';
+    $('weightUnit').value='gr';
+    return;
+  }
+  const [value,unit]=selected.split('|');
+  if(value&&unit){
+    $('weightValue').value=value;
+    $('weightUnit').value=unit;
+  }
+};
+
+$('toppersScanBtn').onclick=startToppersScanner;$('toppersStopScanBtn').onclick=stopToppersScanner;
+$('otherCategoryScanBtn').onclick=async()=>{
+  await startScanner();
+  setTimeout(()=>{
+    const reader=$('reader');
+    if(reader&&!reader.classList.contains('hidden')){
+      reader.scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  },250);
+};
+$('scanBtn').onclick=startScanner;
+$('stopScanBtn').onclick=stopScanner;
+
+
+$('warehouseBarcode').addEventListener('change',async()=>{
+  const code=$('warehouseBarcode').value.trim();
+  if(code)await handleWarehouseBarcode(code);
+});
+
+$('makroBarcode').addEventListener('change',async()=>{
+  const code=$('makroBarcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code,'MAKRO');
+  if(local){
+    edit(local.id);
+  }else{
+    await lookupProductOnlineByBarcode(code,{targetInput:$('makroName'),statusBox:$('makroScanMsg')});
+  }
+});
+
+$('barcode').addEventListener('change',async()=>{
+  const code=$('barcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code);
+  if(local)applySavedProduct(code);
+  else await lookupProductOnlineByBarcode(code,{targetInput:getNameInputForCurrentCategory(),statusBox:$('formMsg')});
+});
+$('barcode').addEventListener('blur',async()=>{
+  const code=$('barcode').value.trim();
+  if(!code)return;
+  const local=localProductForBarcode(code);
+  if(local)applySavedProduct(code);
+});
+
+$('catalogHomeBtn').onclick=()=>{
+  const catalogTab=document.querySelector('[data-tab="catalog"]');
+  if(catalogTab)catalogTab.click();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+$('scrollTopBtn').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+window.addEventListener('scroll',()=>{
+  $('scrollTopBtn').classList.toggle('top-hidden',window.scrollY<350);
+},{passive:true});
+
+$('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){if(e.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else msg($('loginMsg'),e.message,true)}};$('logoutBtn').onclick=()=>{stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();stopCatalogScanner();signOut(auth)};
+$('photoInput').onchange=async()=>{
+  const f=$('photoInput').files?.[0];
+  if(!f)return;
+  photoData=await imageData(f);
+  $('preview').src=photoData;
+  $('preview').classList.remove('hidden');
+};
+$('saveBtn').onclick=async()=>{if(isWarehouseCategory())return saveWarehouseProduct();if(isMakroCategory())return saveMakroProduct();if(isMQSCategory())return saveMQSBulk();const name=$('name').value.trim();
+  const isMQS=isMQSCategory();
+  const priceEach=Number($('priceEach').value||0);
+  const priceP12=isMQS?0:Number($('priceP12').value||0);
+  const priceCrt=isMQS?0:Number($('priceCrt').value||0);
+  const unitsPerCarton=isMQS?0:Number($('unitsPerCarton').value||0);
+  if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
+  if(isMQS&&priceEach<=0)return msg($('formMsg'),'Vul de EACH prijs in.',true);
+  if(!isMQS&&priceEach<=0&&priceP12<=0&&priceCrt<=0)return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
+  if(!isMQS&&priceCrt>0&&unitsPerCarton<1)return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
+  const exp1=isMQS?'':typedDateToISO($('expiry1').value);
+  const exp2=isMQS?'':typedDateToISO($('expiry2').value);
+  if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+  const data={productCode:$('codeEach').value.trim(),codeEach:$('codeEach').value.trim(),codeP12:isMQS?'':$('codeP12').value.trim(),codeCrt:isMQS?'':$('codeCrt').value.trim(),name,weightValue:Number($('weightValue').value||0),weightUnit:$('weightUnit').value,price:priceEach,priceEach,priceP12,priceCrt,unitsPerCarton,expiryDate1:exp1,expiryDate2:exp2,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),stockExp1:exp1?Number($('stockExp1').value||0):0,stockExp2:exp2?Number($('stockExp2').value||0):0,category:normalizeCategoryName($('cat').value)||'OVERIG',barcode:$('barcode').value.trim(),notes:$('notes').value.trim(),available:$('available').checked,internalOnly:$('internalOnly').checked,photoData,updatedAt:serverTimestamp()};try{const editingId=$('editId').value.trim();if(editingId)await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');reset()}catch(e){msg($('formMsg'),e.message,true)}};
+$('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
+onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));migrateAllToppersToUppercase().catch(e=>console.warn('TOPPERS migratie overgeslagen:',e));categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();renderPackageSystem();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();
+  const existingNames=[...new Set(sales.map(x=>cleanCustomerName(x.customerName)).filter(Boolean))];
+  Promise.all(existingNames.map(name=>ensureCustomerExists(name))).catch(e=>console.warn('Klanten migreren overgeslagen:',e));},e=>msg($('saleMessage'),e.message,true));
+onSnapshot(collection(db,'customers'),s=>{
+  customers=s.docs.map(d=>({id:d.id,...d.data()}));
+  renderCustomerSuggestions();
+  renderCustomerManager();
+},e=>msg($('customerManagerMsg'),'Klanten laden mislukt: '+e.message,true));
+onSnapshot(doc(db,'publicSettings','packageSystem'),snap=>{
+  if(snap.exists()){
+    packageSettings=snap.data();
+  }else{
+    packageSettings={packages:DEFAULT_PACKAGES.map(p=>({...p,items:[]})),history:[],dayCounts:{}};
+    setDoc(doc(db,'publicSettings','packageSystem'),packageSettings,{merge:true})
+      .catch(e=>console.warn('Pakketinstellingen initialiseren mislukt:',e));
+  }
+  renderPackageSystem();
+},e=>msg($('packageMessage'),'Pakketten laden mislukt: '+e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
+</script>
+<div class="floating-actions no-print">
+  <button id="catalogHomeBtn" class="floating-btn" type="button" title="Terug naar Catalogus" aria-label="Terug naar Catalogus">🏠</button>
+  <button id="scrollTopBtn" class="floating-btn top-hidden" type="button" title="Naar boven" aria-label="Naar boven">↑</button>
+</div>
+</body>
+</html>
