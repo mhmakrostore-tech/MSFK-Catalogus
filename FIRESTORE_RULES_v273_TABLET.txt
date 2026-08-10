@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && request.auth.token.email == "mh.makrostore@gmail.com";
+    }
+
+    function isTablet() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/tabletUsers/$(request.auth.token.email));
+    }
+
+    // Producten:
+    // beheerder = lezen/schrijven
+    // tablet = alleen lezen (catalogus + EXP)
+    match /catalogProducts/{productId} {
+      allow read: if isOwner() || isTablet();
+      allow create, update, delete: if isOwner();
+    }
+
+    // Bestellingen:
+    // beheerder = alles
+    // tablet = alleen nieuwe bestelling aanmaken vanuit eigen e-mail
+    match /sales/{saleId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isOwner()
+        || (isTablet()
+            && request.resource.data.createdByEmail == request.auth.token.email);
+    }
+
+    // Klantenbeheer alleen voor beheerder
+    match /customers/{customerId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
+    // Pakketten / instellingen alleen voor beheerder
+    match /publicSettings/{docId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
+    // Tablet gebruikers:
+    // beheerder beheert de lijst
+    // tablet mag alleen zijn eigen toegang-document lezen
+    match /tabletUsers/{email} {
+      allow read: if isOwner()
+        || (signedIn() && request.auth.token.email == email);
+      allow create, update, delete: if isOwner();
+    }
+
+    match /users/{userId} {
+      allow read, create, update, delete: if isOwner();
+    }
+  }
+}

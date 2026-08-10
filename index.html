@@ -336,6 +336,21 @@ window.addEventListener('unhandledrejection',function(e){
 </section>
 
 <section id="customers" class="tab">
+  <div id="tabletAccessPanel" class="panel">
+    <h2>Tablet toegang</h2>
+    <p class="meta">Voeg hier het Google/Gmail-adres van de tablet toe. Deze gebruiker krijgt alleen Catalogus, EXP bekijken en bestellen/versturen.</p>
+    <div class="grid2">
+      <div>
+        <label>E-mailadres tablet</label>
+        <input id="tabletEmailInput" type="email" placeholder="bijv. tablet@gmail.com">
+      </div>
+      <div class="category-add-btn-wrap">
+        <button id="addTabletEmailBtn" type="button" class="btn secondary">Toegang toevoegen</button>
+      </div>
+    </div>
+    <div id="tabletUserList"></div>
+    <div id="tabletAccessMsg" class="message"></div>
+  </div>
   <div class="panel">
     <h2>Klanten</h2>
     <p class="meta">Opgeslagen klantnamen verschijnen automatisch zodra je bij Nieuwe verkoop begint te typen.</p>
@@ -439,11 +454,11 @@ window.addEventListener('unhandledrejection',function(e){
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import {getFirestore,collection,doc,setDoc,addDoc,deleteDoc,onSnapshot,serverTimestamp,runTransaction} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import {getFirestore,collection,doc,setDoc,getDoc,addDoc,deleteDoc,onSnapshot,serverTimestamp,runTransaction} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
 const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
 const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
-let products=[],sales=[],customers=[],packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
+let products=[],sales=[],customers=[],tabletUsers=[],currentRole='guest',packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
 
@@ -547,6 +562,7 @@ async function saveCatalogOrder(){
   if(!customerName)return msg($('catalogOrderMessage'),'Vul de klantnaam in.',true);
   if(!items.length)return msg($('catalogOrderMessage'),'Vul bij minstens één product een aantal in.',true);
   const total=items.reduce((sum,item)=>sum+item.qty*item.price,0);
+  const creatorEmail=String(auth.currentUser?.email||'').toLowerCase();
   const data={
     orderNumber:editingSaleId?(sales.find(s=>s.id===editingSaleId)?.orderNumber||orderNumber()):orderNumber(),
     customerName,
@@ -554,10 +570,14 @@ async function saveCatalogOrder(){
     note:$('catalogOrderNote').value.trim(),
     items,
     total,
+    createdByEmail:creatorEmail,
     updatedAt:serverTimestamp()
   };
   try{
     if(editingSaleId){
+      if(currentRole==='tablet'){
+        return msg($('catalogOrderMessage'),'Tabletgebruikers kunnen bestaande bestellingen niet wijzigen.',true);
+      }
       await setDoc(doc(db,'sales',editingSaleId),data,{merge:true});
       msg($('catalogOrderMessage'),'Bestelling aangepast.');
     }else{
@@ -2079,6 +2099,170 @@ function exportPackageTotalsCsv(){
   URL.revokeObjectURL(url);
 }
 
+
+function normalizeEmail(value){
+  return String(value||'').trim().toLowerCase();
+}
+
+function tabletDocRef(email){
+  return doc(db,'tabletUsers',normalizeEmail(email));
+}
+
+async function isAllowedTabletEmail(email){
+  try{
+    const snap=await getDoc(tabletDocRef(email));
+    return snap.exists() && snap.data()?.active!==false;
+  }catch(e){
+    console.warn('Tablet toegang controleren mislukt:',e);
+    return false;
+  }
+}
+
+function applyRoleUI(){
+  const isTablet=currentRole==='tablet';
+
+  document.querySelectorAll('.tabs button').forEach(btn=>{
+    const keep=!isTablet || btn.dataset.tab==='catalog';
+    btn.classList.toggle('hidden',!keep);
+  });
+
+  if($('tabletAccessPanel'))$('tabletAccessPanel').classList.toggle('hidden',isTablet);
+
+  // Tablet ziet alleen de Catalogus. Geen beheerpagina's.
+  if(isTablet){
+    document.querySelectorAll('.tab').forEach(tab=>tab.classList.remove('active'));
+    $('catalog').classList.add('active');
+    document.querySelectorAll('.tabs button').forEach(btn=>btn.classList.remove('active'));
+    const catalogBtn=document.querySelector('[data-tab="catalog"]');
+    if(catalogBtn)catalogBtn.classList.add('active');
+
+    // Tablet mag bestellen en versturen, maar geen historische order bewerken.
+    editingSaleId='';
+  }
+}
+
+async function addTabletEmail(){
+  const email=normalizeEmail($('tabletEmailInput').value);
+  if(!email || !email.includes('@')){
+    return msg($('tabletAccessMsg'),'Vul een geldig e-mailadres in.',true);
+  }
+  if(email===OWNER){
+    return msg($('tabletAccessMsg'),'Dit is al het beheerdersaccount.',true);
+  }
+
+  try{
+    await setDoc(tabletDocRef(email),{
+      email,
+      role:'tablet',
+      active:true,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    $('tabletEmailInput').value='';
+    msg($('tabletAccessMsg'),`Tablet toegang toegevoegd voor ${email}.`);
+  }catch(e){
+    msg($('tabletAccessMsg'),'Toegang toevoegen mislukt: '+e.message,true);
+  }
+}
+
+async function removeTabletEmail(email){
+  email=normalizeEmail(email);
+  if(!confirm(`Tablet toegang voor ${email} verwijderen?`))return;
+  try{
+    await deleteDoc(tabletDocRef(email));
+    msg($('tabletAccessMsg'),`Tablet toegang verwijderd voor ${email}.`);
+  }catch(e){
+    msg($('tabletAccessMsg'),'Verwijderen mislukt: '+e.message,true);
+  }
+}
+
+function renderTabletUsers(){
+  const box=$('tabletUserList');
+  if(!box)return;
+  const list=tabletUsers.slice().sort((a,b)=>normalizeEmail(a.email||a.id).localeCompare(normalizeEmail(b.email||b.id)));
+  box.innerHTML=list.length?'':'<div class="meta" style="margin-top:10px">Nog geen tablet e-mail toegevoegd.</div>';
+
+  for(const item of list){
+    const email=normalizeEmail(item.email||item.id);
+    const row=document.createElement('div');
+    row.className='customer-manage-row';
+    row.innerHTML=`
+      <div class="customer-name">
+        <strong>${safe(email)}</strong>
+        <div class="meta">Alleen Catalogus + EXP bekijken + bestellen/versturen</div>
+      </div>
+      <span class="meta">${item.active===false?'Geblokkeerd':'Actief'}</span>
+      <button type="button" class="btn light remove-tablet-user" data-email="${safe(email)}">Verwijderen</button>`;
+    box.appendChild(row);
+  }
+
+  box.querySelectorAll('.remove-tablet-user').forEach(btn=>{
+    btn.onclick=()=>removeTabletEmail(btn.dataset.email);
+  });
+}
+
+function startCatalogListener(){
+  onSnapshot(
+    collection(db,'catalogProducts'),
+    s=>{
+      products=s.docs.map(d=>({id:d.id,...d.data()}));
+
+      if(currentRole==='owner'){
+        migrateAllToppersToUppercase().catch(e=>console.warn('TOPPERS migratie overgeslagen:',e));
+      }
+
+      categories();
+      render();
+
+      if(currentRole==='owner'){
+        renderExpiryAlerts();
+        maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));
+        refreshCategorySelects();
+        renderPackageSystem();
+        if(isMQSCategory())loadMQSBulkValues();
+        document.querySelectorAll('.sale-product').forEach(sel=>{
+          const v=sel.value;
+          sel.innerHTML=productOptions(v);
+        });
+      }
+    },
+    e=>msg($('catalogOrderMessage'),'Catalogus laden mislukt: '+e.message,true)
+  );
+}
+
+function startOwnerListeners(){
+  onSnapshot(collection(db,'sales'),s=>{
+    sales=s.docs.map(d=>({id:d.id,...d.data()}));
+    renderHistory();
+    const existingNames=[...new Set(sales.map(x=>cleanCustomerName(x.customerName)).filter(Boolean))];
+    Promise.all(existingNames.map(name=>ensureCustomerExists(name))).catch(e=>console.warn('Klanten migreren overgeslagen:',e));
+  },e=>msg($('saleMessage'),e.message,true));
+
+  onSnapshot(collection(db,'customers'),s=>{
+    customers=s.docs.map(d=>({id:d.id,...d.data()}));
+    renderCustomerSuggestions();
+    renderCustomerManager();
+  },e=>msg($('customerManagerMsg'),'Klanten laden mislukt: '+e.message,true));
+
+  onSnapshot(collection(db,'tabletUsers'),s=>{
+    tabletUsers=s.docs.map(d=>({id:d.id,...d.data()}));
+    renderTabletUsers();
+  },e=>msg($('tabletAccessMsg'),'Tablet gebruikers laden mislukt: '+e.message,true));
+
+  onSnapshot(doc(db,'publicSettings','packageSystem'),snap=>{
+    if(snap.exists()){
+      packageSettings=snap.data();
+    }else{
+      packageSettings={packages:DEFAULT_PACKAGES.map(p=>({...p,items:[]})),history:[],dayCounts:{}};
+      setDoc(doc(db,'publicSettings','packageSystem'),packageSettings,{merge:true})
+        .catch(e=>console.warn('Pakketinstellingen initialiseren mislukt:',e));
+    }
+    renderPackageSystem();
+  },e=>msg($('packageMessage'),'Pakketten laden mislukt: '+e.message,true));
+
+  if(!$('saleItems').children.length)addSaleItem();
+  updateMQSWeightUI();
+}
+
 function normalizeCustomerKey(name){
   return String(name||'').trim().replace(/\s+/g,' ').toLowerCase();
 }
@@ -3014,10 +3198,18 @@ function duplicateProduct(id){
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
 function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}if(b.dataset.tab!=='catalog')stopCatalogScanner();document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  if(currentRole==='tablet'&&b.dataset.tab!=='catalog')return;
+  if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}
+  if(b.dataset.tab!=='catalog')stopCatalogScanner();
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  $(b.dataset.tab).classList.add('active');
+});
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 $('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
-$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
+$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addTabletEmailBtn').onclick=addTabletEmail;$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
 
 $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
 $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
@@ -3304,24 +3496,43 @@ $('saveBtn').onclick=async()=>{
 };
 
 $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=render;$('availability').onchange=render;getRedirectResult(auth).catch(e=>msg($('loginMsg'),e.message,true));
-onAuthStateChanged(auth,u=>{$('loading').classList.add('hidden');if(!u){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}if((u.email||'').toLowerCase()!==OWNER){signOut(auth);$('login').classList.remove('hidden');msg($('loginMsg'),'Dit account heeft geen toegang.',true);return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('email').textContent=u.email;onSnapshot(collection(db,'catalogProducts'),s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));migrateAllToppersToUppercase().catch(e=>console.warn('TOPPERS migratie overgeslagen:',e));categories();render();renderExpiryAlerts();maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));refreshCategorySelects();renderPackageSystem();if(isMQSCategory())loadMQSBulkValues();document.querySelectorAll('.sale-product').forEach(sel=>{const v=sel.value;sel.innerHTML=productOptions(v);});},e=>msg($('formMsg'),e.message,true));onSnapshot(collection(db,'sales'),s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));renderHistory();
-  const existingNames=[...new Set(sales.map(x=>cleanCustomerName(x.customerName)).filter(Boolean))];
-  Promise.all(existingNames.map(name=>ensureCustomerExists(name))).catch(e=>console.warn('Klanten migreren overgeslagen:',e));},e=>msg($('saleMessage'),e.message,true));
-onSnapshot(collection(db,'customers'),s=>{
-  customers=s.docs.map(d=>({id:d.id,...d.data()}));
-  renderCustomerSuggestions();
-  renderCustomerManager();
-},e=>msg($('customerManagerMsg'),'Klanten laden mislukt: '+e.message,true));
-onSnapshot(doc(db,'publicSettings','packageSystem'),snap=>{
-  if(snap.exists()){
-    packageSettings=snap.data();
-  }else{
-    packageSettings={packages:DEFAULT_PACKAGES.map(p=>({...p,items:[]})),history:[],dayCounts:{}};
-    setDoc(doc(db,'publicSettings','packageSystem'),packageSettings,{merge:true})
-      .catch(e=>console.warn('Pakketinstellingen initialiseren mislukt:',e));
+onAuthStateChanged(auth,async u=>{
+  $('loading').classList.add('hidden');
+
+  if(!u){
+    currentRole='guest';
+    $('login').classList.remove('hidden');
+    $('app').classList.add('hidden');
+    return;
   }
-  renderPackageSystem();
-},e=>msg($('packageMessage'),'Pakketten laden mislukt: '+e.message,true));if(!$('saleItems').children.length)addSaleItem();updateMQSWeightUI();});
+
+  const email=normalizeEmail(u.email);
+
+  if(email===OWNER){
+    currentRole='owner';
+  }else{
+    const allowed=await isAllowedTabletEmail(email);
+    if(!allowed){
+      currentRole='guest';
+      await signOut(auth);
+      $('login').classList.remove('hidden');
+      $('app').classList.add('hidden');
+      msg($('loginMsg'),'Dit account heeft geen toegang.',true);
+      return;
+    }
+    currentRole='tablet';
+  }
+
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('email').textContent=email+(currentRole==='tablet'?' — Tablet':'');
+  applyRoleUI();
+
+  startCatalogListener();
+  if(currentRole==='owner'){
+    startOwnerListeners();
+  }
+});
 </script>
 <div class="floating-actions no-print">
   <button id="catalogHomeBtn" class="floating-btn" type="button" title="Terug naar Catalogus" aria-label="Terug naar Catalogus">🏠</button>
