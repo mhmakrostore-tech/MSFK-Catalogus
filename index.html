@@ -3129,103 +3129,170 @@ $('saveBtn').onclick=async()=>{
 
   if(!name)return msg($('formMsg'),'Vul productnaam in.',true);
 
-  const inputPriceEach=$('priceEach').value.trim();
-  const inputPriceP12=$('priceP12').value.trim();
-  const inputPriceCrt=$('priceCrt').value.trim();
-  const inputUnitsPerCarton=$('unitsPerCarton').value.trim();
-
-  // Bij een NIEUW product blijven de normale controles gelden.
-  if(!editingId){
-    const priceEach=Number(inputPriceEach||0);
-    const priceP12=Number(inputPriceP12||0);
-    const priceCrt=Number(inputPriceCrt||0);
-    const unitsPerCarton=Number(inputUnitsPerCarton||0);
-
-    if(priceEach<=0&&priceP12<=0&&priceCrt<=0){
-      return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
-    }
-    if(priceCrt>0&&unitsPerCarton<1){
-      return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
-    }
-  }
-
-  const exp1Typed=$('expiry1').value.trim();
-  const exp2Typed=$('expiry2').value.trim();
-  const exp1=exp1Typed?typedDateToISO(exp1Typed):'';
-  const exp2=exp2Typed?typedDateToISO(exp2Typed):'';
-
-  if(exp1Typed&&exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
-  if(exp2Typed&&exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
-
-  // Bij bestaand product nemen lege velden automatisch de bestaande waarde over.
-  // Daardoor kun je alleen de naam wijzigen zonder alle oude gegevens opnieuw in te vullen.
-  const oldPrices=existing?normalizedPrices(existing):{each:0,p12:0,crt:0,unitsPerCarton:0};
-  const oldCodes=existing?normalizedCodes(existing):{each:'',p12:'',crt:''};
-
-  const priceEach=inputPriceEach!==''?Number(inputPriceEach):Number(oldPrices.each||0);
-  const priceP12=inputPriceP12!==''?Number(inputPriceP12):Number(oldPrices.p12||0);
-  const priceCrt=inputPriceCrt!==''?Number(inputPriceCrt):Number(oldPrices.crt||0);
-  const unitsPerCarton=inputUnitsPerCarton!==''?Number(inputUnitsPerCarton):Number(oldPrices.unitsPerCarton||existing?.unitsPerCarton||0);
-
-  const expiryDate1=exp1Typed?exp1:String(existing?.expiryDate1||existing?.expiryDate||'');
-  const expiryDate2=exp2Typed?exp2:String(existing?.expiryDate2||'');
-
-  const codeEach=$('codeEach').value.trim()||oldCodes.each||'';
-  const codeP12=$('codeP12').value.trim()||oldCodes.p12||'';
-  const codeCrt=$('codeCrt').value.trim()||oldCodes.crt||'';
-
-  const barcode=$('barcode').value.trim()||String(existing?.barcode||'');
-  const notes=$('notes').value.trim()!==''?$('notes').value.trim():String(existing?.notes||'');
-
-  const weightValue=$('weightValue').value.trim()!==''?Number($('weightValue').value):Number(existing?.weightValue||0);
-  const weightUnit=$('weightUnit').value||existing?.weightUnit||'gr';
-
-  const stockExp1=$('stockExp1').value.trim()!==''?Number($('stockExp1').value):Number(existing?.stockExp1||0);
-  const stockExp2=$('stockExp2').value.trim()!==''?Number($('stockExp2').value):Number(existing?.stockExp2||0);
-
-  const data={
-    productCode:codeEach,
-    codeEach,
-    codeP12,
-    codeCrt,
-    name,
-    weightValue,
-    weightUnit,
-    price:priceEach,
-    priceEach,
-    priceP12,
-    priceCrt,
-    unitsPerCarton,
-    expiryDate1,
-    expiryDate2,
-    expiryDate:([expiryDate1,expiryDate2].filter(Boolean).sort()[0]||''),
-    stockExp1,
-    stockExp2,
-    category:normalizeCategoryName($('cat').value)||existing?.category||'OVERIG',
-    barcode,
-    notes,
-    available:$('available').checked,
-    internalOnly:$('internalOnly').checked,
-    photoData:photoData||existing?.photoData||'',
-    updatedAt:serverTimestamp()
-  };
-
   try{
     $('saveBtn').disabled=true;
 
-    if(editingId){
-      await setDoc(doc(db,'catalogProducts',editingId),data,{merge:true});
-    }else{
-      await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+    if(editingId && existing){
+      // BESTAAND PRODUCT:
+      // Alleen velden opslaan die echt gewijzigd zijn.
+      // Alle andere gegevens in Firestore blijven exact onaangeraakt.
+      const changes={updatedAt:serverTimestamp()};
+
+      if(name!==String(existing.name||''))changes.name=name;
+
+      const newCategory=normalizeCategoryName($('cat').value)||String(existing.category||'OVERIG');
+      if(newCategory!==normalizeCategoryName(existing.category||'OVERIG'))changes.category=newCategory;
+
+      const currentCodes=normalizedCodes(existing);
+      const codeEach=$('codeEach').value.trim();
+      const codeP12=$('codeP12').value.trim();
+      const codeCrt=$('codeCrt').value.trim();
+
+      if(codeEach!==currentCodes.each){
+        changes.codeEach=codeEach;
+        changes.productCode=codeEach;
+      }
+      if(codeP12!==currentCodes.p12)changes.codeP12=codeP12;
+      if(codeCrt!==currentCodes.crt)changes.codeCrt=codeCrt;
+
+      const currentPrices=normalizedPrices(existing);
+      const eachRaw=$('priceEach').value.trim();
+      const p12Raw=$('priceP12').value.trim();
+      const crtRaw=$('priceCrt').value.trim();
+      const cartonRaw=$('unitsPerCarton').value.trim();
+
+      if(eachRaw!=='' && Number(eachRaw)!==Number(currentPrices.each||0)){
+        changes.priceEach=Number(eachRaw);
+        changes.price=Number(eachRaw);
+      }
+      if(p12Raw!=='' && Number(p12Raw)!==Number(currentPrices.p12||0))changes.priceP12=Number(p12Raw);
+      if(crtRaw!=='' && Number(crtRaw)!==Number(currentPrices.crt||0))changes.priceCrt=Number(crtRaw);
+      if(cartonRaw!=='' && Number(cartonRaw)!==Number(existing.unitsPerCarton||currentPrices.unitsPerCarton||0)){
+        changes.unitsPerCarton=Number(cartonRaw);
+      }
+
+      const weightRaw=$('weightValue').value.trim();
+      if(weightRaw!=='' && Number(weightRaw)!==Number(existing.weightValue||0))changes.weightValue=Number(weightRaw);
+      if($('weightUnit').value && $('weightUnit').value!==String(existing.weightUnit||'gr'))changes.weightUnit=$('weightUnit').value;
+
+      const barcode=$('barcode').value.trim();
+      if(barcode!==String(existing.barcode||''))changes.barcode=barcode;
+
+      const notes=$('notes').value;
+      if(notes!==String(existing.notes||''))changes.notes=notes;
+
+      if($('available').checked!==(existing.available!==false))changes.available=$('available').checked;
+      if($('internalOnly').checked!==(existing.internalOnly===true))changes.internalOnly=$('internalOnly').checked;
+
+      const exp1Raw=$('expiry1').value.trim();
+      const exp2Raw=$('expiry2').value.trim();
+
+      if(exp1Raw!==''){
+        const exp1=typedDateToISO(exp1Raw);
+        if(exp1===null){
+          $('saveBtn').disabled=false;
+          return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+        }
+        if(exp1!==String(existing.expiryDate1||existing.expiryDate||''))changes.expiryDate1=exp1;
+      }
+
+      if(exp2Raw!==''){
+        const exp2=typedDateToISO(exp2Raw);
+        if(exp2===null){
+          $('saveBtn').disabled=false;
+          return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+        }
+        if(exp2!==String(existing.expiryDate2||''))changes.expiryDate2=exp2;
+      }
+
+      const stock1Raw=$('stockExp1').value.trim();
+      const stock2Raw=$('stockExp2').value.trim();
+      if(stock1Raw!=='' && Number(stock1Raw)!==Number(existing.stockExp1||0))changes.stockExp1=Number(stock1Raw);
+      if(stock2Raw!=='' && Number(stock2Raw)!==Number(existing.stockExp2||0))changes.stockExp2=Number(stock2Raw);
+
+      // Alleen foto wijzigen als daadwerkelijk een nieuwe foto gekozen/geplaatst is.
+      if(photoData && photoData!==String(existing.photoData||''))changes.photoData=photoData;
+
+      // Alleen expiryDate opnieuw berekenen als een EXP-veld echt gewijzigd is.
+      if('expiryDate1' in changes || 'expiryDate2' in changes){
+        const finalExp1=('expiryDate1' in changes)?changes.expiryDate1:String(existing.expiryDate1||existing.expiryDate||'');
+        const finalExp2=('expiryDate2' in changes)?changes.expiryDate2:String(existing.expiryDate2||'');
+        changes.expiryDate=([finalExp1,finalExp2].filter(Boolean).sort()[0]||'');
+      }
+
+      await setDoc(doc(db,'catalogProducts',editingId),changes,{merge:true});
+      $('saveBtn').disabled=false;
+      msg($('formMsg'),'Wijzigingen opgeslagen. Bestaande gegevens zijn behouden.');
+      reset();
+      return;
     }
 
+    // NIEUW PRODUCT: normale volledige invoer.
+    const priceEach=Number($('priceEach').value||0);
+    const priceP12=Number($('priceP12').value||0);
+    const priceCrt=Number($('priceCrt').value||0);
+    const unitsPerCarton=Number($('unitsPerCarton').value||0);
+
+    if(priceEach<=0&&priceP12<=0&&priceCrt<=0){
+      $('saveBtn').disabled=false;
+      return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
+    }
+    if(priceCrt>0&&unitsPerCarton<1){
+      $('saveBtn').disabled=false;
+      return msg($('formMsg'),'Vul het aantal stuks in een karton in.',true);
+    }
+
+    const exp1Raw=$('expiry1').value.trim();
+    const exp2Raw=$('expiry2').value.trim();
+    const exp1=exp1Raw?typedDateToISO(exp1Raw):'';
+    const exp2=exp2Raw?typedDateToISO(exp2Raw):'';
+
+    if(exp1Raw&&exp1===null){
+      $('saveBtn').disabled=false;
+      return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+    }
+    if(exp2Raw&&exp2===null){
+      $('saveBtn').disabled=false;
+      return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
+    }
+
+    const data={
+      productCode:$('codeEach').value.trim(),
+      codeEach:$('codeEach').value.trim(),
+      codeP12:$('codeP12').value.trim(),
+      codeCrt:$('codeCrt').value.trim(),
+      name,
+      weightValue:Number($('weightValue').value||0),
+      weightUnit:$('weightUnit').value,
+      price:priceEach,
+      priceEach,
+      priceP12,
+      priceCrt,
+      unitsPerCarton,
+      expiryDate1:exp1,
+      expiryDate2:exp2,
+      expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),
+      stockExp1:exp1?Number($('stockExp1').value||0):0,
+      stockExp2:exp2?Number($('stockExp2').value||0):0,
+      category:normalizeCategoryName($('cat').value)||'OVERIG',
+      barcode:$('barcode').value.trim(),
+      notes:$('notes').value.trim(),
+      available:$('available').checked,
+      internalOnly:$('internalOnly').checked,
+      photoData,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    };
+
+    await addDoc(collection(db,'catalogProducts'),data);
     $('saveBtn').disabled=false;
-    msg($('formMsg'),editingId?'Wijzigingen opgeslagen.':'Product toegevoegd.');
+    msg($('formMsg'),'Product toegevoegd.');
     reset();
+
   }catch(e){
     $('saveBtn').disabled=false;
 
-    // Bij een fout blijven ALLE ingevulde velden staan.
+    // Bij fout niets leegmaken.
     if(editingId){
       setProductFormMode(true);
       $('formTitle').textContent='Product aanpassen';
