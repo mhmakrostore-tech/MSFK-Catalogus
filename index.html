@@ -33,7 +33,7 @@ body.tablet-mode .delete-product-card,
 body.tablet-mode .edit-mqs-group,
 body.tablet-mode .duplicate-mqs-group,
 body.tablet-mode .delete-mqs-group{display:none!important}
-</style>
+.exp-line{margin-top:6px;font-weight:800;color:#111827}</style>
 </head>
 <body>
 <div id="startupError" style="display:none;margin:12px;padding:12px;border:2px solid #b91c1c;border-radius:10px;background:#fff;color:#b91c1c;font-weight:700"></div>
@@ -2908,6 +2908,7 @@ function render(){
               </div>
               <div class="mqs-variant-meta">
                 ${code?`Code: ${safe(code)}${crt?' · ':''}`:''}${crt?`CRT: ${crt} PCS`:''}
+                <div class="exp-line"><strong>EXP:</strong> ${nearestExpiryDate(p)?safe(formatDate(nearestExpiryDate(p))):'Geen EXP ingevuld'}</div>
               </div>
               <div class="mqs-order-row">
                 <span>Aantal</span>
@@ -2957,7 +2958,7 @@ function render(){
           <div class="body">
             <div class="cat">${safe(p.category||'OVERIG')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
-            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line">EXP: ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}</div>
+            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}<div class="exp-line"><strong>EXP:</strong> ${nearestExpiryDate(p)?safe(formatDate(nearestExpiryDate(p))):'Geen EXP ingevuld'}</div></div>
             ${productPriceHtml(p)}
             <div class="catalog-order-controls">
               <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
