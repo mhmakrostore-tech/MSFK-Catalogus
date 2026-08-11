@@ -2929,7 +2929,7 @@ function render(){
               </div>
               <div class="mqs-variant-meta">
                 ${code?`Code: ${safe(code)}${crt?' · ':''}`:''}${crt?`CRT: ${crt} PCS`:''}
-                <div class="exp-line"><strong>EXP:</strong> ${nearestExpiryDate(p)?safe(formatDate(nearestExpiryDate(p))):'Geen EXP ingevuld'}</div>
+                ${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
               </div>
               <div class="mqs-order-row">
                 <span>Aantal</span>
@@ -2979,7 +2979,7 @@ function render(){
           <div class="body">
             <div class="cat">${safe(p.category||'OVERIG')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
-            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}<div class="exp-line"><strong>EXP:</strong> ${nearestExpiryDate(p)?safe(formatDate(nearestExpiryDate(p))):'Geen EXP ingevuld'}</div></div>
+            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
             ${productPriceHtml(p)}
             <div class="catalog-order-controls">
               <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
