@@ -93,7 +93,7 @@ function renderCatalog(){
   const list=filteredCatalog(); r.catalogGrid.innerHTML=''; r.catalogEmpty.classList.toggle('hidden',list.length>0);
   for(const p of list){
     const card=document.createElement('article'); card.className='card';
-    card.innerHTML=`<div class="photo-wrap">${p.photoData?`<img src="${p.photoData}" alt="${safe(p.name)}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div><div class="card-body"><div class="category-label">${safe(p.category||'Overig')}</div><h2>${safe(p.name||'Naamloos product')}</h2><div class="meta">${p.barcode?`Barcode: ${safe(p.barcode)}<br>`:''}${p.expiryDate?`THT: ${safe(p.expiryDate)}<br>`:''}Aantal: ${Number(p.quantity||0)} · ${safe(p.location||'')}</div><div class="price">CG ${Number(p.price||0).toFixed(2)}</div></div>`;
+  card.innerHTML=`<div class="photo-wrap">${p.photoData?`<img src="${p.photoData}" alt="${safe(p.name)}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div><div class="card-body"><div class="category-label">${safe(p.category||'Overig')}</div><h2>${safe(p.name||'Naamloos product')}</h2><div class="meta">${p.barcode?`Barcode: ${safe(p.barcode)}<br>`:''}${p.expiryDate?`EXP: ${safe(p.expiryDate)}<br>`:''}Aantal: ${Number(p.quantity||0)} · ${safe(p.location||'')}</div><div class="price">CG ${Number(p.price||0).toFixed(2)}</div></div>`;
     r.catalogGrid.appendChild(card);
   }
 }
