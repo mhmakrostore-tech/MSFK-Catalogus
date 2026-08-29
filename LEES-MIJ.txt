@@ -1,22 +1,17 @@
-MSFK Verkoop & EXP – update v271
+MSFK Verkoop & EXP – update v273
 
-Deze update doet 2 dingen:
-
-1. Herstelt de fout:
-   getNameInputForCurrentCategory is not defined
-
-2. Foto beheer bij producten:
-   - bestaande foto blijft zichtbaar bij bewerken
-   - knop Foto wijzigen
-   - knop Foto verwijderen
-   - verwijderen wordt pas definitief na Opslaan
-   - werkt ook voor MAKRO, MAGAZIJN en MQS
+Nieuw:
+- Als bij een product een notitie/omschrijving is ingevuld, wordt deze nu zichtbaar op de productkaart in de Catalogus.
+- Er verschijnt alleen een vak 'Notitie:' als er echt tekst is ingevuld.
+- Producten zonder notitie blijven hetzelfde.
+- Alle herstelwijzigingen uit v272 blijven behouden.
 
 UPLOAD:
 1. Open GitHub > MSFK-Catalogus
-2. Upload/vervang alleen index.html
-3. Commit changes
-4. Wacht ongeveer 1 minuut
-5. Open de ONLINE website (niet het bestand uit Downloads)
-6. Doe één keer Ctrl + F5 op de pc
-7. Op de tablet sluit/open Chrome opnieuw en open de website
+2. Add file > Upload files
+3. Vervang alleen index.html
+4. Commit changes
+5. Wacht ongeveer 1 minuut
+6. Open de website opnieuw
+7. Pc: Ctrl + F5
+8. Tablet: Chrome sluiten en opnieuw openen

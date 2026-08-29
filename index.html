@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v271 herstel + foto beheer</title>
+<title>MSFK Verkoop & EXP - v273 notitie in catalogus</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -33,7 +33,9 @@ body.tablet-mode .delete-product-card,
 body.tablet-mode .edit-mqs-group,
 body.tablet-mode .duplicate-mqs-group,
 body.tablet-mode .delete-mqs-group{display:none!important}
-.exp-line{margin-top:6px;font-weight:800;color:#111827}</style>
+.exp-line{margin-top:6px;font-weight:800;color:#111827}
+.catalog-note{margin-top:10px;padding:9px 10px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;font-size:.92rem;line-height:1.4}
+.catalog-note strong{color:#9a3412}</style>
 </head>
 <body>
 <div id="startupError" style="display:none;margin:12px;padding:12px;border:2px solid #b91c1c;border-radius:10px;background:#fff;color:#b91c1c;font-weight:700"></div>
@@ -323,10 +325,6 @@ window.addEventListener('unhandledrejection',function(e){
 <label>Omschrijving</label><textarea id="notes" rows="3"></textarea>
 <label>Productfoto</label>
 <input id="photoInput" type="file" accept="image/*" capture="environment">
-<div id="photoEditActions" class="actions" style="margin-top:10px">
-  <button id="changePhotoBtn" type="button" class="btn secondary">Foto wijzigen</button>
-  <button id="removePhotoBtn" type="button" class="btn light">Foto verwijderen</button>
-</div>
 <img id="preview" class="preview hidden">
 <p><label><input id="available" type="checkbox" checked style="width:auto"> Beschikbaar</label></p>
 <p><label><input id="internalOnly" type="checkbox" style="width:auto"> Alleen intern / niet in catalogus</label></p>
@@ -482,7 +480,7 @@ import {getFirestore,collection,doc,setDoc,getDoc,addDoc,deleteDoc,onSnapshot,se
 
 const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
 const OWNER='mh.makrostore@gmail.com',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
-let products=[],sales=[],customers=[],tabletUsers=[],currentRole='guest',packageSettings=null,packageLastTotals=[],photoData='',photoRemoved=false,html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
+let products=[],sales=[],customers=[],tabletUsers=[],currentRole='guest',packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
 
@@ -704,7 +702,6 @@ function compareProductsByNameWeight(a,b){
 
 
 
-
 function getNameInputForCurrentCategory(){
   const category=normalizeCategoryName($('cat')?.value||'');
   if(category==='MAKRO')return $('makroName');
@@ -791,7 +788,7 @@ function loadMQSBulkValues(){
   // Als de naam nieuw is en er nog geen product bestaat, moet de foto leeg zijn.
   const imageProduct=matched.find(p=>p.photoData);
   if(imageProduct?.photoData){
-    photoData=imageProduct.photoData;photoRemoved=false;
+    photoData=imageProduct.photoData;
     $('preview').src=photoData;
     $('preview').classList.remove('hidden');
   }else{
@@ -930,7 +927,7 @@ async function saveMQSBulk(){
         barcode:'',
         notes:'',
         available:true,
-        photoData:photoRemoved?'':(photoData||existing?.photoData||''),
+        photoData:photoData||existing?.photoData||'',
         updatedAt:serverTimestamp()
       };
       if(existing)await setDoc(doc(db,'catalogProducts',existing.id),data,{merge:true});
@@ -946,7 +943,6 @@ async function saveMQSBulk(){
       'mqsExpiry1','mqsExpiry2'
     ].forEach(id=>{const el=$(id);if(el)el.value='';});
     photoData='';
-    photoRemoved=false;
     if($('photoInput'))$('photoInput').value='';
     if($('preview')){
       $('preview').removeAttribute('src');
@@ -1155,7 +1151,7 @@ function applySavedProduct(code){
   $('cat').value=p.category||'';
   $('notes').value=p.notes||'';
   $('available').checked=p.available!==false;
-  photoData=p.photoData||'';photoRemoved=false;
+  photoData=p.photoData||'';
   if(photoData){
     $('preview').src=photoData;
     $('preview').classList.remove('hidden');
@@ -1260,7 +1256,7 @@ function fillWarehouseFromProduct(p,{useDates=true}={}){
     $('warehouseStock3').value='';
   }
 
-  photoData=p.photoData||'';photoRemoved=false;
+  photoData=p.photoData||'';
   if(photoData){
     $('preview').src=photoData;
     $('preview').classList.remove('hidden');
@@ -1435,7 +1431,7 @@ async function startMakroScanner(){
           $('makroStock1').value=existing.stockExp1??'';
           $('makroStock2').value=existing.stockExp2??'';
           $('makroStock3').value=existing.stockExp3??'';
-          photoData=existing.photoData||'';photoRemoved=false;
+          photoData=existing.photoData||'';
 
           if(photoData){
             $('preview').src=photoData;
@@ -2994,6 +2990,7 @@ function render(){
             <div class="cat">${safe(p.category||'OVERIG')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
             <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
+            ${String(p.notes||'').trim()?`<div class="catalog-note"><strong>Notitie:</strong> ${safe(String(p.notes).trim())}</div>`:''}
             ${productPriceHtml(p)}
             <div class="catalog-order-controls">
               <select class="catalog-order-unit" data-product="${p.id}">${options}</select>
@@ -3156,7 +3153,7 @@ function setProductFormMode(editing){
 }
 
 function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
-  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';photoRemoved=false;
+  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
 }
 function edit(id){
   if(currentRole==='tablet')return;
@@ -3187,7 +3184,7 @@ function edit(id){
     $('makroStock1').value=p.stockExp1??'';
     $('makroStock2').value=p.stockExp2??'';
     $('makroStock3').value=p.stockExp3??'';
-    photoData=p.photoData||'';photoRemoved=false;
+    photoData=p.photoData||'';
     if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
     $('formTitle').textContent='MAKRO product aanpassen';
     $('cancelBtn').classList.remove('hidden');
@@ -3203,7 +3200,7 @@ function edit(id){
     $('mqsProductName').value=p.name||'';
     loadMQSBulkValues();
     setProductFormMode(true);
-    photoData=p.photoData||'';photoRemoved=false;
+    photoData=p.photoData||'';
     if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
     $('formTitle').textContent='MQS product aanpassen';
     $('cancelBtn').classList.remove('hidden');
@@ -3218,7 +3215,7 @@ function edit(id){
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
   $('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
-  photoData=p.photoData||'';photoRemoved=false;if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+  photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();
   $('formTitle').textContent='Product aanpassen';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3236,7 +3233,7 @@ function duplicateProduct(id){
     // Copy the values but make it a new product group. Codes are cleared to prevent accidental duplicates.
     $('mqsProductName').value=sourceName+' KOPIE';
     ['mqsCodeMqs','mqsCode500','mqsCodeKg'].forEach(id=>$(id).value='');
-    photoData=p.photoData||'';photoRemoved=false;if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
+    photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}
     $('formTitle').textContent='MQS product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
@@ -3245,10 +3242,10 @@ function duplicateProduct(id){
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
-  photoData=p.photoData||'';photoRemoved=false;if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
+  photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';photoRemoved=false;$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(currentRole==='tablet'&&b.dataset.tab!=='catalog')return;
   if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}
@@ -3358,25 +3355,8 @@ $('photoInput').onchange=async()=>{
   const f=$('photoInput').files?.[0];
   if(!f)return;
   photoData=await imageData(f);
-  photoRemoved=false;
   $('preview').src=photoData;
   $('preview').classList.remove('hidden');
-  msg($('formMsg'),'Nieuwe foto gekozen. Klik op Opslaan om de wijziging te bewaren.');
-};
-$('changePhotoBtn').onclick=()=>{
-  $('photoInput').click();
-};
-$('removePhotoBtn').onclick=()=>{
-  if(!photoData && $('preview').classList.contains('hidden')){
-    return msg($('formMsg'),'Dit product heeft geen foto.');
-  }
-  if(!confirm('Foto van dit product verwijderen?'))return;
-  photoData='';
-  photoRemoved=true;
-  $('photoInput').value='';
-  $('preview').removeAttribute('src');
-  $('preview').classList.add('hidden');
-  msg($('formMsg'),'Foto verwijderd. Klik op Opslaan om dit te bewaren.');
 };
 $('saveBtn').onclick=async()=>{
   if(isWarehouseCategory())return saveWarehouseProduct();
@@ -3470,9 +3450,8 @@ $('saveBtn').onclick=async()=>{
       if(stock1Raw!=='' && Number(stock1Raw)!==Number(existing.stockExp1||0))changes.stockExp1=Number(stock1Raw);
       if(stock2Raw!=='' && Number(stock2Raw)!==Number(existing.stockExp2||0))changes.stockExp2=Number(stock2Raw);
 
-      // Foto alleen aanpassen als de beheerder bewust wijzigt of verwijdert.
-      if(photoRemoved)changes.photoData='';
-      else if(photoData && photoData!==String(existing.photoData||''))changes.photoData=photoData;
+      // Alleen foto wijzigen als daadwerkelijk een nieuwe foto gekozen/geplaatst is.
+      if(photoData && photoData!==String(existing.photoData||''))changes.photoData=photoData;
 
       // Alleen expiryDate opnieuw berekenen als een EXP-veld echt gewijzigd is.
       if('expiryDate1' in changes || 'expiryDate2' in changes){
