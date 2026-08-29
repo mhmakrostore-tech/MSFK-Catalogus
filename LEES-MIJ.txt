@@ -1,25 +1,22 @@
-MSFK VERKOOP & THT - DEFINITIEVE VERSIE
+MSFK Verkoop & EXP – update v271
 
-BESTANDEN OM TE UPLOADEN:
-- index.html
-- style.css
-- app.js
-- firebase-config.js
-- firestore.rules
+Deze update doet 2 dingen:
 
-BELANGRIJK:
-1. Upload deze bestanden in de nieuwe repository MSFK-Catalogus.
-2. Firebase > Firestore > Rules:
-   vervang de regels door de inhoud van firestore.rules en klik Publish.
-3. Firebase > Authentication > Settings > Authorized domains:
-   voeg mhmakrostore-tech.github.io toe als die nog niet bestaat.
-4. GitHub Pages werkt meestal alleen vanuit een openbare repository op een gratis GitHub-account.
-   Als Pages niet geactiveerd kan worden terwijl de repository Private is, zet alleen de repository Public.
-   De PRODUCTGEGEVENS blijven privé door de Firebase-regels.
-5. GitHub > Settings > Pages > Deploy from a branch > main > /(root) > Save.
+1. Herstelt de fout:
+   getNameInputForCurrentCategory is not defined
 
-Website:
-https://mhmakrostore-tech.github.io/MSFK-Catalogus/
+2. Foto beheer bij producten:
+   - bestaande foto blijft zichtbaar bij bewerken
+   - knop Foto wijzigen
+   - knop Foto verwijderen
+   - verwijderen wordt pas definitief na Opslaan
+   - werkt ook voor MAKRO, MAGAZIJN en MQS
 
-Alleen mh.makrostore@gmail.com kan inloggen.
-Foto's worden verkleind en rechtstreeks in Firestore opgeslagen.
+UPLOAD:
+1. Open GitHub > MSFK-Catalogus
+2. Upload/vervang alleen index.html
+3. Commit changes
+4. Wacht ongeveer 1 minuut
+5. Open de ONLINE website (niet het bestand uit Downloads)
+6. Doe één keer Ctrl + F5 op de pc
+7. Op de tablet sluit/open Chrome opnieuw en open de website
