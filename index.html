@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v284 OUDE BESTELLINGEN VERWIJDEREN</title>
+<title>MSFK Verkoop & EXP - v285 PICK GELEZEN SYNCHRONISATIE</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -2329,9 +2329,11 @@ function pickSeenSet(){
 function savePickSeenSet(set){
   localStorage.setItem('msfkPickSeenOrders',JSON.stringify([...set].slice(-500)));
 }
+function isPickOrderRead(s){
+  return s?.pickRead===true;
+}
 function pickUnreadOrders(){
-  const seen=pickSeenSet();
-  return sales.filter(s=>!seen.has(s.id));
+  return sales.filter(s=>!isPickOrderRead(s));
 }
 function updatePickUnreadUI(){
   const n=pickUnreadOrders().length;
@@ -2341,8 +2343,15 @@ function updatePickUnreadUI(){
     $('pickTabBadge').classList.toggle('hidden',n===0);
   }
 }
-function markPickSeen(id){
-  const seen=pickSeenSet();seen.add(id);savePickSeenSet(seen);renderPickOrders();
+async function markPickSeen(id){
+  const seen=pickSeenSet();seen.add(id);savePickSeenSet(seen);
+  try{
+    await setDoc(doc(db,'sales',id),{pickRead:true,pickReadAt:serverTimestamp(),pickReadBy:auth.currentUser?.email||''},{merge:true});
+  }catch(e){
+    console.error('ORDER PICK gelezen opslaan mislukt',e);
+    msg($('pickMessage'),'Gelezen status kon niet worden opgeslagen: '+e.message,true);
+  }
+  renderPickOrders();
 }
 function pickOrderDate(s){
   const d=s.createdAt?.toDate?.();
@@ -2350,9 +2359,8 @@ function pickOrderDate(s){
 }
 function renderPickOrders(){
   const box=$('pickOrderList');if(!box)return;
-  const seen=pickSeenSet();
   // Alleen nog niet gelezen/geprinte bestellingen blijven bovenaan bij NIEUW.
-  const list=sales.filter(s=>!seen.has(s.id)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const list=sales.filter(s=>!isPickOrderRead(s)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   box.innerHTML=list.length?'':'<div class="meta">Geen nieuwe bestellingen.</div>';
   for(const s of list){
     const items=(s.items||[]).map(i=>`<div><strong>${safe(i.name||'')}</strong>${i.productCode?` · Code: ${safe(i.productCode)}`:''} · <strong>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())} · ${Number(i.qty||0)}</strong></div>`).join('');
@@ -2368,9 +2376,8 @@ function renderPickOrders(){
 }
 function renderPickHistory(){
   const box=$('pickHistoryList'),input=$('pickHistorySearch');if(!box||!input)return;
-  const seen=pickSeenSet();
   const q=String(input.value||'').trim().toLowerCase();
-  const archived=sales.filter(s=>seen.has(s.id) && (!q||String(s.customerName||'').toLowerCase().includes(q)))
+  const archived=sales.filter(s=>isPickOrderRead(s) && (!q||String(s.customerName||'').toLowerCase().includes(q)))
     .sort((a,b)=>String(a.customerName||'').localeCompare(String(b.customerName||''),'nl',{sensitivity:'base'}) || ((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
   if(!archived.length){box.innerHTML=`<div class="meta">${q?'Geen oudere bestellingen gevonden voor deze klant.':'Nog geen gelezen of geprinte bestellingen.'}</div>`;return;}
   box.innerHTML='';
@@ -2407,11 +2414,11 @@ async function deleteOldPickOrder(id){
     msg($('pickMessage'),'Bestelling verwijderen mislukt: '+e.message,true);
   }
 }
-function printPickOrder(id){
+async function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
   const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.productCode||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
   $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(s.orderType)}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
-  markPickSeen(id);
+  await markPickSeen(id);
   window.print();
 }
 function playPickSound(){
