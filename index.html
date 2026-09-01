@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v278 FOOD PAK</title>
+<title>MSFK Verkoop & EXP - v279 FOOD PAK CODE</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -297,6 +297,7 @@ window.addEventListener('unhandledrejection',function(e){
 <div id="packBox" class="unit-box hidden">
   <h3>PAK (P)</h3>
   <div class="grid2">
+    <div><label>P Code</label><input id="codePack" placeholder="Code per pak"></div>
     <div><label>P Prijs $</label><input id="pricePack" type="number" min="0" step="0.01"></div>
     <div><label>Aantal per pak</label><input id="unitsPerPack" type="number" min="1" step="1" placeholder="Bijv. 20"></div>
   </div>
@@ -1137,11 +1138,11 @@ function formatDate(dateStr){
 }
 
 function normalizedCodes(p){
-  return {each:String(p.codeEach??p.productCode??p.code??'').trim(),p12:String(p.codeP12??'').trim(),crt:String(p.codeCrt??'').trim()};
+  return {each:String(p.codeEach??p.productCode??p.code??'').trim(),p12:String(p.codeP12??'').trim(),pack:String(p.codePack??'').trim(),crt:String(p.codeCrt??'').trim()};
 }
 function codeForUnit(p,unitType){
   const codes=normalizedCodes(p);
-  return unitType==='p12'?codes.p12:unitType==='crt'?codes.crt:codes.each;
+  return unitType==='p12'?codes.p12:unitType==='p'?codes.pack:unitType==='crt'?codes.crt:codes.each;
 }
 function normalizedPrices(p){
   return {
@@ -1199,7 +1200,7 @@ function applySavedProduct(code){
     box.textContent='';
     return false;
   }
-  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();
+  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codePack').value=normalizedCodes(p).pack;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('pricePack').value=p.pricePack??'';$('unitsPerPack').value=p.unitsPerPack??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
   
@@ -2341,7 +2342,7 @@ function renderPickOrders(){
   box.innerHTML=list.length?'':'<div class="meta">Nog geen bestellingen.</div>';
   for(const s of list){
     const isNew=!seen.has(s.id);
-    const items=(s.items||[]).map(i=>`<div><strong>${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()}</strong> ${safe(i.name||'')}</div>`).join('');
+    const items=(s.items||[]).map(i=>`<div><strong>${safe(i.name||'')}</strong>${i.productCode?` · Code: ${safe(i.productCode)}`:''} · <strong>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())} · ${Number(i.qty||0)}</strong></div>`).join('');
     const card=document.createElement('div');
     card.className='history-card'+(isNew?' pick-order-new':'');
     card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div>${isNew?'<span class="pick-unread">NIEUW</span>':''}</div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">${isNew?'Markeer als gezien':'Gezien'}</button></div>`;
@@ -2353,8 +2354,8 @@ function renderPickOrders(){
 }
 function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
-  const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
-  $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(s.orderType)}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
+  const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.productCode||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
+  $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(s.orderType)}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
   markPickSeen(id);
   window.print();
 }
@@ -3045,7 +3046,7 @@ async function deleteMQSGroupByName(name){
 function render(){
   const q=$('search').value.toLowerCase(),selectedCategory=$('category').value,a=$('availability').value;
   const filtered=products.filter(p=>{
-    const t=`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''} ${p.category||''}`.toLowerCase();
+    const t=`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).pack} ${normalizedCodes(p).crt} ${p.barcode||''} ${p.category||''}`.toLowerCase();
     return p.internalOnly!==true&&(!q||t.includes(q))&&(selectedCategory==='all'||(p.category||'OVERIG')===selectedCategory)&&(a==='all'||(a==='available'?p.available!==false:p.available===false));
   });
 
@@ -3158,7 +3159,7 @@ function render(){
         return;
       }
 
-      const visible=groups[category].filter(p=>(`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()));
+      const visible=groups[category].filter(p=>(`${p.name||''} ${weightText(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).pack} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()));
 
       for(const p of visible){
         const current=catalogCart[p.id]||{unitType:'each',qty:''};
@@ -3176,7 +3177,7 @@ function render(){
           <div class="body">
             <div class="cat">${safe(p.category||'OVERIG')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
-            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
+            <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${normalizedCodes(p).p12?`P12 Code: ${safe(normalizedCodes(p).p12)}<br>`:''}${normalizedCodes(p).pack?`P${normalizedPrices(p).unitsPerPack||''} Code: ${safe(normalizedCodes(p).pack)}<br>`:''}${normalizedCodes(p).crt?`CRT Code: ${safe(normalizedCodes(p).crt)}<br>`:''}${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
             ${String(p.notes||'').trim()?`<div class="catalog-note"><strong>Notitie:</strong> ${safe(String(p.notes).trim())}</div>`:''}
             ${productPriceHtml(p)}
             <div class="catalog-order-controls">
@@ -3299,7 +3300,7 @@ function renderList(){
       }
 
       const visible=byCategory[category]
-        .filter(p=>(`${productDisplayName(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()))
+        .filter(p=>(`${productDisplayName(p)} ${normalizedCodes(p).each} ${normalizedCodes(p).p12} ${normalizedCodes(p).pack} ${normalizedCodes(p).crt} ${p.barcode||''}`).toLowerCase().includes(term.toLowerCase()))
         .sort(compareProductsByNameWeight);
 
       for(const p of visible){
@@ -3340,7 +3341,7 @@ function setProductFormMode(editing){
 }
 
 function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
-  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
+  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codePack').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
 }
 function edit(id){
   if(currentRole==='tablet')return;
@@ -3396,7 +3397,7 @@ function edit(id){
     return;
   }
   $('editId').value=id;setProductFormMode(true);
-  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;
+  $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codePack').value=normalizedCodes(p).pack;$('codeCrt').value=normalizedCodes(p).crt;
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';
   updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
   $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('pricePack').value=p.pricePack??'';$('unitsPerPack').value=p.unitsPerPack??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
@@ -3432,7 +3433,7 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codePack').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(currentRole==='tablet'&&b.dataset.tab!=='catalog')return;
   if(currentRole==='pick'&&b.dataset.tab!=='pick')return;
@@ -3574,6 +3575,7 @@ $('saveBtn').onclick=async()=>{
       const currentCodes=normalizedCodes(existing);
       const codeEach=$('codeEach').value.trim();
       const codeP12=$('codeP12').value.trim();
+      const codePack=$('codePack').value.trim();
       const codeCrt=$('codeCrt').value.trim();
 
       if(codeEach!==currentCodes.each){
@@ -3581,6 +3583,7 @@ $('saveBtn').onclick=async()=>{
         changes.productCode=codeEach;
       }
       if(codeP12!==currentCodes.p12)changes.codeP12=codeP12;
+      if(codePack!==currentCodes.pack)changes.codePack=codePack;
       if(codeCrt!==currentCodes.crt)changes.codeCrt=codeCrt;
 
       const currentPrices=normalizedPrices(existing);
@@ -3699,6 +3702,7 @@ $('saveBtn').onclick=async()=>{
       productCode:$('codeEach').value.trim(),
       codeEach:$('codeEach').value.trim(),
       codeP12:$('codeP12').value.trim(),
+      codePack:isFoodProduct?$('codePack').value.trim():'',
       codeCrt:$('codeCrt').value.trim(),
       name,
       weightValue:Number($('weightValue').value||0),
