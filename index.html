@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v283 KLANTNAAM AUTOCOMPLETE</title>
+<title>MSFK Verkoop & EXP - v284 OUDE BESTELLINGEN VERWIJDEREN</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -2387,10 +2387,25 @@ function renderPickHistory(){
     const card=document.createElement('div');
     card.className='history-card';
     const itemCount=(s.items||[]).reduce((sum,i)=>sum+Number(i.qty||0),0);
-    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div><span class="meta">GELEZEN</span></div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button></div>`;
+    const deleteButton=currentRole==='owner'?`<button type="button" class="btn light delete-old-pick-order" data-id="${s.id}" style="color:#b91c1c">VERWIJDEREN</button>`:'';
+    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div><span class="meta">GELEZEN</span></div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deleteButton}</div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-old-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
+  box.querySelectorAll('.delete-old-pick-order').forEach(btn=>btn.onclick=()=>deleteOldPickOrder(btn.dataset.id));
+}
+async function deleteOldPickOrder(id){
+  if(currentRole!=='owner')return;
+  const order=sales.find(s=>s.id===id);if(!order)return;
+  const customer=order.customerName||'Onbekende klant';
+  if(!confirm(`Oude bestelling van "${customer}" verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`))return;
+  try{
+    await deleteDoc(doc(db,'sales',id));
+    const seen=pickSeenSet();seen.delete(id);savePickSeenSet(seen);
+    msg($('pickMessage'),`Oude bestelling van ${customer} verwijderd.`);
+  }catch(e){
+    msg($('pickMessage'),'Bestelling verwijderen mislukt: '+e.message,true);
+  }
 }
 function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
