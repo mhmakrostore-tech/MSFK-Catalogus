@@ -1,0 +1,23 @@
+MSFK Verkoop & EXP - v275 ORDER PICK
+
+Nieuw:
+- ORDER PICK login zonder Google-account
+- Loginnaam: ORDERPICK
+- Interne Firebase-login: orderpick@maxi.local
+- Dezelfde login kan op 2 pc's worden gebruikt
+- ORDER PICK ziet alleen bestellingen
+- Nieuwe orders verschijnen realtime
+- Teller met nieuwe/ongelezen orders
+- Browsermelding + geluid bij nieuwe order (na toestemming)
+- PRINT PICK BON zonder prijzen en zonder productcodes
+- Notitie wordt alleen geprint als er een notitie is
+- Beheerder kan in Klanten & historie het ORDER PICK-account aanmaken met een eigen wachtwoord
+
+BELANGRIJK:
+1. Upload index.html naar GitHub en vervang de huidige index.html.
+2. Publiceer firestore_v275_order_pick.rules in Firebase Firestore Rules.
+3. Firebase Authentication > Sign-in method: Email/Password moet ingeschakeld zijn.
+4. Log als beheerder in de app in, ga naar Klanten & historie > ORDER PICK toegang.
+5. Kies een wachtwoord (minimaal 6 tekens) en klik ORDER PICK account maken.
+6. Op beide order-pc's: login ORDERPICK + hetzelfde wachtwoord.
+7. Klik op beide pc's één keer Meldingen + geluid inschakelen.
