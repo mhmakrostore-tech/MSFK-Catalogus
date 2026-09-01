@@ -505,7 +505,7 @@ import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirec
 import {getFirestore,collection,doc,setDoc,getDoc,addDoc,deleteDoc,onSnapshot,serverTimestamp,runTransaction} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
 const firebaseConfig={apiKey:"AIzaSyAz84bwA97vvqv7LrjvYXBI7BheRwGM_ms",authDomain:"makro-tht.firebaseapp.com",projectId:"makro-tht",storageBucket:"makro-tht.firebasestorage.app",messagingSenderId:"777366139530",appId:"1:777366139530:web:2cc8ca4c2dfffb9e07f373",measurementId:"G-K9SV5ZLM83"};
-const OWNER='mh.makrostore@gmail.com',ORDER_PICK_EMAIL='orderpick@maxi.local',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
+const OWNER='mh.makrostore@gmail.com',ORDER_PICK_EMAIL='orderpick@maxi.bonaire',appFirebase=initializeApp(firebaseConfig),auth=getAuth(appFirebase),db=getFirestore(appFirebase),provider=new GoogleAuthProvider(),$=id=>document.getElementById(id);
 let products=[],sales=[],customers=[],tabletUsers=[],currentRole='guest',packageSettings=null,packageLastTotals=[],photoData='',html5QrCode=null,scannerRunning=false,catalogQrCode=null,catalogScannerRunning=false,makroQrCode=null,makroScannerRunning=false,warehouseQrCode=null,warehouseScannerRunning=false,toppersQrCode=null,toppersScannerRunning=false,catalogCart={},editingSaleId='',editingMQSOriginalName='';
 const safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const msg=(el,t,e=false)=>{el.textContent=t;el.style.color=e?'#b91c1c':'#15803d'};
