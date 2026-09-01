@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v282 ORDER PICK AUTO ARCHIEF</title>
+<title>MSFK Verkoop & EXP - v283 KLANTNAAM AUTOCOMPLETE</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -64,7 +64,7 @@ window.addEventListener('unhandledrejection',function(e){
   <div class="sales-grid">
     <div>
       <label>Klantnaam</label>
-      <input id="catalogCustomerName" placeholder="Naam klant">
+      <input id="catalogCustomerName" placeholder="Naam klant" list="customerSuggestions" autocomplete="off">
     </div>
     <div>
       <label>Opmerking</label>
@@ -660,6 +660,7 @@ async function saveCatalogOrder(){
       await addDoc(collection(db,'sales'),{...data,createdAt:serverTimestamp()});
       msg($('catalogOrderMessage'),'Bestelling opgeslagen.');
     }
+    rememberCustomerName(customerName);
     clearCatalogOrder();
   }catch(e){
     msg($('catalogOrderMessage'),'Opslaan mislukt: '+e.message,true);
@@ -2554,13 +2555,31 @@ async function ensureCustomerExists(name){
   );
 }
 
+function localCustomerNames(){
+  try{
+    const value=JSON.parse(localStorage.getItem('msfkCustomerNames')||'[]');
+    return Array.isArray(value)?value.map(cleanCustomerName).filter(Boolean):[];
+  }catch(e){return []}
+}
+function rememberCustomerName(name){
+  const clean=cleanCustomerName(name);
+  if(!clean)return;
+  const names=localCustomerNames();
+  if(!names.some(n=>normalizeCustomerKey(n)===normalizeCustomerKey(clean)))names.push(clean);
+  names.sort((a,b)=>a.localeCompare(b,'nl',{sensitivity:'base'}));
+  localStorage.setItem('msfkCustomerNames',JSON.stringify(names));
+  renderCustomerSuggestions();
+}
 function renderCustomerSuggestions(){
   const list=$('customerSuggestions');
   if(!list)return;
-  const names=customers
-    .map(c=>cleanCustomerName(c.name))
-    .filter(Boolean)
-    .sort((a,b)=>a.localeCompare(b,'nl',{sensitivity:'base'}));
+  const all=[...customers.map(c=>cleanCustomerName(c.name)),...localCustomerNames()].filter(Boolean);
+  const seen=new Set();
+  const names=all.filter(name=>{
+    const key=normalizeCustomerKey(name);
+    if(seen.has(key))return false;
+    seen.add(key);return true;
+  }).sort((a,b)=>a.localeCompare(b,'nl',{sensitivity:'base'}));
   list.innerHTML=names.map(name=>`<option value="${safe(name)}"></option>`).join('');
 }
 
