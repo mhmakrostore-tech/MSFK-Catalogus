@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v280 CATALOGUS STATUS + PICK HISTORIE</title>
+<title>MSFK Verkoop & EXP - v281 CATALOGUS STATUS + PICK HISTORIE</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -2490,6 +2490,7 @@ function startOwnerListeners(){
   onSnapshot(collection(db,'sales'),s=>{
     sales=s.docs.map(d=>({id:d.id,...d.data()}));
     renderHistory();
+    renderPickOrders();
     const existingNames=[...new Set(sales.map(x=>cleanCustomerName(x.customerName)).filter(Boolean))];
     Promise.all(existingNames.map(name=>ensureCustomerExists(name))).catch(e=>console.warn('Klanten migreren overgeslagen:',e));
   },e=>msg($('saleMessage'),e.message,true));
