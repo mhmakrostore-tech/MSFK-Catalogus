@@ -1,10 +1,11 @@
+```
 <!doctype html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v273 notitie in catalogus</title>
+<title>MSFK Verkoop & EXP - v274 WhatsApp pickbon</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -551,7 +552,8 @@ function buildOrderPreview(){
     return `<tr><td>${safe(item.productCode||'')}</td><td>${safe(item.name)}</td><td>${unitLabel}</td><td>${item.qty}</td><td>$ ${item.price.toFixed(2)}</td><td>$ ${(item.qty*item.price).toFixed(2)}</td></tr>`;
   }).join('');
   const total=items.reduce((s,i)=>s+i.qty*i.price,0);
-  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderType())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>`;
+  const note=$('catalogOrderNote').value.trim();
+  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderType())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
   $('orderPreview').classList.remove('hidden');
 }
 function printCatalogOrder(){buildOrderPreview();if(!$('orderPreview').classList.contains('hidden'))window.print();}
@@ -562,15 +564,19 @@ function buildCatalogWhatsAppText(){
     msg($('catalogOrderMessage'),'Vul bij minstens één product een aantal in.',true);
     return '';
   }
-  const lines=['*Bestelling MSFK*',`Bestelnummer: ${orderNumber()}`,`Datum: ${new Date().toLocaleDateString('nl-NL')}`,`Klant: ${customerName}`,`Bestelling: ${catalogOrderType()}`,''];
+  const lines=[
+    '*ORDER PICK BON*',
+    `Datum: ${new Date().toLocaleDateString('nl-NL')}`,
+    `Klant: ${customerName}`,
+    `Bestelling: ${catalogOrderType()}`,
+    '',
+    '*PRODUCT | EENHEID | AANTAL*'
+  ];
   items.forEach(item=>{
-    const code=item.productCode?`[${item.productCode}] `:'';
-    lines.push(`${item.qty} × ${item.unitType.toUpperCase()} ${code}${item.name} — $ ${(item.qty*item.price).toFixed(2)}`);
+    lines.push(`${item.name} | ${item.unitType.toUpperCase()} | ${item.qty}`);
   });
-  const total=items.reduce((sum,item)=>sum+item.qty*item.price,0);
-  lines.push('',`*Totaal: $ ${total.toFixed(2)}*`);
   const note=$('catalogOrderNote').value.trim();
-  if(note)lines.push(`Opmerking: ${note}`);
+  if(note)lines.push('',`*Notitie:* ${note}`);
   return lines.join('\n');
 }
 function sendCatalogOrderWhatsApp(){
@@ -2495,18 +2501,18 @@ function buildWhatsAppText(){
     return '';
   }
   const lines=[
-    '*Bestelling MSFK*',
+    '*ORDER PICK BON*',
+    `Datum: ${new Date().toLocaleDateString('nl-NL')}`,
     `Klant: ${customerName}`,
     `Bestelling: ${orderType}`,
-    ''
+    '',
+    '*PRODUCT | EENHEID | AANTAL*'
   ];
   items.forEach(i=>{
-    lines.push(`${i.qty} × ${i.unitType?.toUpperCase()||'EACH'} ${i.productCode?`[${i.productCode}] `:''}${i.name} — $ ${(i.qty*i.price).toFixed(2)}`);
+    lines.push(`${i.name} | ${i.unitType?.toUpperCase()||'EACH'} | ${i.qty}`);
   });
-  const total=items.reduce((s,x)=>s+x.qty*x.price,0);
-  lines.push('',`*Totaal: $ ${total.toFixed(2)}*`);
   const note=$('saleNote').value.trim();
-  if(note) lines.push(`Opmerking: ${note}`);
+  if(note)lines.push('',`*Notitie:* ${note}`);
   return lines.join('\n');
 }
 
@@ -3588,3 +3594,4 @@ onAuthStateChanged(auth,async u=>{
 </div>
 </body>
 </html>
+```
