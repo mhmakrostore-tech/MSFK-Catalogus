@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v275 ORDER PICK</title>
+<title>MSFK Verkoop & EXP - v278 FOOD PAK</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -52,7 +52,7 @@ window.addEventListener('unhandledrejection',function(e){
 });
 </script>
 <div id="loading" class="loading">App laden…</div>
-<section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="ORDERPICK" autocomplete="username"><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
+<section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username"><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
 <nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="notifications">Meldingen</button></nav>
@@ -294,6 +294,15 @@ window.addEventListener('unhandledrejection',function(e){
   </div>
 </div>
 
+<div id="packBox" class="unit-box hidden">
+  <h3>PAK (P)</h3>
+  <div class="grid2">
+    <div><label>P Prijs $</label><input id="pricePack" type="number" min="0" step="0.01"></div>
+    <div><label>Aantal per pak</label><input id="unitsPerPack" type="number" min="1" step="1" placeholder="Bijv. 20"></div>
+  </div>
+  <div class="meta" style="margin-top:8px">Voor FOOD. Vul je 20 in, dan wordt de eenheid automatisch P20.</div>
+</div>
+
 <div id="crtBox" class="unit-box">
   <h3>CRT</h3>
   <div class="grid3">
@@ -379,7 +388,7 @@ window.addEventListener('unhandledrejection',function(e){
     <h2>ORDER PICK toegang</h2>
     <p class="meta">Maak één aparte ORDER PICK-login voor maximaal 2 pc's. Dit is geen echt e-mailadres en er is geen Google-aanmelding nodig.</p>
     <div class="grid2">
-      <div><label>Login</label><input value="ORDERPICK" disabled></div>
+      <div><label>Login</label><input value="orderpick@maxi.bonaire" disabled></div>
       <div><label>Nieuw wachtwoord</label><input id="orderPickSetupPassword" type="password" minlength="6" placeholder="Minimaal 6 tekens"></div>
     </div>
     <button id="createOrderPickAccountBtn" type="button" class="btn secondary" style="margin-top:12px">ORDER PICK account maken</button>
@@ -533,6 +542,7 @@ function catalogCartItems(){
       productCode:codeForUnit(product,unitType),
       name:productDisplayName(product),
       unitType,
+      unitLabel:unitLabelForProduct(product,unitType),
       qty,
       price
     };
@@ -573,7 +583,7 @@ function buildOrderPreview(){
   const date=new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'});
   const rows=items.map(item=>{
     const product=products.find(p=>p.id===item.productId);
-    const unitLabel=item.unitType==='crt'?`CRT${product?.unitsPerCarton?` (${product.unitsPerCarton})`:''}`:item.unitType.toUpperCase();
+    const unitLabel=item.unitType==='crt'?`CRT${product?.unitsPerCarton?` (${product.unitsPerCarton})`:''}`:(item.unitLabel||unitLabelForProduct(product,item.unitType));
     return `<tr><td>${safe(item.productCode||'')}</td><td>${safe(item.name)}</td><td>${unitLabel}</td><td>${item.qty}</td><td>$ ${item.price.toFixed(2)}</td><td>$ ${(item.qty*item.price).toFixed(2)}</td></tr>`;
   }).join('');
   const total=items.reduce((s,i)=>s+i.qty*i.price,0);
@@ -598,7 +608,7 @@ function buildCatalogWhatsAppText(){
     '*PRODUCT | EENHEID | AANTAL*'
   ];
   items.forEach(item=>{
-    lines.push(`${item.name} | ${item.unitType.toUpperCase()} | ${item.qty}`);
+    lines.push(`${item.name} | ${item.unitLabel||item.unitType.toUpperCase()} | ${item.qty}`);
   });
   const note=$('catalogOrderNote').value.trim();
   if(note)lines.push('',`*Notitie:* ${note}`);
@@ -1033,6 +1043,8 @@ function updateMQSWeightUI(){
   $('warehouseOnlyBox').classList.toggle('hidden',!isWarehouse);
   $('normalProductFields').classList.toggle('hidden',isMQS||isMakro||isWarehouse);
   const isToppers=isToppersCategory();
+  const isFood=normalizeCategoryName($('cat').value)==='FOOD';
+  if($('packBox'))$('packBox').classList.toggle('hidden',!isFood);
   $('toppersWeightNote').classList.toggle('hidden',!isToppers);
   $('toppersScannerBox').classList.toggle('hidden',!isToppers);
   $('genericScannerBox').classList.toggle('hidden',isToppers);
@@ -1135,18 +1147,29 @@ function normalizedPrices(p){
   return {
     each: Number(p.priceEach ?? p.price ?? 0),
     p12: Number(p.priceP12 ?? 0),
+    pack: Number(p.pricePack ?? 0),
     crt: Number(p.priceCrt ?? 0),
+    unitsPerPack: Number(p.unitsPerPack ?? 0),
     unitsPerCarton: Number(p.unitsPerCarton ?? 0)
   };
+}
+function unitLabelForProduct(p,unitType){
+  if(unitType==='p'){
+    const n=Number(p?.unitsPerPack||0);
+    return n>0?`P${n}`:'P';
+  }
+  return String(unitType||'each').toUpperCase();
 }
 function productPriceForUnit(p, unitType){
   const prices=normalizedPrices(p);
   if(unitType==='p12') return prices.p12;
+  if(unitType==='p') return prices.pack;
   if(unitType==='crt') return prices.crt;
   return prices.each;
 }
 function stockUnitsForSale(unitType, quantity, product){
   if(unitType==='p12') return quantity*12;
+  if(unitType==='p') return quantity*Math.max(1,Number(product.unitsPerPack||0));
   if(unitType==='crt') return quantity*Math.max(1,Number(product.unitsPerCarton||0));
   return quantity;
 }
@@ -1154,6 +1177,7 @@ function productPriceHtml(p){
   const pr=normalizedPrices(p), lines=[];
   if(pr.each>0) lines.push(`<div class="price-line"><span class="price-label">EACH</span><strong>$ ${pr.each.toFixed(2)}</strong></div>`);
   if(pr.p12>0) lines.push(`<div class="price-line"><span class="price-label">P12</span><strong>$ ${pr.p12.toFixed(2)}</strong></div>`);
+  if(pr.pack>0&&pr.unitsPerPack>0) lines.push(`<div class="price-line"><span class="price-label">P${pr.unitsPerPack}</span><strong>$ ${pr.pack.toFixed(2)}</strong></div>`);
   if(pr.crt>0) lines.push(`<div class="price-line"><span class="price-label">CRT${pr.unitsPerCarton?` (${pr.unitsPerCarton} stuks)`:''}</span><strong>$ ${pr.crt.toFixed(2)}</strong></div>`);
   return `<div class="price-lines">${lines.join('')||'<div class="meta">Geen prijs ingevuld</div>'}</div>`;
 }
@@ -1176,7 +1200,7 @@ function applySavedProduct(code){
     return false;
   }
   $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;$('name').value=p.name||'';$('weightValue').value=p.weightValue??'';$('weightUnit').value=p.weightUnit||'gr';updateMQSWeightUI();
-  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('pricePack').value=p.pricePack??'';$('unitsPerPack').value=p.unitsPerPack??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
   
   $('cat').value=p.category||'';
@@ -1190,7 +1214,7 @@ function applySavedProduct(code){
     $('preview').src='';
     $('preview').classList.add('hidden');
   }
-  const pr=normalizedPrices(p);box.textContent=`Eerder opgeslagen product gevonden: ${p.name||'product'}${pr.each?` · EACH $ ${pr.each.toFixed(2)}`:''}${pr.p12?` · P12 $ ${pr.p12.toFixed(2)}`:''}${pr.crt?` · CRT $ ${pr.crt.toFixed(2)}`:''}${nearestExpiryDate(p)?' · laatste EXP '+formatDate(nearestExpiryDate(p)):''}`;
+  const pr=normalizedPrices(p);box.textContent=`Eerder opgeslagen product gevonden: ${p.name||'product'}${pr.each?` · EACH $ ${pr.each.toFixed(2)}`:''}${pr.p12?` · P12 $ ${pr.p12.toFixed(2)}`:''}${pr.pack&&pr.unitsPerPack?` · P${pr.unitsPerPack} $ ${pr.pack.toFixed(2)}`:''}${pr.crt?` · CRT $ ${pr.crt.toFixed(2)}`:''}${nearestExpiryDate(p)?' · laatste EXP '+formatDate(nearestExpiryDate(p)):''}`;
   box.classList.remove('hidden');
   msg($('formMsg'),'Productgegevens automatisch ingevuld.');
   return true;
@@ -1712,20 +1736,31 @@ async function startScanner(){
 
 function productOptions(selected=''){
   return '<option value="">Kies product</option>'+products.filter(p=>p.internalOnly!==true).slice().sort(compareProductsByNameWeight)
-    .map(p=>{const pr=normalizedPrices(p);const shown=pr.each||pr.p12||pr.crt;return `<option value="${p.id}" ${p.id===selected?'selected':''}>${safe(productDisplayName(p))} — vanaf $ ${Number(shown||0).toFixed(2)}</option>`;}).join('');
+    .map(p=>{const pr=normalizedPrices(p);const shown=pr.each||pr.p12||pr.pack||pr.crt;return `<option value="${p.id}" ${p.id===selected?'selected':''}>${safe(productDisplayName(p))} — vanaf $ ${Number(shown||0).toFixed(2)}</option>`;}).join('');
 }
 function addSaleItem(item={productId:'',qty:1,price:''}){
   const row=document.createElement('div'); row.className='sale-item';
   row.innerHTML=`<div class="wide"><label>Product</label><select class="sale-product">${productOptions(item.productId)}</select></div>
-  <div><label>Verkoopeenheid</label><select class="sale-unit"><option value="each">EACH</option><option value="p12">P12</option><option value="crt">CRT</option></select></div>
+  <div><label>Verkoopeenheid</label><select class="sale-unit"><option value="each">EACH</option><option value="p12">P12</option><option value="p">P</option><option value="crt">CRT</option></select></div>
   <div><label>Aantal</label><input class="sale-qty" type="number" min="1" value="${Number(item.qty||1)}"></div>
   <div><label>Prijs $</label><input class="sale-price" type="number" min="0" step="0.01" value="${item.price!==''?Number(item.price).toFixed(2):''}"></div>
   <button type="button" class="btn light sale-remove">Verwijder</button>`;
   $('saleItems').appendChild(row);
   const sel=row.querySelector('.sale-product'),unit=row.querySelector('.sale-unit'),qty=row.querySelector('.sale-qty'),price=row.querySelector('.sale-price');
   unit.value=item.unitType||'each';
-  const refreshPrice=()=>{const p=products.find(x=>x.id===sel.value);if(!p)return;const chosen=productPriceForUnit(p,unit.value);price.value=chosen>0?chosen.toFixed(2):'';updateSaleTotal();};
+  const refreshPrice=()=>{
+    const p=products.find(x=>x.id===sel.value);if(!p)return;
+    const packOption=unit.querySelector('option[value="p"]');
+    const pr=normalizedPrices(p);
+    if(packOption){
+      packOption.textContent=pr.unitsPerPack>0?`P${pr.unitsPerPack}`:'P';
+      packOption.disabled=!(String(p.category||'').trim().toUpperCase()==='FOOD'&&pr.pack>0&&pr.unitsPerPack>0);
+      if(unit.value==='p'&&packOption.disabled)unit.value=pr.each>0?'each':(pr.p12>0?'p12':'crt');
+    }
+    const chosen=productPriceForUnit(p,unit.value);price.value=chosen>0?chosen.toFixed(2):'';updateSaleTotal();
+  };
   sel.onchange=refreshPrice;unit.onchange=refreshPrice;
+  refreshPrice();
   qty.oninput=updateSaleTotal; price.oninput=updateSaleTotal;
   row.querySelector('.sale-remove').onclick=()=>{row.remove();updateSaleTotal();};
   updateSaleTotal();
@@ -1734,7 +1769,7 @@ function getSaleItems(){
   return [...document.querySelectorAll('.sale-item')].map(row=>{
     const productId=row.querySelector('.sale-product').value,p=products.find(x=>x.id===productId);
     const unitType=row.querySelector('.sale-unit').value,qty=Number(row.querySelector('.sale-qty').value||0);
-    return {productId,productCode:codeForUnit(p||{},unitType),name:p?productDisplayName(p):'',unitType,qty,stockUnits:stockUnitsForSale(unitType,qty,p||{}),price:Number(row.querySelector('.sale-price').value||0)};
+    return {productId,productCode:codeForUnit(p||{},unitType),name:p?productDisplayName(p):'',unitType,unitLabel:unitLabelForProduct(p||{},unitType),qty,stockUnits:stockUnitsForSale(unitType,qty,p||{}),price:Number(row.querySelector('.sale-price').value||0)};
   }).filter(x=>x.productId&&x.qty>0&&Number.isFinite(x.price));
 }
 function updateSaleTotal(){$('saleTotal').textContent=getSaleItems().reduce((s,x)=>s+x.qty*x.price,0).toFixed(2);}
@@ -2306,7 +2341,7 @@ function renderPickOrders(){
   box.innerHTML=list.length?'':'<div class="meta">Nog geen bestellingen.</div>';
   for(const s of list){
     const isNew=!seen.has(s.id);
-    const items=(s.items||[]).map(i=>`<div><strong>${Number(i.qty||0)} × ${(i.unitType||'each').toUpperCase()}</strong> ${safe(i.name||'')}</div>`).join('');
+    const items=(s.items||[]).map(i=>`<div><strong>${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()}</strong> ${safe(i.name||'')}</div>`).join('');
     const card=document.createElement('div');
     card.className='history-card'+(isNew?' pick-order-new':'');
     card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div>${isNew?'<span class="pick-unread">NIEUW</span>':''}</div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">${isNew?'Markeer als gezien':'Gezien'}</button></div>`;
@@ -2318,7 +2353,7 @@ function renderPickOrders(){
 }
 function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
-  const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe((i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
+  const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
   $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(s.orderType)}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
   markPickSeen(id);
   window.print();
@@ -2626,7 +2661,7 @@ function renderHistory(){
   for(const s of list){
     const card=document.createElement('div'); card.className='history-card';
     const d=s.createdAt?.toDate?.(),date=d?d.toLocaleString('nl-NL'):'Bezig met opslaan…';
-    const items=(s.items||[]).map(i=>`${Number(i.qty||0)} × ${(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`).join('<br>');
+    const items=(s.items||[]).map(i=>`${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`).join('<br>');
     card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div></div><div class="meta" style="margin-top:10px">${items}</div><div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
       <button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>
       <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">Bestelling verwijderen</button>
@@ -2654,7 +2689,7 @@ function buildWhatsAppText(){
     '*PRODUCT | EENHEID | AANTAL*'
   ];
   items.forEach(i=>{
-    lines.push(`${i.name} | ${i.unitType?.toUpperCase()||'EACH'} | ${i.qty}`);
+    lines.push(`${i.name} | ${i.unitLabel||i.unitType?.toUpperCase()||'EACH'} | ${i.qty}`);
   });
   const note=$('saleNote').value.trim();
   if(note)lines.push('',`*Notitie:* ${note}`);
@@ -3131,6 +3166,7 @@ function render(){
         const options=[
           prices.each>0?'<option value="each">EACH</option>':'',
           prices.p12>0?'<option value="p12">P12</option>':'',
+          (String(p.category||'').trim().toUpperCase()==='FOOD'&&prices.pack>0&&prices.unitsPerPack>0)?`<option value="p">P${prices.unitsPerPack}</option>`:'',
           prices.crt>0?'<option value="crt">CRT</option>':''
         ].join('');
 
@@ -3304,7 +3340,7 @@ function setProductFormMode(editing){
 }
 
 function clearNormalEditForm(){editingMQSOriginalName='';setProductFormMode(false);
-  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
+  $('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value='';$('available').checked=true;$('internalOnly').checked=false;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';
 }
 function edit(id){
   if(currentRole==='tablet')return;
@@ -3363,7 +3399,7 @@ function edit(id){
   $('codeEach').value=normalizedCodes(p).each;$('codeP12').value=normalizedCodes(p).p12;$('codeCrt').value=normalizedCodes(p).crt;
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';
   updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
-  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('pricePack').value=p.pricePack??'';$('unitsPerPack').value=p.unitsPerPack??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value=isoToTypedDate(p.expiryDate1||p.expiryDate||'');$('expiry2').value=isoToTypedDate(p.expiryDate2||'');$('stockExp1').value=p.stockExp1??'';$('stockExp2').value=p.stockExp2??'';
   $('barcode').value=p.barcode||'';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
@@ -3391,12 +3427,12 @@ function duplicateProduct(id){
   $('editId').value='';editingMQSOriginalName='';setProductFormMode(false);
   $('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';
   $('name').value=p.name||'';$('weightValue').value=p.weightValue??'';updateWeightUnitOptions();$('weightUnit').value=p.weightUnit||'gr';
-  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
+  $('priceEach').value=(p.priceEach??p.price??'');$('priceP12').value=p.priceP12??'';$('pricePack').value=p.pricePack??'';$('unitsPerPack').value=p.unitsPerPack??'';$('priceCrt').value=p.priceCrt??'';$('unitsPerCarton').value=p.unitsPerCarton??'';
   $('expiry1').value='';$('expiry2').value='';$('barcode').value='';$('notes').value=p.notes||'';$('available').checked=p.available!==false;$('internalOnly').checked=p.internalOnly===true;
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(currentRole==='tablet'&&b.dataset.tab!=='catalog')return;
   if(currentRole==='pick'&&b.dataset.tab!=='pick')return;
@@ -3550,6 +3586,8 @@ $('saveBtn').onclick=async()=>{
       const currentPrices=normalizedPrices(existing);
       const eachRaw=$('priceEach').value.trim();
       const p12Raw=$('priceP12').value.trim();
+      const packRaw=$('pricePack').value.trim();
+      const packUnitsRaw=$('unitsPerPack').value.trim();
       const crtRaw=$('priceCrt').value.trim();
       const cartonRaw=$('unitsPerCarton').value.trim();
 
@@ -3558,6 +3596,8 @@ $('saveBtn').onclick=async()=>{
         changes.price=Number(eachRaw);
       }
       if(p12Raw!=='' && Number(p12Raw)!==Number(currentPrices.p12||0))changes.priceP12=Number(p12Raw);
+      if(packRaw!=='' && Number(packRaw)!==Number(currentPrices.pack||0))changes.pricePack=Number(packRaw);
+      if(packUnitsRaw!=='' && Number(packUnitsRaw)!==Number(existing.unitsPerPack||currentPrices.unitsPerPack||0))changes.unitsPerPack=Number(packUnitsRaw);
       if(crtRaw!=='' && Number(crtRaw)!==Number(currentPrices.crt||0))changes.priceCrt=Number(crtRaw);
       if(cartonRaw!=='' && Number(cartonRaw)!==Number(existing.unitsPerCarton||currentPrices.unitsPerCarton||0)){
         changes.unitsPerCarton=Number(cartonRaw);
@@ -3622,12 +3662,19 @@ $('saveBtn').onclick=async()=>{
     // NIEUW PRODUCT: normale volledige invoer.
     const priceEach=Number($('priceEach').value||0);
     const priceP12=Number($('priceP12').value||0);
+    const pricePack=Number($('pricePack').value||0);
+    const unitsPerPack=Number($('unitsPerPack').value||0);
     const priceCrt=Number($('priceCrt').value||0);
     const unitsPerCarton=Number($('unitsPerCarton').value||0);
+    const isFoodProduct=normalizeCategoryName($('cat').value)==='FOOD';
 
-    if(priceEach<=0&&priceP12<=0&&priceCrt<=0){
+    if(priceEach<=0&&priceP12<=0&&pricePack<=0&&priceCrt<=0){
       $('saveBtn').disabled=false;
-      return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12 of CRT.',true);
+      return msg($('formMsg'),'Vul minstens één prijs in: EACH, P12, P of CRT.',true);
+    }
+    if(isFoodProduct&&pricePack>0&&unitsPerPack<1){
+      $('saveBtn').disabled=false;
+      return msg($('formMsg'),'Vul het aantal stuks in het pak in, bijvoorbeeld 10 of 20.',true);
     }
     if(priceCrt>0&&unitsPerCarton<1){
       $('saveBtn').disabled=false;
@@ -3659,6 +3706,8 @@ $('saveBtn').onclick=async()=>{
       price:priceEach,
       priceEach,
       priceP12,
+      pricePack:isFoodProduct?pricePack:0,
+      unitsPerPack:isFoodProduct?unitsPerPack:0,
       priceCrt,
       unitsPerCarton,
       expiryDate1:exp1,
