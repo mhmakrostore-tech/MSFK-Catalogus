@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v290 MAKRO ZOEK BARCODE SCAN</title>
+<title>MSFK Verkoop & EXP - v291 GRATIS/UITGEDEELD AANTAL + TYPE</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -497,8 +497,17 @@ window.addEventListener('unhandledrejection',function(e){
       <div><label>Code product</label><input id="giveawayCode" placeholder="Bijv. 78212"></div>
       <div><label>Naam product</label><input id="giveawayProductName" placeholder="Naam product"></div>
     </div>
-    <label>Persoon / Uitgedeeld</label>
-    <input id="giveawayPerson" placeholder="Naam persoon of typ Uitgedeeld">
+    <div class="sales-grid">
+      <div><label>Aantal</label><input id="giveawayQty" type="number" min="1" step="1" value="1" placeholder="Aantal"></div>
+      <div><label>Eenheid</label><select id="giveawayUnit"><option value="LOS">LOS</option><option value="CRT">CRT</option></select></div>
+    </div>
+    <label>Soort</label>
+    <div class="order-type-options">
+      <label><input type="radio" name="giveawayType" value="GRATIS" checked> GRATIS</label>
+      <label><input type="radio" name="giveawayType" value="UITGEDEELD"> UITGEDEELD</label>
+    </div>
+    <label>Naam persoon / ontvanger</label>
+    <input id="giveawayPerson" placeholder="Naam persoon of ontvanger">
     <div class="button-row" style="margin-top:14px">
       <button id="saveGiveawayBtn" type="button" class="btn primary">Toevoegen</button>
     </div>
@@ -2591,8 +2600,8 @@ function printGiveawayReport(){
   const entries=[...state.entries].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   if(!entries.length)return msg($('giveawayMessage'),'Er zijn nog geen gegevens om te printen.',true);
   const preview=$('giveawayPrintPreview');
-  const rows=entries.map(e=>`<tr><td>${safe(giveawayDateLabel(e.createdAt)||'-')}</td><td>${safe(e.code||'-')}</td><td>${safe(e.productName||'-')}</td><td>${safe(e.person||'Uitgedeeld')}</td><td>${e.processed?'JA':'NEE'}</td></tr>`).join('');
-  preview.innerHTML=`<div style="padding:22px;font-family:Arial,sans-serif"><h1 style="margin:0 0 4px">Gratis / Uitgedeeld</h1><div style="margin-bottom:18px">Uitdraai ${safe(new Date().toLocaleDateString('nl-NL'))}</div><table style="width:100%;border-collapse:collapse"><thead><tr><th style="border:1px solid #999;padding:8px;text-align:left">Datum</th><th style="border:1px solid #999;padding:8px;text-align:left">Code</th><th style="border:1px solid #999;padding:8px;text-align:left">Product</th><th style="border:1px solid #999;padding:8px;text-align:left">Persoon / Uitgedeeld</th><th style="border:1px solid #999;padding:8px;text-align:left">Verwerkt</th></tr></thead><tbody>${rows.replaceAll('<td>','<td style="border:1px solid #999;padding:8px">')}</tbody></table></div>`;
+  const rows=entries.map(e=>`<tr><td>${safe(giveawayDateLabel(e.createdAt)||'-')}</td><td>${safe(e.code||'-')}</td><td>${safe(e.productName||'-')}</td><td>${safe(e.qty||1)}</td><td>${safe(e.unit||'LOS')}</td><td>${safe(e.type||'UITGEDEELD')}</td><td>${safe(e.person||'-')}</td><td>${e.processed?'JA':'NEE'}</td></tr>`).join('');
+  preview.innerHTML=`<div style="padding:22px;font-family:Arial,sans-serif"><h1 style="margin:0 0 4px">Gratis / Uitgedeeld</h1><div style="margin-bottom:18px">Uitdraai ${safe(new Date().toLocaleDateString('nl-NL'))}</div><table style="width:100%;border-collapse:collapse"><thead><tr><th style="border:1px solid #999;padding:8px;text-align:left">Datum</th><th style="border:1px solid #999;padding:8px;text-align:left">Code</th><th style="border:1px solid #999;padding:8px;text-align:left">Product</th><th style="border:1px solid #999;padding:8px;text-align:left">Aantal</th><th style="border:1px solid #999;padding:8px;text-align:left">Eenheid</th><th style="border:1px solid #999;padding:8px;text-align:left">Soort</th><th style="border:1px solid #999;padding:8px;text-align:left">Naam</th><th style="border:1px solid #999;padding:8px;text-align:left">Verwerkt</th></tr></thead><tbody>${rows.replaceAll('<td>','<td style="border:1px solid #999;padding:8px">')}</tbody></table></div>`;
   preview.style.display='block';
   window.print();
   setTimeout(()=>{preview.style.display='none';},300);
@@ -2608,7 +2617,7 @@ function renderGiveaways(){
   entries.forEach(entry=>{
     const row=document.createElement('div');
     row.className='history-card';
-    row.innerHTML=`<div class="history-head"><div><strong>${safe(entry.productName||'')}</strong><div class="meta">Code: ${safe(entry.code||'-')} · ${safe(entry.person||'Uitgedeeld')} · ${safe(giveawayDateLabel(entry.createdAt))}</div></div><label style="margin:0;display:flex;align-items:center;gap:8px"><input class="giveaway-processed" type="checkbox" data-id="${safe(entry.id)}" ${entry.processed?'checked':''} style="width:auto"> Verwerkt</label></div>`;
+    row.innerHTML=`<div class="history-head"><div><strong>${safe(entry.productName||'')}</strong><div class="meta">Code: ${safe(entry.code||'-')} · Aantal: ${safe(entry.qty||1)} ${safe(entry.unit||'LOS')} · ${safe(entry.type||'UITGEDEELD')} · Naam: ${safe(entry.person||'-')} · ${safe(giveawayDateLabel(entry.createdAt))}</div></div><label style="margin:0;display:flex;align-items:center;gap:8px"><input class="giveaway-processed" type="checkbox" data-id="${safe(entry.id)}" ${entry.processed?'checked':''} style="width:auto"> Verwerkt</label></div>`;
     box.appendChild(row);
   });
   box.querySelectorAll('.giveaway-processed').forEach(chk=>{
@@ -2633,16 +2642,19 @@ function renderGiveaways(){
 async function addGiveawayEntry(){
   const code=String($('giveawayCode').value||'').trim();
   const productName=String($('giveawayProductName').value||'').trim().replace(/\s+/g,' ');
+  const qty=Math.max(1,parseInt($('giveawayQty').value||'1',10)||1);
+  const unit=String($('giveawayUnit').value||'LOS').toUpperCase();
+  const type=String(document.querySelector('input[name="giveawayType"]:checked')?.value||'GRATIS').toUpperCase();
   const person=String($('giveawayPerson').value||'').trim().replace(/\s+/g,' ');
   if(!code)return msg($('giveawayMessage'),'Vul de productcode in.',true);
   if(!productName)return msg($('giveawayMessage'),'Vul de productnaam in.',true);
-  if(!person)return msg($('giveawayMessage'),'Vul de persoon in of typ Uitgedeeld.',true);
+  if(!person)return msg($('giveawayMessage'),'Vul de naam van de persoon of ontvanger in.',true);
   const state=normalizedGiveawaySettings();
-  state.entries.push({id:`give-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,code,productName,person,processed:false,createdAt:new Date().toISOString(),processedAt:''});
+  state.entries.push({id:`give-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,code,productName,qty,unit,type,person,processed:false,createdAt:new Date().toISOString(),processedAt:''});
   try{
     await setDoc(doc(db,'publicSettings','giveawayTracker'),state,{merge:false});
     giveawaySettings=state;
-    $('giveawayCode').value='';$('giveawayProductName').value='';$('giveawayPerson').value='';
+    $('giveawayCode').value='';$('giveawayProductName').value='';$('giveawayQty').value='1';$('giveawayUnit').value='LOS';const gt=document.querySelector('input[name="giveawayType"][value="GRATIS"]');if(gt)gt.checked=true;$('giveawayPerson').value='';
     msg($('giveawayMessage'),'Toegevoegd.');
     renderGiveaways();
   }catch(e){msg($('giveawayMessage'),'Opslaan mislukt: '+e.message,true);}
