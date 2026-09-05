@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v289 GRATIS UITGEDEELD + PRINT</title>
+<title>MSFK Verkoop & EXP - v290 MAKRO ZOEK BARCODE SCAN</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -3486,17 +3486,52 @@ function renderList(){
       ? new Set(byCategory[category].map(p=>String(p.name||'').trim().toLowerCase())).size
       : byCategory[category].length;
 
+    const isMakroAdmin=category.toUpperCase()==='MAKRO';
     section.innerHTML=`<button type="button" class="edit-category-header">
       <span>${safe(category)} (${count})</span>
       <span>▼</span>
     </button>
     <div class="edit-category-content">
-      <input class="edit-category-search" type="search" placeholder="Zoek in ${safe(category)}…">
+      ${isMakroAdmin?`<div class="scan-line"><input class="edit-category-search" type="search" placeholder="Zoek in ${safe(category)}…"><button type="button" class="btn secondary makro-admin-scan">Scan barcode</button></div><button type="button" class="btn light makro-admin-stop hidden" style="margin-top:8px">Stop scanner</button><div class="makro-admin-reader hidden" style="margin-top:10px"></div><div class="message makro-admin-scan-msg"></div>`:`<input class="edit-category-search" type="search" placeholder="Zoek in ${safe(category)}…">`}
       <div class="edit-category-items"></div>
     </div>`;
 
     const itemsBox=section.querySelector('.edit-category-items');
     const search=section.querySelector('.edit-category-search');
+    if(isMakroAdmin){
+      const scanBtn=section.querySelector('.makro-admin-scan');
+      const stopBtn=section.querySelector('.makro-admin-stop');
+      const reader=section.querySelector('.makro-admin-reader');
+      const scanMsg=section.querySelector('.makro-admin-scan-msg');
+      let adminQr=null;
+      const stopAdminScan=async()=>{
+        if(adminQr){try{await adminQr.stop();}catch{} try{await adminQr.clear();}catch{}}
+        adminQr=null; reader.classList.add('hidden'); stopBtn.classList.add('hidden');
+      };
+      stopBtn.onclick=stopAdminScan;
+      scanBtn.onclick=async()=>{
+        if(!window.Html5Qrcode){scanMsg.textContent='Scanner kon niet worden geladen.';return;}
+        await stopAdminScan();
+        reader.id='makroAdminSearchReader';
+        reader.classList.remove('hidden'); stopBtn.classList.remove('hidden');
+        scanMsg.textContent='Camera openen…';
+        try{
+          const cameras=await Html5Qrcode.getCameras();
+          if(!cameras||!cameras.length)throw new Error('Geen camera gevonden.');
+          const back=cameras.find(c=>/back|rear|environment|achter/i.test(c.label||''))||cameras[cameras.length-1];
+          adminQr=new Html5Qrcode(reader.id);
+          await adminQr.start(back.id,{fps:10,qrbox:{width:280,height:150}},async code=>{
+            search.value=code;
+            search.dispatchEvent(new Event('input',{bubbles:true}));
+            scanMsg.textContent='Barcode gescand: '+code;
+            await stopAdminScan();
+          });
+        }catch(e){
+          scanMsg.textContent='Camera openen mislukt: '+(e.message||e);
+          await stopAdminScan();
+        }
+      };
+    }
 
     const renderItems=(term='')=>{
       itemsBox.innerHTML='';
