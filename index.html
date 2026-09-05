@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v286 PICK STATUS SYNC FIX</title>
+<title>MSFK Verkoop & EXP - v287 MELDINGEN 6 MAANDEN</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -497,6 +497,7 @@ window.addEventListener('unhandledrejection',function(e){
       <div>
         <label>Melding vanaf</label>
         <select id="notificationDays">
+          <option value="180">6 maanden vóór EXP</option>
           <option value="30">30 dagen vóór EXP</option>
           <option value="14">14 dagen vóór EXP</option>
           <option value="7">7 dagen vóór EXP</option>
@@ -2822,7 +2823,7 @@ function expiryDaysLeft(dateStr){
   return Math.ceil((expiry-today)/86400000);
 }
 function getExpiringProducts(){
-  const threshold=Number(localStorage.getItem('msfkNotificationDays')||30);
+  const threshold=Number(localStorage.getItem('msfkNotificationDays')||180);
   return products
     .flatMap(p=>productExpiryEntries(p).map(entry=>({...p,...entry,daysLeft:expiryDaysLeft(entry.expiryDate)})))
     .filter(p=>p.daysLeft!==null && p.daysLeft<=threshold)
@@ -3593,7 +3594,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   $(b.dataset.tab).classList.add('active');
 });
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
-$('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'30';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
+if(!localStorage.getItem('msfkExpiry6MonthsV287')){localStorage.setItem('msfkNotificationDays','180');localStorage.setItem('msfkExpiry6MonthsV287','1');}$('notificationDays').value=localStorage.getItem('msfkNotificationDays')||'180';$('notificationDays').onchange=()=>{localStorage.setItem('msfkNotificationDays',$('notificationDays').value);renderExpiryAlerts();};$('enableNotificationsBtn').onclick=enableNotifications;updateNotificationStatus();
 $('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addTabletEmailBtn').onclick=addTabletEmail;$('pickLoginBtn').onclick=loginOrderPick;$('pickLoginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginOrderPick();});$('pickEnableNotificationsBtn').onclick=enablePickNotifications;$('createOrderPickAccountBtn').onclick=createOrderPickAccount;$('pickHistorySearch').oninput=renderPickHistory;setupAdminCatalogFilter();$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
 
 $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
