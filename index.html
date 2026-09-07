@@ -2299,11 +2299,12 @@ function newQuoteNumber(){
   return `OFF-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 function resetQuoteForm(){
-  if(!$('quoteNumber'))return;
+  const ids=['quoteCustomer','quoteEmail','quoteNote','quoteNumber','quoteDate','quoteItems','quoteTotal'];
+  if(ids.some(id=>!$(id)))return;
   $('quoteCustomer').value=''; $('quoteEmail').value=''; $('quoteNote').value='';
   $('quoteNumber').value=newQuoteNumber(); $('quoteDate').value=new Date().toISOString().slice(0,10);
   $('quoteItems').innerHTML=''; addQuoteItem(); updateQuoteTotal();
-  msg($('quoteMessage'),'');
+  if($('quoteMessage'))msg($('quoteMessage'),'');
 }
 function addQuoteItem(item={}){
   const box=$('quoteItems'); if(!box)return;
@@ -2321,14 +2322,19 @@ function addQuoteItem(item={}){
   box.appendChild(row); updateQuoteTotal();
 }
 function quoteItemsData(){
-  return [...document.querySelectorAll('.quote-item')].map(r=>({product:String(r.querySelector('.quote-product').value||'').trim(),unit:r.querySelector('.quote-unit').value,qty:Math.max(1,Number(r.querySelector('.quote-qty').value||1)),price:Math.max(0,Number(r.querySelector('.quote-price').value||0))})).filter(x=>x.product);
+  return [...document.querySelectorAll('.quote-item')].map(r=>{
+    const productEl=r.querySelector('.quote-product'), unitEl=r.querySelector('.quote-unit'), qtyEl=r.querySelector('.quote-qty'), priceEl=r.querySelector('.quote-price');
+    if(!productEl||!unitEl||!qtyEl||!priceEl)return null;
+    return {product:String(productEl.value||'').trim(),unit:String(unitEl.value||'LOS'),qty:Math.max(1,Number(qtyEl.value||1)),price:Math.max(0,Number(priceEl.value||0))};
+  }).filter(x=>x&&x.product);
 }
 function updateQuoteTotal(){
   if(!$('quoteTotal'))return; const total=quoteItemsData().reduce((a,x)=>a+x.qty*x.price,0); $('quoteTotal').textContent=total.toFixed(2);
 }
 function quoteData(){
   const items=quoteItemsData();
-  return {id:$('quoteNumber').value||newQuoteNumber(),number:$('quoteNumber').value||newQuoteNumber(),date:$('quoteDate').value||new Date().toISOString().slice(0,10),customer:String($('quoteCustomer').value||'').trim(),email:String($('quoteEmail').value||'').trim(),note:String($('quoteNote').value||'').trim(),items,total:items.reduce((a,x)=>a+x.qty*x.price,0),createdAt:new Date().toISOString()};
+  const num=$('quoteNumber')?.value||newQuoteNumber();
+  return {id:num,number:num,date:$('quoteDate')?.value||new Date().toISOString().slice(0,10),customer:String($('quoteCustomer')?.value||'').trim(),email:String($('quoteEmail')?.value||'').trim(),note:String($('quoteNote')?.value||'').trim(),items,total:items.reduce((a,x)=>a+x.qty*x.price,0),createdAt:new Date().toISOString()};
 }
 function validateQuote(q){ if(!q.customer){msg($('quoteMessage'),'Vul de klantnaam in.',true);return false;} if(!q.items.length){msg($('quoteMessage'),'Voeg minimaal één product toe.',true);return false;} return true; }
 async function saveQuote(){
@@ -2766,10 +2772,10 @@ function renderGiveaways(){
 async function addGiveawayEntry(){
   const code=String($('giveawayCode').value||'').trim();
   const productName=String($('giveawayProductName').value||'').trim().replace(/\s+/g,' ');
-  const qty=Math.max(1,parseInt($('giveawayQty').value||'1',10)||1);
-  const unit=String($('giveawayUnit').value||'LOS').toUpperCase();
+  const qty=Math.max(1,parseInt($('giveawayQty')?.value||'1',10)||1);
+  const unit=String($('giveawayUnit')?.value||'LOS').toUpperCase();
   const type=String(document.querySelector('input[name="giveawayType"]:checked')?.value||'GRATIS').toUpperCase();
-  const person=String($('giveawayPerson').value||'').trim().replace(/\s+/g,' ');
+  const person=String($('giveawayPerson')?.value||'').trim().replace(/\s+/g,' ');
   if(!code)return msg($('giveawayMessage'),'Vul de productcode in.',true);
   if(!productName)return msg($('giveawayMessage'),'Vul de productnaam in.',true);
   if(!person)return msg($('giveawayMessage'),'Vul de naam van de persoon of ontvanger in.',true);
@@ -2778,7 +2784,7 @@ async function addGiveawayEntry(){
   try{
     await setDoc(doc(db,'publicSettings','giveawayTracker'),state,{merge:false});
     giveawaySettings=state;
-    $('giveawayCode').value='';$('giveawayProductName').value='';$('giveawayQty').value='1';$('giveawayUnit').value='LOS';const gt=document.querySelector('input[name="giveawayType"][value="GRATIS"]');if(gt)gt.checked=true;$('giveawayPerson').value='';
+    if($('giveawayCode'))$('giveawayCode').value='';if($('giveawayProductName'))$('giveawayProductName').value='';if($('giveawayQty'))$('giveawayQty').value='1';if($('giveawayUnit'))$('giveawayUnit').value='LOS';const gt=document.querySelector('input[name="giveawayType"][value="GRATIS"]');if(gt)gt.checked=true;if($('giveawayPerson'))$('giveawayPerson').value='';
     msg($('giveawayMessage'),'Toegevoegd.');
     renderGiveaways();
   }catch(e){msg($('giveawayMessage'),'Opslaan mislukt: '+e.message,true);}
