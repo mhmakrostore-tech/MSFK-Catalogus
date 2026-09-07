@@ -55,7 +55,7 @@ window.addEventListener('unhandledrejection',function(e){
 <section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username"><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
-<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
+<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="quote">OFFERTE</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
 <main>
 <section id="catalog" class="tab active">
 
@@ -489,6 +489,41 @@ window.addEventListener('unhandledrejection',function(e){
     <div id="packageCards" class="package-grid"></div>
   </div>
 </section>
+
+<section id="quote" class="tab">
+  <div class="panel">
+    <h2>Offerte maken</h2>
+    <p class="meta">Maak een vrijblijvende offerte. Een offerte wordt niet als bestelling opgeslagen en gaat niet naar ORDER PICK.</p>
+    <div class="sales-grid">
+      <div><label>Klantnaam</label><input id="quoteCustomer" placeholder="Naam klant" list="customerSuggestions" autocomplete="off"></div>
+      <div><label>E-mail klant</label><input id="quoteEmail" type="email" placeholder="klant@email.com"></div>
+    </div>
+    <div class="sales-grid">
+      <div><label>Offertenummer</label><input id="quoteNumber" readonly></div>
+      <div><label>Datum</label><input id="quoteDate" type="date"></div>
+    </div>
+    <label>Opmerking</label><input id="quoteNote" placeholder="Optioneel">
+    <h3 style="margin-top:20px">Producten</h3>
+    <div id="quoteItems"></div>
+    <button id="addQuoteItemBtn" type="button" class="btn light">+ Product toevoegen</button>
+    <div class="total-box">Totaal offerte: $ <span id="quoteTotal">0.00</span></div>
+    <div class="button-row no-print" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="saveQuoteBtn" type="button" class="btn primary">OFFERTE OPSLAAN</button>
+      <button id="quotePdfBtn" type="button" class="btn secondary">PDF MAKEN</button>
+      <button id="quoteWhatsappBtn" type="button" class="btn secondary">WHATSAPP (PDF)</button>
+      <button id="quoteEmailBtn" type="button" class="btn secondary">E-MAIL (PDF)</button>
+      <button id="quotePrintBtn" type="button" class="btn light">PRINTEN</button>
+      <button id="newQuoteBtn" type="button" class="btn light">NIEUWE OFFERTE</button>
+    </div>
+    <div id="quoteMessage" class="message"></div>
+    <p class="meta" style="margin-top:14px"><strong>Bovenstaand is een vrijblijvende offerte, geen bestelling!</strong><br><br>Met vriendelijke groeten,<br><strong>Makro</strong><br><strong>Promo Team</strong></p>
+  </div>
+  <div class="panel">
+    <h2>Oude offertes</h2>
+    <div id="quoteHistory"></div>
+  </div>
+</section>
+
 <section id="giveaway" class="tab">
   <div class="panel">
     <h2>Gratis / Uitgedeeld</h2>
@@ -555,6 +590,8 @@ window.addEventListener('unhandledrejection',function(e){
 </section>
 
 </main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
@@ -2254,6 +2291,93 @@ function exportPackageTotalsCsv(){
 }
 
 
+
+// ===== OFFERTE =====
+let quoteHistoryState={entries:[]};
+function newQuoteNumber(){
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  return `OFF-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+function resetQuoteForm(){
+  if(!$('quoteNumber'))return;
+  $('quoteCustomer').value=''; $('quoteEmail').value=''; $('quoteNote').value='';
+  $('quoteNumber').value=newQuoteNumber(); $('quoteDate').value=new Date().toISOString().slice(0,10);
+  $('quoteItems').innerHTML=''; addQuoteItem(); updateQuoteTotal();
+  msg($('quoteMessage'),'');
+}
+function addQuoteItem(item={}){
+  const box=$('quoteItems'); if(!box)return;
+  const row=document.createElement('div'); row.className='sale-item quote-item';
+  row.style.gridTemplateColumns='minmax(180px,1fr) 100px 90px 120px auto';
+  row.innerHTML=`<div><label>Product</label><input class="quote-product" list="quoteProductSuggestions" placeholder="Naam of code" value="${safe(item.product||'')}"></div><div><label>Eenheid</label><select class="quote-unit"><option>LOS</option><option>EACH</option><option>P12</option><option>CRT</option></select></div><div><label>Aantal</label><input class="quote-qty" type="number" min="1" step="1" value="${Number(item.qty||1)}"></div><div><label>Prijs</label><input class="quote-price" type="number" min="0" step="0.01" value="${item.price!==undefined?Number(item.price).toFixed(2):''}" placeholder="0.00"></div><button type="button" class="btn light quote-remove">×</button>`;
+  row.querySelector('.quote-unit').value=item.unit||'LOS';
+  row.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',updateQuoteTotal));
+  row.querySelector('.quote-product').addEventListener('change',e=>{
+    const v=String(e.target.value||'').trim().toLowerCase();
+    const p=products.find(x=>String(x.name||'').trim().toLowerCase()===v||String(x.code||x.barcode||'').trim().toLowerCase()===v);
+    if(p){ e.target.value=p.name||e.target.value; const price=Number(p.priceEach??p.price??0); if(price>0)row.querySelector('.quote-price').value=price.toFixed(2); updateQuoteTotal(); }
+  });
+  row.querySelector('.quote-remove').onclick=()=>{row.remove();if(!box.children.length)addQuoteItem();updateQuoteTotal();};
+  box.appendChild(row); updateQuoteTotal();
+}
+function quoteItemsData(){
+  return [...document.querySelectorAll('.quote-item')].map(r=>({product:String(r.querySelector('.quote-product').value||'').trim(),unit:r.querySelector('.quote-unit').value,qty:Math.max(1,Number(r.querySelector('.quote-qty').value||1)),price:Math.max(0,Number(r.querySelector('.quote-price').value||0))})).filter(x=>x.product);
+}
+function updateQuoteTotal(){
+  if(!$('quoteTotal'))return; const total=quoteItemsData().reduce((a,x)=>a+x.qty*x.price,0); $('quoteTotal').textContent=total.toFixed(2);
+}
+function quoteData(){
+  const items=quoteItemsData();
+  return {id:$('quoteNumber').value||newQuoteNumber(),number:$('quoteNumber').value||newQuoteNumber(),date:$('quoteDate').value||new Date().toISOString().slice(0,10),customer:String($('quoteCustomer').value||'').trim(),email:String($('quoteEmail').value||'').trim(),note:String($('quoteNote').value||'').trim(),items,total:items.reduce((a,x)=>a+x.qty*x.price,0),createdAt:new Date().toISOString()};
+}
+function validateQuote(q){ if(!q.customer){msg($('quoteMessage'),'Vul de klantnaam in.',true);return false;} if(!q.items.length){msg($('quoteMessage'),'Voeg minimaal één product toe.',true);return false;} return true; }
+async function saveQuote(){
+  const q=quoteData(); if(!validateQuote(q))return;
+  try{
+    const snap=await getDoc(doc(db,'publicSettings','offerteTracker')); const state=snap.exists()?snap.data():{entries:[]};
+    const entries=Array.isArray(state.entries)?state.entries:[]; const idx=entries.findIndex(x=>x.id===q.id); if(idx>=0)entries[idx]=q;else entries.push(q);
+    await setDoc(doc(db,'publicSettings','offerteTracker'),{entries},{merge:false}); quoteHistoryState={entries}; renderQuoteHistory(); rememberCustomerName(q.customer); msg($('quoteMessage'),'Offerte opgeslagen. Dit is geen bestelling en gaat niet naar ORDER PICK.');
+  }catch(e){msg($('quoteMessage'),'Offerte opslaan mislukt: '+e.message,true);}
+}
+function buildQuotePdf(q){
+  if(!window.jspdf?.jsPDF){msg($('quoteMessage'),'PDF-module kon niet worden geladen.',true);return null;}
+  const {jsPDF}=window.jspdf, pdf=new jsPDF();
+  pdf.setFont('helvetica','bold');pdf.setFontSize(20);pdf.text('MAKRO - OFFERTE',14,18);
+  pdf.setFontSize(10);pdf.setFont('helvetica','normal');
+  pdf.text(`Offertenummer: ${q.number}`,14,28);pdf.text(`Datum: ${q.date}`,14,34);pdf.text(`Klant: ${q.customer}`,14,40);if(q.email)pdf.text(`E-mail: ${q.email}`,14,46);
+  const y=q.email?53:47;
+  pdf.autoTable({startY:y,head:[['Product','Eenheid','Aantal','Prijs','Totaal']],body:q.items.map(x=>[x.product,x.unit,String(x.qty),`$ ${x.price.toFixed(2)}`,`$ ${(x.qty*x.price).toFixed(2)}`]),styles:{fontSize:9},headStyles:{fillColor:[194,24,91]}});
+  let fy=pdf.lastAutoTable.finalY+10; pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(`Totaal offerte: $ ${q.total.toFixed(2)}`,14,fy);fy+=12;
+  if(q.note){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.text(`Opmerking: ${q.note}`,14,fy);fy+=12;}
+  pdf.setFont('helvetica','bold');pdf.setFontSize(10);pdf.text('Bovenstaand is een vrijblijvende offerte, geen bestelling!',14,fy);fy+=10;
+  pdf.setFont('helvetica','normal');pdf.text('Met vriendelijke groeten,',14,fy);pdf.setFont('helvetica','bold');pdf.text('Makro',14,fy+6);pdf.text('Promo Team',14,fy+12);
+  return pdf;
+}
+function makeQuotePdf(){const q=quoteData();if(!validateQuote(q))return;const pdf=buildQuotePdf(q);if(pdf)pdf.save(`${q.number}-${q.customer.replace(/[^a-z0-9]+/gi,'-')}.pdf`);}
+async function shareQuotePdf(mode){
+  const q=quoteData();if(!validateQuote(q))return;const pdf=buildQuotePdf(q);if(!pdf)return;
+  const blob=pdf.output('blob'), file=new File([blob],`${q.number}.pdf`,{type:'application/pdf'});
+  const text=`Offerte ${q.number} voor ${q.customer}. Bovenstaand is een vrijblijvende offerte, geen bestelling!`;
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){await navigator.share({title:`Makro offerte ${q.number}`,text,files:[file]});return;}
+  }catch(e){if(e.name==='AbortError')return;}
+  pdf.save(`${q.number}.pdf`);
+  if(mode==='email'){window.location.href=`mailto:${encodeURIComponent(q.email||'')}?subject=${encodeURIComponent('Makro offerte '+q.number)}&body=${encodeURIComponent(text+'\n\nDe PDF is gedownload. Voeg deze PDF als bijlage toe aan deze e-mail.')}`;msg($('quoteMessage'),'PDF is gedownload. Voeg hem als bijlage toe aan de e-mail.',false);}
+  else{window.open(`https://wa.me/?text=${encodeURIComponent(text+'\n\nDe PDF is gedownload. Voeg het PDF-bestand toe in WhatsApp.')}`,'_blank');msg($('quoteMessage'),'PDF is gedownload. Voeg hem als document toe in WhatsApp.',false);}
+}
+function printQuote(){const q=quoteData();if(!validateQuote(q))return;const pdf=buildQuotePdf(q);if(pdf)window.open(pdf.output('bloburl'),'_blank');}
+function renderQuoteHistory(){
+  const box=$('quoteHistory');if(!box)return;const entries=[...(quoteHistoryState.entries||[])].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  box.innerHTML=entries.length?entries.map(q=>`<div class="history-card"><div class="history-head"><div><strong>${safe(q.number||'Offerte')}</strong> — ${safe(q.customer||'-')}<div class="meta">${safe(q.date||'')} · $ ${Number(q.total||0).toFixed(2)}</div></div><button class="btn light load-quote" data-id="${safe(q.id)}">OPENEN</button></div></div>`).join(''):'<div class="meta">Nog geen offertes opgeslagen.</div>';
+  box.querySelectorAll('.load-quote').forEach(b=>b.onclick=()=>loadQuote(b.dataset.id));
+}
+function loadQuote(id){const q=(quoteHistoryState.entries||[]).find(x=>x.id===id);if(!q)return;$('quoteCustomer').value=q.customer||'';$('quoteEmail').value=q.email||'';$('quoteNumber').value=q.number||q.id;$('quoteDate').value=q.date||new Date().toISOString().slice(0,10);$('quoteNote').value=q.note||'';$('quoteItems').innerHTML='';(q.items||[]).forEach(addQuoteItem);if(!(q.items||[]).length)addQuoteItem();updateQuoteTotal();window.scrollTo({top:0,behavior:'smooth'});}
+async function loadQuoteHistory(){try{const snap=await getDoc(doc(db,'publicSettings','offerteTracker'));quoteHistoryState=snap.exists()?snap.data():{entries:[]};renderQuoteHistory();}catch(e){console.warn('Offertes laden mislukt',e);}}
+function refreshQuoteProductSuggestions(){
+  let dl=$('quoteProductSuggestions');if(!dl){dl=document.createElement('datalist');dl.id='quoteProductSuggestions';document.body.appendChild(dl);}
+  dl.innerHTML=products.filter(p=>!p.internalOnly).map(p=>`<option value="${safe(p.name||'')}">${safe(p.code||p.barcode||'')}</option>`).join('');
+}
+
 function normalizeEmail(value){
   return String(value||'').trim().toLowerCase();
 }
@@ -3734,6 +3858,14 @@ function duplicateProduct(id){
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
 function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codePack').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+if($('addQuoteItemBtn'))$('addQuoteItemBtn').onclick=()=>addQuoteItem();
+if($('saveQuoteBtn'))$('saveQuoteBtn').onclick=saveQuote;
+if($('quotePdfBtn'))$('quotePdfBtn').onclick=makeQuotePdf;
+if($('quoteWhatsappBtn'))$('quoteWhatsappBtn').onclick=()=>shareQuotePdf('whatsapp');
+if($('quoteEmailBtn'))$('quoteEmailBtn').onclick=()=>shareQuotePdf('email');
+if($('quotePrintBtn'))$('quotePrintBtn').onclick=printQuote;
+if($('newQuoteBtn'))$('newQuoteBtn').onclick=resetQuoteForm;
+resetQuoteForm();
 if($('saveGiveawayBtn'))$('saveGiveawayBtn').onclick=addGiveawayEntry;
 if($('printGiveawayBtn'))$('printGiveawayBtn').onclick=printGiveawayReport;
 
@@ -3742,6 +3874,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(currentRole==='pick'&&b.dataset.tab!=='pick')return;
   if(b.dataset.tab!=='add'){stopScanner();stopMakroScanner();stopWarehouseScanner();stopToppersScanner();}
   if(b.dataset.tab!=='catalog')stopCatalogScanner();
+  if(b.dataset.tab==='quote'){refreshQuoteProductSuggestions();loadQuoteHistory();}
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
