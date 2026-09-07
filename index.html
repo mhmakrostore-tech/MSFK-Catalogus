@@ -52,7 +52,7 @@ window.addEventListener('unhandledrejection',function(e){
 });
 </script>
 <div id="loading" class="loading">App laden…</div>
-<section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username"><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
+<section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username" readonly><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
 <nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="quote">OFFERTE</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
@@ -2705,9 +2705,9 @@ function startPickSalesListener(){
   },e=>msg($('pickMessage'),'Bestellingen laden mislukt: '+e.message,true));
 }
 async function loginOrderPick(){
-  const name=String($('pickLoginName').value||'').trim().toUpperCase();
-  const password=$('pickLoginPassword').value;
-  if(name!=='ORDERPICK')return msg($('loginMsg'),'ORDER PICK login is niet juist.',true);
+  const email=String($('pickLoginName')?.value||'').trim().toLowerCase();
+  const password=$('pickLoginPassword')?.value||'';
+  if(email!==ORDER_PICK_EMAIL.toLowerCase())return msg($('loginMsg'),'ORDER PICK login is niet juist.',true);
   if(!password)return msg($('loginMsg'),'Vul het ORDER PICK wachtwoord in.',true);
   try{await signInWithEmailAndPassword(auth,ORDER_PICK_EMAIL,password);}catch(e){msg($('loginMsg'),'ORDER PICK inloggen mislukt. Controleer het wachtwoord.',true);}
 }
