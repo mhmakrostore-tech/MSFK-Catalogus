@@ -1,11 +1,10 @@
-```
 <!doctype html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v300 VERKOOP + OFFERTE APART</title>
+<title>MSFK Verkoop & EXP - v302 MQS VERKOOP + CRT</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -145,12 +144,12 @@ window.addEventListener('unhandledrejection',function(e){
   <p class="meta">Vul per formaat de eigen code, prijs en het aantal in een CRT in.</p>
   <table class="mqs-table">
     <thead>
-      <tr><th>Formaat</th><th>Werkelijk gewicht</th><th>EACH Code</th><th>EACH Prijs $</th><th>CRT aantal</th></tr>
+      <tr><th>Formaat</th><th>Werkelijk gewicht</th><th>EACH Code</th><th>EACH Prijs $</th><th>CRT Code</th><th>CRT Prijs $</th><th>Aantal per CRT</th></tr>
     </thead>
     <tbody>
-      <tr><td><strong>MQS</strong></td><td>—</td><td><input id="mqsCodeMqs"></td><td><input id="mqsPriceMqs" type="number" min="0" step="0.01"></td><td><input id="mqsCrtMqs" type="number" min="0"></td></tr>
-      <tr><td><strong>500 gr</strong></td><td>500 gr (vast)</td><td><input id="mqsCode500"></td><td><input id="mqsPrice500" type="number" min="0" step="0.01"></td><td><input id="mqsCrt500" type="number" min="0"></td></tr>
-      <tr><td><strong>KG</strong></td><td><input id="mqsActualKg" type="number" min="0" step="0.001" placeholder="Bijv. 0.950"> KG</td><td><input id="mqsCodeKg"></td><td><input id="mqsPriceKg" type="number" min="0" step="0.01"></td><td><input id="mqsCrtKg" type="number" min="0"></td></tr>
+      <tr><td><strong>MQS</strong></td><td>—</td><td><input id="mqsCodeMqs"></td><td><input id="mqsPriceMqs" type="number" min="0" step="0.01"></td><td><input id="mqsCrtCodeMqs" placeholder="CRT code"></td><td><input id="mqsCrtPriceMqs" type="number" min="0" step="0.01"></td><td><input id="mqsCrtMqs" type="number" min="0"></td></tr>
+      <tr><td><strong>500 gr</strong></td><td>500 gr (vast)</td><td><input id="mqsCode500"></td><td><input id="mqsPrice500" type="number" min="0" step="0.01"></td><td><input id="mqsCrtCode500" placeholder="CRT code"></td><td><input id="mqsCrtPrice500" type="number" min="0" step="0.01"></td><td><input id="mqsCrt500" type="number" min="0"></td></tr>
+      <tr><td><strong>KG</strong></td><td><input id="mqsActualKg" type="number" min="0" step="0.001" placeholder="Bijv. 0.950"> KG</td><td><input id="mqsCodeKg"></td><td><input id="mqsPriceKg" type="number" min="0" step="0.01"></td><td><input id="mqsCrtCodeKg" placeholder="CRT code"></td><td><input id="mqsCrtPriceKg" type="number" min="0" step="0.01"></td><td><input id="mqsCrtKg" type="number" min="0"></td></tr>
     </tbody>
   </table>
 </div>
@@ -366,6 +365,7 @@ window.addEventListener('unhandledrejection',function(e){
     </div>
     <div id="saleItems" class="sale-items"></div>
     <button id="addSaleItemBtn" class="btn light" type="button" style="margin-top:12px">Productregel toevoegen</button>
+    <button id="addMQSSaleItemBtn" class="btn secondary" type="button" style="margin-top:12px">+ MQS</button>
     <div class="total-box">Totaal: $ <span id="saleTotal">0.00</span></div>
     <div class="button-row">
       <button id="saveSaleBtn" class="btn primary" type="button">Verkoop opslaan</button>
@@ -896,15 +896,17 @@ function loadMQSBulkValues(){
   const matched=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&wanted&&String(p.name||'').trim().toLowerCase()===wanted);
   matched.forEach(p=>{const key=mqsFormatKey(p);if(key)map[key]=p;});
 
-  const fill=(key,codeId,priceId,crtId)=>{
+  const fill=(key,codeId,priceId,crtCodeId,crtPriceId,crtId)=>{
     const p=map[key]||{};
     $(codeId).value=p.codeEach||p.productCode||'';
     $(priceId).value=p.priceEach??p.price??'';
+    $(crtCodeId).value=p.codeCrt||'';
+    $(crtPriceId).value=p.priceCrt??'';
     $(crtId).value=p.unitsPerCarton??'';
   };
-  fill('mqs','mqsCodeMqs','mqsPriceMqs','mqsCrtMqs');
-  fill('500','mqsCode500','mqsPrice500','mqsCrt500');
-  fill('kg','mqsCodeKg','mqsPriceKg','mqsCrtKg');
+  fill('mqs','mqsCodeMqs','mqsPriceMqs','mqsCrtCodeMqs','mqsCrtPriceMqs','mqsCrtMqs');
+  fill('500','mqsCode500','mqsPrice500','mqsCrtCode500','mqsCrtPrice500','mqsCrt500');
+  fill('kg','mqsCodeKg','mqsPriceKg','mqsCrtCodeKg','mqsCrtPriceKg','mqsCrtKg');
   const kgProduct=map['kg']||{};
   $('mqsActualKg').value=kgProduct.actualWeightKg??'';
 
@@ -1023,14 +1025,14 @@ async function saveMQSBulk(){
   if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
   if(exp2===null)return msg($('formMsg'),'EXP 2 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
   const rows=[
-    {key:'mqs',format:'MQS',label:'MQS',weightValue:0,weightUnit:'gr',actualWeightKg:0,code:$('mqsCodeMqs').value.trim(),price:Number($('mqsPriceMqs').value||0),crt:Number($('mqsCrtMqs').value||0)},
-    {key:'500',format:'500',label:'500 gr',weightValue:500,weightUnit:'gr',actualWeightKg:0,code:$('mqsCode500').value.trim(),price:Number($('mqsPrice500').value||0),crt:Number($('mqsCrt500').value||0)},
-    {key:'kg',format:'KG',label:'KG',weightValue:1,weightUnit:'kg',actualWeightKg:Number($('mqsActualKg').value||0),code:$('mqsCodeKg').value.trim(),price:Number($('mqsPriceKg').value||0),crt:Number($('mqsCrtKg').value||0)}
+    {key:'mqs',format:'MQS',label:'MQS',weightValue:0,weightUnit:'gr',actualWeightKg:0,code:$('mqsCodeMqs').value.trim(),price:Number($('mqsPriceMqs').value||0),crtCode:$('mqsCrtCodeMqs').value.trim(),crtPrice:Number($('mqsCrtPriceMqs').value||0),crt:Number($('mqsCrtMqs').value||0)},
+    {key:'500',format:'500',label:'500 gr',weightValue:500,weightUnit:'gr',actualWeightKg:0,code:$('mqsCode500').value.trim(),price:Number($('mqsPrice500').value||0),crtCode:$('mqsCrtCode500').value.trim(),crtPrice:Number($('mqsCrtPrice500').value||0),crt:Number($('mqsCrt500').value||0)},
+    {key:'kg',format:'KG',label:'KG',weightValue:1,weightUnit:'kg',actualWeightKg:Number($('mqsActualKg').value||0),code:$('mqsCodeKg').value.trim(),price:Number($('mqsPriceKg').value||0),crtCode:$('mqsCrtCodeKg').value.trim(),crtPrice:Number($('mqsCrtPriceKg').value||0),crt:Number($('mqsCrtKg').value||0)}
   ];
-  if(rows.every(r=>!r.code&&r.price<=0&&r.crt<=0))return msg($('formMsg'),'Vul minstens één MQS-formaat in.',true);
+  if(rows.every(r=>!r.code&&r.price<=0&&!r.crtCode&&r.crtPrice<=0&&r.crt<=0))return msg($('formMsg'),'Vul minstens één MQS-formaat in.',true);
   try{
     for(const row of rows){
-      if(!row.code&&row.price<=0&&row.crt<=0)continue;
+      if(!row.code&&row.price<=0&&!row.crtCode&&row.crtPrice<=0&&row.crt<=0)continue;
       const lookupName=(editingMQSOriginalName||productName).trim().toLowerCase();
       const existing=products.find(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===lookupName&&mqsFormatKey(p)===row.key);
       const data={
@@ -1043,11 +1045,11 @@ async function saveMQSBulk(){
         productCode:row.code,
         codeEach:row.code,
         codeP12:'',
-        codeCrt:'',
+        codeCrt:row.crtCode,
         price:row.price,
         priceEach:row.price,
         priceP12:0,
-        priceCrt:0,
+        priceCrt:row.crtPrice,
         unitsPerCarton:row.crt,
         expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),
         expiryDate1:exp1,
@@ -1065,9 +1067,9 @@ async function saveMQSBulk(){
     // Maak het MQS-formulier leeg voor het volgende nieuwe product.
     if($('mqsProductName'))$('mqsProductName').value='';
     [
-      'mqsCodeMqs','mqsPriceMqs','mqsCrtMqs',
-      'mqsCode500','mqsPrice500','mqsCrt500',
-      'mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg',
+      'mqsCodeMqs','mqsPriceMqs','mqsCrtCodeMqs','mqsCrtPriceMqs','mqsCrtMqs',
+      'mqsCode500','mqsPrice500','mqsCrtCode500','mqsCrtPrice500','mqsCrt500',
+      'mqsCodeKg','mqsPriceKg','mqsCrtCodeKg','mqsCrtPriceKg','mqsCrtKg','mqsActualKg',
       'mqsExpiry1','mqsExpiry2'
     ].forEach(id=>{const el=$(id);if(el)el.value='';});
     photoData='';
@@ -1821,13 +1823,14 @@ async function startScanner(){
   }
 }
 
-function productOptions(selected=''){
-  return '<option value="">Kies product</option>'+products.filter(p=>p.internalOnly!==true).slice().sort(compareProductsByNameWeight)
+function productOptions(selected='',onlyCategory=''){
+  const wanted=normalizeCategoryName(onlyCategory||'');
+  return '<option value="">Kies product</option>'+products.filter(p=>p.internalOnly!==true&&(!wanted||normalizeCategoryName(p.category||'')===wanted)).slice().sort(compareProductsByNameWeight)
     .map(p=>{const pr=normalizedPrices(p);const shown=pr.each||pr.p12||pr.pack||pr.crt;return `<option value="${p.id}" ${p.id===selected?'selected':''}>${safe(productDisplayName(p))} — vanaf $ ${Number(shown||0).toFixed(2)}</option>`;}).join('');
 }
-function addSaleItem(item={productId:'',qty:1,price:''}){
+function addSaleItem(item={productId:'',qty:1,price:''},onlyCategory=''){
   const row=document.createElement('div'); row.className='sale-item';
-  row.innerHTML=`<div class="wide"><label>Product</label><select class="sale-product">${productOptions(item.productId)}</select></div>
+  row.innerHTML=`<div class="wide"><label>Product${onlyCategory?` (${safe(onlyCategory)})`:''}</label><select class="sale-product">${productOptions(item.productId,onlyCategory)}</select></div>
   <div><label>Verkoopeenheid</label><select class="sale-unit"><option value="each">EACH</option><option value="p12">P12</option><option value="p">P</option><option value="crt">CRT</option></select></div>
   <div><label>Aantal</label><input class="sale-qty" type="number" min="1" value="${Number(item.qty||1)}"></div>
   <div><label>Prijs $</label><input class="sale-price" type="number" min="0" step="0.01" value="${item.price!==''?Number(item.price).toFixed(2):''}"></div>
@@ -1844,6 +1847,12 @@ function addSaleItem(item={productId:'',qty:1,price:''}){
       packOption.disabled=!(String(p.category||'').trim().toUpperCase()==='FOOD'&&pr.pack>0&&pr.unitsPerPack>0);
       if(unit.value==='p'&&packOption.disabled)unit.value=pr.each>0?'each':(pr.p12>0?'p12':'crt');
     }
+    const p12Option=unit.querySelector('option[value="p12"]');
+    const crtOption=unit.querySelector('option[value="crt"]');
+    if(p12Option)p12Option.disabled=!(pr.p12>0);
+    if(crtOption)crtOption.disabled=!(pr.crt>0&&pr.unitsPerCarton>0);
+    if(unit.value==='p12'&&p12Option?.disabled)unit.value=pr.each>0?'each':(pr.crt>0?'crt':'each');
+    if(unit.value==='crt'&&crtOption?.disabled)unit.value=pr.each>0?'each':(pr.p12>0?'p12':'each');
     const chosen=productPriceForUnit(p,unit.value);price.value=chosen>0?chosen.toFixed(2):'';updateSaleTotal();
   };
   sel.onchange=refreshPrice;unit.onchange=refreshPrice;
@@ -3533,7 +3542,11 @@ function render(){
                 ${code?`Code: ${safe(code)}${crt?' · ':''}`:''}${crt?`CRT: ${crt} PCS`:''}
                 ${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
               </div>
-              <div class="mqs-order-row">
+              <div class="mqs-order-row" style="grid-template-columns:110px 1fr 90px">
+                <select class="mqs-order-unit" data-product="${p.id}">
+                  <option value="each" ${current.unitType==='each'?'selected':''}>EACH</option>
+                  ${Number(p.priceCrt||0)>0&&crt>0?`<option value="crt" ${current.unitType==='crt'?'selected':''}>CRT</option>`:''}
+                </select>
                 <span>Aantal</span>
                 <input class="mqs-order-qty" data-product="${p.id}" type="number" min="0" step="1" placeholder="0" value="${current.qty||''}">
               </div>
@@ -3555,7 +3568,16 @@ function render(){
           container.appendChild(card);
 
           card.querySelectorAll('.mqs-order-qty').forEach(input=>{
-            input.oninput=()=>setCatalogCartItem(input.dataset.product,'each',input.value);
+            input.oninput=()=>{
+              const unit=card.querySelector(`.mqs-order-unit[data-product="${input.dataset.product}"]`)?.value||'each';
+              setCatalogCartItem(input.dataset.product,unit,input.value);
+            };
+          });
+          card.querySelectorAll('.mqs-order-unit').forEach(select=>{
+            select.onchange=()=>{
+              const input=card.querySelector(`.mqs-order-qty[data-product="${select.dataset.product}"]`);
+              setCatalogCartItem(select.dataset.product,select.value,input?.value||0);
+            };
           });
           card.querySelector('.edit-mqs-group').onclick=()=>edit(first.id);
           card.querySelector('.duplicate-mqs-group').onclick=()=>duplicateProduct(first.id);
@@ -3911,7 +3933,7 @@ function duplicateProduct(id){
   photoData=p.photoData||'';if(photoData){$('preview').src=photoData;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');
   updateMQSWeightUI();$('formTitle').textContent='Product dupliceren';$('cancelBtn').classList.remove('hidden');document.querySelector('[data-tab="add"]').click();window.scrollTo({top:0,behavior:'smooth'});
 }
-function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codePack').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
+function reset(){stopMakroScanner();stopWarehouseScanner();editingMQSOriginalName='';setProductFormMode(false);['makroName','makroBarcode','makroExpiry1','makroExpiry2','makroExpiry3','makroStock1','makroStock2','makroStock3','warehouseName','warehouseBarcode','warehouseExpiry1','warehouseExpiry2','warehouseExpiry3','warehouseStock1','warehouseStock2','warehouseStock3'].forEach(id=>{if($(id))$(id).value='';});if($('mqsProductName'))$('mqsProductName').value='';['mqsCodeMqs','mqsPriceMqs','mqsCrtCodeMqs','mqsCrtPriceMqs','mqsCrtMqs','mqsCode500','mqsPrice500','mqsCrtCode500','mqsCrtPrice500','mqsCrt500','mqsCodeKg','mqsPriceKg','mqsCrtCodeKg','mqsCrtPriceKg','mqsCrtKg','mqsActualKg','mqsExpiry1','mqsExpiry2'].forEach(id=>{if($(id))$(id).value='';});$('editId').value='';$('codeEach').value='';$('codeP12').value='';$('codePack').value='';$('codeCrt').value='';$('name').value='';$('weightValue').value='';$('weightUnit').value='gr';$('mqsWeightPreset').value='';updateMQSWeightUI();$('priceEach').value='';$('priceP12').value='';$('pricePack').value='';$('unitsPerPack').value='';$('priceCrt').value='';$('unitsPerCarton').value='';$('expiry1').value='';$('expiry2').value='';$('stockExp1').value='';$('stockExp2').value='';refreshCategorySelects();$('cat').value=allCategoryNames()[0]||'OVERIG';updateMQSWeightUI();$('barcode').value='';$('notes').value='';$('available').checked=true;$('photoInput').value='';$('preview').classList.add('hidden');photoData='';$('formTitle').textContent='Nieuw product';$('cancelBtn').classList.add('hidden');$('foundBox').classList.add('hidden');$('foundBox').textContent='';stopScanner()}
 if($('addQuoteItemBtn'))$('addQuoteItemBtn').onclick=()=>addQuoteItem();
 if($('saveQuoteBtn'))$('saveQuoteBtn').onclick=saveQuote;
 if($('quotePdfBtn'))$('quotePdfBtn').onclick=makeQuotePdf;
@@ -3943,7 +3965,8 @@ if(notificationDaysEl){
 }
 if($('enableNotificationsBtn'))$('enableNotificationsBtn').onclick=enableNotifications;
 updateNotificationStatus();
-$('addSaleItemBtn').onclick=()=>addSaleItem();$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addTabletEmailBtn').onclick=addTabletEmail;$('pickLoginBtn').onclick=loginOrderPick;$('pickLoginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginOrderPick();});$('pickEnableNotificationsBtn').onclick=enablePickNotifications;$('createOrderPickAccountBtn').onclick=createOrderPickAccount;$('pickHistorySearch').oninput=renderPickHistory;setupAdminCatalogFilter();$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
+$('addSaleItemBtn').onclick=()=>addSaleItem();
+$('addMQSSaleItemBtn').onclick=()=>addSaleItem({productId:'',qty:1,price:''},'MQS');$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addTabletEmailBtn').onclick=addTabletEmail;$('pickLoginBtn').onclick=loginOrderPick;$('pickLoginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginOrderPick();});$('pickEnableNotificationsBtn').onclick=enablePickNotifications;$('createOrderPickAccountBtn').onclick=createOrderPickAccount;$('pickHistorySearch').oninput=renderPickHistory;setupAdminCatalogFilter();$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
 
 $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
 $('closeCategoryManagerBtn').onclick=()=>$('categoryManager').classList.add('hidden');
@@ -4301,4 +4324,3 @@ onAuthStateChanged(auth,async u=>{
 </div>
 </body>
 </html>
-```
