@@ -506,7 +506,7 @@ window.addEventListener('unhandledrejection',function(e){
     <h3 style="margin-top:20px">Producten</h3>
     <div id="quoteItems"></div>
     <button id="addQuoteItemBtn" type="button" class="btn light">+ Product toevoegen</button>
-    <div class="total-box">Totaal offerte: $ <span id="quoteTotal">0.00</span></div>
+    <div class="total-box">Totaal offerte: CG <span id="quoteTotal">0.00</span></div>
     <div class="button-row no-print" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
       <button id="saveQuoteBtn" type="button" class="btn primary">OFFERTE OPSLAAN</button>
       <button id="quotePdfBtn" type="button" class="btn secondary">PDF MAKEN</button>
@@ -2310,7 +2310,7 @@ function addQuoteItem(item={}){
   const box=$('quoteItems'); if(!box)return;
   const row=document.createElement('div'); row.className='sale-item quote-item';
   row.style.gridTemplateColumns='minmax(180px,1fr) 100px 90px 120px auto';
-  row.innerHTML=`<div><label>Product</label><input class="quote-product" list="quoteProductSuggestions" placeholder="Naam of code" value="${safe(item.product||'')}"></div><div><label>Eenheid</label><select class="quote-unit"><option>LOS</option><option>EACH</option><option>P12</option><option>CRT</option></select></div><div><label>Aantal</label><input class="quote-qty" type="number" min="1" step="1" value="${Number(item.qty||1)}"></div><div><label>Prijs</label><input class="quote-price" type="number" min="0" step="0.01" value="${item.price!==undefined?Number(item.price).toFixed(2):''}" placeholder="0.00"></div><button type="button" class="btn light quote-remove">×</button>`;
+  row.innerHTML=`<div><label>Product</label><input class="quote-product" list="quoteProductSuggestions" placeholder="Naam of code" value="${safe(item.product||'')}"></div><div><label>Eenheid</label><select class="quote-unit"><option>LOS</option><option>EACH</option><option>P12</option><option>CRT</option></select></div><div><label>Aantal</label><input class="quote-qty" type="number" min="1" step="1" value="${Number(item.qty||1)}"></div><div><label>Prijs (CG)</label><input class="quote-price" type="number" min="0" step="0.01" value="${item.price!==undefined?Number(item.price).toFixed(2):''}" placeholder="0.00"></div><button type="button" class="btn light quote-remove">×</button>`;
   row.querySelector('.quote-unit').value=item.unit||'LOS';
   row.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',updateQuoteTotal));
   row.querySelector('.quote-product').addEventListener('change',e=>{
@@ -2352,8 +2352,8 @@ function buildQuotePdf(q){
   pdf.setFontSize(10);pdf.setFont('helvetica','normal');
   pdf.text(`Offertenummer: ${q.number}`,14,28);pdf.text(`Datum: ${q.date}`,14,34);pdf.text(`Klant: ${q.customer}`,14,40);if(q.email)pdf.text(`E-mail: ${q.email}`,14,46);
   const y=q.email?53:47;
-  pdf.autoTable({startY:y,head:[['Product','Eenheid','Aantal','Prijs','Totaal']],body:q.items.map(x=>[x.product,x.unit,String(x.qty),`$ ${x.price.toFixed(2)}`,`$ ${(x.qty*x.price).toFixed(2)}`]),styles:{fontSize:9},headStyles:{fillColor:[194,24,91]}});
-  let fy=pdf.lastAutoTable.finalY+10; pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(`Totaal offerte: $ ${q.total.toFixed(2)}`,14,fy);fy+=12;
+  pdf.autoTable({startY:y,head:[['Product','Eenheid','Aantal','Prijs','Totaal']],body:q.items.map(x=>[x.product,x.unit,String(x.qty),`CG ${x.price.toFixed(2)}`,`CG ${(x.qty*x.price).toFixed(2)}`]),styles:{fontSize:9},headStyles:{fillColor:[194,24,91]}});
+  let fy=pdf.lastAutoTable.finalY+10; pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(`Totaal offerte: CG ${q.total.toFixed(2)}`,14,fy);fy+=12;
   if(q.note){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.text(`Opmerking: ${q.note}`,14,fy);fy+=12;}
   pdf.setFont('helvetica','bold');pdf.setFontSize(10);pdf.text('Bovenstaand is een vrijblijvende offerte, geen bestelling!',14,fy);fy+=10;
   pdf.setFont('helvetica','normal');pdf.text('Met vriendelijke groeten,',14,fy);pdf.setFont('helvetica','bold');pdf.text('Makro',14,fy+6);pdf.text('Promo Team',14,fy+12);
@@ -2374,7 +2374,7 @@ async function shareQuotePdf(mode){
 function printQuote(){const q=quoteData();if(!validateQuote(q))return;const pdf=buildQuotePdf(q);if(pdf)window.open(pdf.output('bloburl'),'_blank');}
 function renderQuoteHistory(){
   const box=$('quoteHistory');if(!box)return;const entries=[...(quoteHistoryState.entries||[])].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
-  box.innerHTML=entries.length?entries.map(q=>`<div class="history-card"><div class="history-head"><div><strong>${safe(q.number||'Offerte')}</strong> — ${safe(q.customer||'-')}<div class="meta">${safe(q.date||'')} · $ ${Number(q.total||0).toFixed(2)}</div></div><button class="btn light load-quote" data-id="${safe(q.id)}">OPENEN</button></div></div>`).join(''):'<div class="meta">Nog geen offertes opgeslagen.</div>';
+  box.innerHTML=entries.length?entries.map(q=>`<div class="history-card"><div class="history-head"><div><strong>${safe(q.number||'Offerte')}</strong> — ${safe(q.customer||'-')}<div class="meta">${safe(q.date||'')} · CG ${Number(q.total||0).toFixed(2)}</div></div><button class="btn light load-quote" data-id="${safe(q.id)}">OPENEN</button></div></div>`).join(''):'<div class="meta">Nog geen offertes opgeslagen.</div>';
   box.querySelectorAll('.load-quote').forEach(b=>b.onclick=()=>loadQuote(b.dataset.id));
 }
 function loadQuote(id){const q=(quoteHistoryState.entries||[]).find(x=>x.id===id);if(!q)return;$('quoteCustomer').value=q.customer||'';$('quoteEmail').value=q.email||'';$('quoteNumber').value=q.number||q.id;$('quoteDate').value=q.date||new Date().toISOString().slice(0,10);$('quoteNote').value=q.note||'';$('quoteItems').innerHTML='';(q.items||[]).forEach(addQuoteItem);if(!(q.items||[]).length)addQuoteItem();updateQuoteTotal();window.scrollTo({top:0,behavior:'smooth'});}
