@@ -2368,10 +2368,14 @@ function buildQuotePdf(q){
   try{pdf.addImage(QUOTE_LOGO_DATA,'JPEG',14,10,182,76);}catch(e){console.warn('Logo in PDF mislukt',e);}
   pdf.setFont('helvetica','bold');pdf.setFontSize(18);pdf.text('OFFERTE',14,94);
   pdf.setFontSize(10);pdf.setFont('helvetica','normal');
-  pdf.text(`Offertenummer: ${q.number}`,14,104);pdf.text(`Datum: ${q.date}`,14,110);pdf.text(`Klant: ${q.customer}`,14,116);if(q.email)pdf.text(`E-mail: ${q.email}`,14,122);
-  const y=q.email?129:123;
+  pdf.text(`Offertenummer: ${q.number}`,14,104);pdf.text(`Datum: ${q.date}`,14,110);
+  // Twee lege regels onder de datum voor een ruimere A4-opmaak.
+  pdf.text(`Klant: ${q.customer}`,14,128);if(q.email)pdf.text(`E-mail: ${q.email}`,14,134);
+  const y=q.email?143:137;
+  // Productcode staat altijd als eerste kolom op de offerte.
   pdf.autoTable({startY:y,head:[['Code','Product','Eenheid','Aantal','Prijs','Totaal']],body:q.items.map(x=>[x.code||'',x.product,x.unit,String(x.qty),`CG ${x.price.toFixed(2)}`,`CG ${(x.qty*x.price).toFixed(2)}`]),styles:{fontSize:9},headStyles:{fillColor:[194,24,91]}});
-  let fy=pdf.lastAutoTable.finalY+10; pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(`Totaal offerte: CG ${q.total.toFixed(2)}`,14,fy);fy+=12;
+  // Extra ruimte tussen de producten en de totaalprijs zodat de A4 voller oogt.
+  let fy=pdf.lastAutoTable.finalY+28; pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(`Totaal offerte: CG ${q.total.toFixed(2)}`,14,fy);fy+=12;
   if(q.note){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.text(`Opmerking: ${q.note}`,14,fy);fy+=12;}
   pdf.setFont('helvetica','bold');pdf.setFontSize(10);pdf.text('Bovenstaand is een vrijblijvende offerte, geen bestelling!',14,fy);fy+=10;
   pdf.setFont('helvetica','normal');pdf.text('Met vriendelijke groeten,',14,fy);pdf.setFont('helvetica','bold');pdf.text('Makro',14,fy+6);pdf.text('Promo Team',14,fy+12);
