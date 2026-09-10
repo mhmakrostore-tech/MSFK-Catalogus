@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#c2185b">
+  <title>MSFK Beheerder</title>
+  <style>
+    html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f4f6fa}
+    #status{position:fixed;inset:0;display:grid;place-items:center;color:#8e1244;font-weight:700}
+    iframe{border:0;width:100%;height:100%;display:block;background:white}
+  </style>
+</head>
+<body>
+<div id="status">Beheerder wordt geopend…</div>
+<iframe id="app" src="./"></iframe>
+
+<script>
+const frame = document.getElementById('app');
+const status = document.getElementById('status');
+
+function openBeheerder(){
+  try{
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    if(!doc) return false;
+    const buttons = [...doc.querySelectorAll('button,a')];
+    const beheerder = buttons.find(el => {
+      const t = (el.textContent || '').trim().toLowerCase();
+      return t === 'beheerder' || t.includes('beheerder');
+    });
+    if(beheerder){
+      beheerder.click();
+      status.style.display='none';
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+frame.addEventListener('load', ()=>{
+  let tries = 0;
+  const timer = setInterval(()=>{
+    tries++;
+    if(openBeheerder() || tries > 40){
+      clearInterval(timer);
+      status.style.display='none';
+    }
+  }, 500);
+});
+</script>
+</body>
+</html>
