@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v304 SNEL ZOEKEN</title>
+<title>MSFK Verkoop & EXP - v305 LIJST BLIJFT OPEN</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -3686,8 +3686,10 @@ function groupCatalogState(group){
 async function setCatalogAvailability(ids,makeAvailable){
   if(currentRole==='tablet'||currentRole==='pick')return;
   const target=Array.isArray(ids)?ids:[ids];
+  const keepScrollY=window.scrollY;
   try{
     await Promise.all(target.map(id=>setDoc(doc(db,'catalogProducts',id),{available:!!makeAvailable},{merge:true})));
+    requestAnimationFrame(()=>window.scrollTo(0,keepScrollY));
   }catch(e){
     console.error(e);
     alert('Catalogus-status opslaan is mislukt. Probeer opnieuw.');
@@ -3714,7 +3716,9 @@ function renderList(){
 
   for(const category of categoryNames){
     const section=document.createElement('section');
-    section.className='edit-category-section collapsed';
+    const adminOpenKey='msfkAdminCategoryOpen:'+category;
+    const keepOpen=localStorage.getItem(adminOpenKey)==='1';
+    section.className='edit-category-section'+(keepOpen?'':' collapsed');
 
     const isMQS=category.toUpperCase()==='MQS';
     const count=isMQS
@@ -3835,7 +3839,10 @@ function renderList(){
       }
     };
 
-    section.querySelector('.edit-category-header').onclick=()=>section.classList.toggle('collapsed');
+    section.querySelector('.edit-category-header').onclick=()=>{
+      section.classList.toggle('collapsed');
+      localStorage.setItem(adminOpenKey,section.classList.contains('collapsed')?'0':'1');
+    };
     search.oninput=e=>renderItems(e.target.value);
     renderItems();
 
