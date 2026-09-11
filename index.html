@@ -3678,7 +3678,11 @@ function render(){
             };
           });
           card.addEventListener('click',e=>{
-            if(!e.target.closest('.product-admin-actions'))clearCatalogSearchForNextProduct();
+            if(!e.target.closest('.product-admin-actions')){
+              clearCatalogSearchForNextProduct();
+              const localSearch=card.closest('.category-section')?.querySelector('.category-search');
+              if(localSearch)localSearch.value='';
+            }
           });
           card.querySelector('.edit-mqs-group').onclick=()=>edit(first.id);
           card.querySelector('.duplicate-mqs-group').onclick=()=>duplicateProduct(first.id);
@@ -3733,7 +3737,11 @@ function render(){
         unit.onchange=sync;
         qty.oninput=sync;
         card.addEventListener('click',e=>{
-          if(!e.target.closest('.product-admin-actions'))clearCatalogSearchForNextProduct();
+          if(!e.target.closest('.product-admin-actions')){
+            clearCatalogSearchForNextProduct();
+            const localSearch=card.closest('.category-section')?.querySelector('.category-search');
+            if(localSearch)localSearch.value='';
+          }
         });
         card.querySelector('.edit-product-card').onclick=()=>edit(p.id);
         card.querySelector('.duplicate-product-card').onclick=()=>duplicateProduct(p.id);
@@ -3888,7 +3896,7 @@ function renderList(){
             </div>`;
           const groupState=groupCatalogState(group);
           if(groupState!=='internal')row.querySelector('.catalog-toggle').onclick=()=>setCatalogAvailability(group.filter(p=>p.internalOnly!==true).map(p=>p.id),groupState!=='yes');
-          row.querySelector('.edit-one').onclick=()=>edit(first.id);
+          row.querySelector('.edit-one').onclick=()=>{search.value='';edit(first.id);};
           row.querySelector('.duplicate-one').onclick=()=>duplicateProduct(first.id);
           row.querySelector('.delete-one').onclick=()=>deleteMQSGroupByName(mqsGroupDisplayName(group));
           itemsBox.appendChild(row);
@@ -3915,7 +3923,7 @@ function renderList(){
           </div>`;
         const state=productCatalogState(p);
         if(state!=='internal')row.querySelector('.catalog-toggle').onclick=()=>setCatalogAvailability(p.id,state!=='yes');
-        row.querySelector('.edit-one').onclick=()=>edit(p.id);
+        row.querySelector('.edit-one').onclick=()=>{search.value='';edit(p.id);};
         row.querySelector('.duplicate-one').onclick=()=>duplicateProduct(p.id);
         row.querySelector('.delete-one').onclick=()=>deleteProductById(p.id);
         itemsBox.appendChild(row);
