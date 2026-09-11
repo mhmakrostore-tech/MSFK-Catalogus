@@ -1,5 +1,65 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c2185b"><title>MSFK Beheerder</title><style>html,body{margin:0;height:100%;font-family:Arial;background:#f4f6fa}#status{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:99999;background:#fff;color:#c2185b;font-weight:800;padding:9px 14px;border-radius:999px;box-shadow:0 4px 16px #0003}iframe{border:0;width:100%;height:100%;display:block;background:#fff}</style></head><body><div id="status">Beheerder wordt geopend…</div><iframe id="app" src="./?msfkStart=beheerder"></iframe><script>
-const f=document.getElementById("app"),s=document.getElementById("status"),tx=e=>(e?.textContent||"").trim().toLowerCase();
-function go(){try{const d=f.contentDocument||f.contentWindow.document;if(!d)return false;const a=[...d.querySelectorAll("button,a,[role=button]")];if(a.some(e=>tx(e).includes("inloggen met google"))){s.textContent="Log in met Google voor Beheerder";return false}const b=a.find(e=>{const t=tx(e);return t==="beheerder"||t==="admin"||t.includes("beheerder")||t.includes("producten beheren")});if(b){b.click();s.style.display="none";return true}}catch(e){}return false}
-function watch(){let n=0,x=setInterval(()=>{n++;if(go()||n>240){clearInterval(x);if(n>240)s.style.display="none"}},500)}f.addEventListener("load",watch);watch();
-</script></body></html>
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#c2185b">
+  <title>MSFK Beheerder</title>
+  <style>
+    html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f4f6fa}
+    #status{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:99999;
+      background:#fff;color:#c2185b;font-weight:800;padding:9px 14px;border-radius:999px;
+      box-shadow:0 4px 16px rgba(0,0,0,.15)}
+    iframe{border:0;width:100%;height:100%;display:block;background:#fff}
+  </style>
+</head>
+<body>
+<div id="status">Beheerder wordt geopend…</div>
+<iframe id="appFrame" src="./"></iframe>
+
+<script>
+const frame = document.getElementById('appFrame');
+const status = document.getElementById('status');
+
+function visible(el, win){
+  if(!el) return false;
+  const s = win.getComputedStyle(el);
+  return s.display !== 'none' && s.visibility !== 'hidden' && el.offsetParent !== null;
+}
+
+function check(){
+  try{
+    const win = frame.contentWindow;
+    const doc = frame.contentDocument || win.document;
+    if(!doc) return;
+
+    const app = doc.getElementById('app');
+    const login = doc.getElementById('login');
+
+    if(app && visible(app, win)){
+      status.style.display = 'none';
+      return;
+    }
+
+    if(login && visible(login, win)){
+      const googleBtn = doc.getElementById('loginBtn');
+      if(googleBtn && visible(googleBtn, win)){
+        status.style.display = '';
+        status.textContent = 'Log in met Google voor Beheerder';
+        return;
+      }
+    }
+
+    status.style.display = '';
+    status.textContent = 'Beheerder wordt geopend…';
+  }catch(e){}
+}
+
+frame.addEventListener('load', ()=>{
+  check();
+  const t = setInterval(check, 500);
+  setTimeout(()=>clearInterval(t), 120000);
+});
+</script>
+</body>
+</html>
