@@ -936,6 +936,10 @@ function loadMQSBulkValues(){
   $('mqsExpiry1').value=isoToTypedDate(expSource.expiryDate1||expSource.expiryDate||'');
   $('mqsExpiry2').value=isoToTypedDate(expSource.expiryDate2||'');
 
+  // MQS-omschrijving/notitie hoort bij de hele productgroep.
+  const noteSource=matched.find(p=>String(p.notes||'').trim())||matched[0]||{};
+  if($('notes'))$('notes').value=String(noteSource.notes||'');
+
   // Belangrijk: gebruik alleen de foto van DIT MQS-product.
   // Als de naam nieuw is en er nog geen product bestaat, moet de foto leeg zijn.
   const imageProduct=matched.find(p=>p.photoData);
@@ -1042,6 +1046,7 @@ async function saveMakroProduct(){
 async function saveMQSBulk(){
   const productName=String($('mqsProductName').value||'').trim();
   if(!productName)return msg($('formMsg'),'Vul de productnaam in.',true);
+  const notes=String($('notes')?.value||'').trim();
   const exp1=typedDateToISO($('mqsExpiry1').value);
   const exp2=typedDateToISO($('mqsExpiry2').value);
   if(exp1===null)return msg($('formMsg'),'EXP 1 is ongeldig. Gebruik bijvoorbeeld 15-08-2027.',true);
@@ -1077,7 +1082,7 @@ async function saveMQSBulk(){
         expiryDate1:exp1,
         expiryDate2:exp2,
         barcode:'',
-        notes:'',
+        notes,
         available:true,
         photoData:photoData||existing?.photoData||'',
         updatedAt:serverTimestamp()
@@ -3647,6 +3652,7 @@ function render(){
             <div class="body">
               <div class="cat">MQS</div>
               <h2>${safe(mqsGroupDisplayName(group))}</h2>
+              ${String((group.find(p=>String(p.notes||'').trim())||{}).notes||'').trim()?`<div class="catalog-note"><strong>Notitie:</strong> ${safe(String((group.find(p=>String(p.notes||'').trim())||{}).notes||'').trim())}</div>`:''}
               <div class="mqs-variants">${variantsHtml}</div>
               <div class="product-admin-actions">
                 <button type="button" class="btn light edit-mqs-group">Bewerken</button>
