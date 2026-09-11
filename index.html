@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c2185b">
-<title>MSFK Verkoop & EXP - v308 SNEL BESCHIKBAAR</title>
+<title>MSFK Verkoop & EXP - v309 MQS CRT ZICHTBAAR</title>
 <style>
 :root{--brand:#c2185b;--dark:#8e1244;--bg:#f4f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;--good:#15803d;--warning:#c77800;--danger:#b91c1c;--shadow:0 12px 34px rgba(31,41,55,.10)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}.hidden{display:none!important}
@@ -3615,20 +3615,27 @@ function render(){
             const current=catalogCart[p.id]||{unitType:'each',qty:''};
             const price=Number(p.priceEach??p.price??0);
             const code=normalizedCodes(p).each;
+            const crtCode=normalizedCodes(p).crt;
             const crt=Number(p.unitsPerCarton||0);
+            const crtPrice=Number(p.priceCrt||0);
+            const hasCrt=crtPrice>0&&crt>0;
             return `<div class="mqs-variant" data-mqs-product="${p.id}">
               <div class="mqs-variant-head">
                 <span>${safe(mqsVariantLabel(p))}</span>
-                <strong>$ ${price.toFixed(2)}</strong>
+              </div>
+              <div class="price-lines">
+                ${price>0?`<div class="price-line"><span class="price-label">EACH</span><strong>$ ${price.toFixed(2)}</strong></div>`:''}
+                ${hasCrt?`<div class="price-line"><span class="price-label">CRT (${crt} PCS)</span><strong>$ ${crtPrice.toFixed(2)}</strong></div>`:''}
               </div>
               <div class="mqs-variant-meta">
-                ${code?`Code: ${safe(code)}${crt?' · ':''}`:''}${crt?`CRT: ${crt} PCS`:''}
+                ${code?`EACH Code: ${safe(code)}`:''}
+                ${hasCrt&&crtCode?`<div>CRT Code: ${safe(crtCode)}</div>`:''}
                 ${nearestExpiryDate(p)?`<div class="exp-line"><strong>EXP:</strong> ${safe(formatDate(nearestExpiryDate(p)))}</div>`:''}
               </div>
               <div class="mqs-order-row" style="grid-template-columns:110px 1fr 90px">
                 <select class="mqs-order-unit" data-product="${p.id}">
                   <option value="each" ${current.unitType==='each'?'selected':''}>EACH</option>
-                  ${Number(p.priceCrt||0)>0&&crt>0?`<option value="crt" ${current.unitType==='crt'?'selected':''}>CRT</option>`:''}
+                  ${hasCrt?`<option value="crt" ${current.unitType==='crt'?'selected':''}>CRT</option>`:''}
                 </select>
                 <span>Aantal</span>
                 <input class="mqs-order-qty" data-product="${p.id}" type="number" min="0" step="1" placeholder="0" value="${current.qty||''}">
