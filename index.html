@@ -51,6 +51,12 @@ body.tablet-mode .delete-mqs-group{display:none!important}
 .admin-card-availability .avail-label{font-weight:800;font-size:.86rem}
 .admin-card-availability button{border:1px solid #d1d5db;border-radius:999px;padding:6px 11px;font-weight:800;cursor:pointer;background:#f3f4f6}
 .admin-card-availability button.active{background:#111827;color:#fff}
+.mqs-variant-head{min-width:0}
+.mqs-variant-head span{min-width:0;overflow-wrap:anywhere}
+.mqs-variant-head strong{white-space:nowrap;flex:0 0 auto}
+.price-line strong{white-space:nowrap;flex:0 0 auto}
+.card .body{min-width:0}
+@media(min-width:761px){.category-products{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}}
 </style>
 
 </head>
@@ -3477,30 +3483,34 @@ function clearCatalogSearchForNextProduct(){
 }
 
 function addAdminAvailabilityControls(){
-  if(!(auth.currentUser && String(auth.currentUser.email||'').toLowerCase()===String(OWNER_EMAIL||OWNER||'mh.makrostore@gmail.com').toLowerCase())) return;
-  const cards=[...document.querySelectorAll('.product-card,.catalog-card,.card-product')];
+  if(currentRole!=='owner') return;
+  const cards=[...document.querySelectorAll('#grid article.card')];
   cards.forEach(card=>{
     if(card.querySelector('.admin-card-availability')) return;
-    const editBtn=[...card.querySelectorAll('button')].find(b=>/bewerken/i.test(b.textContent||''));
+    const editBtn=card.querySelector('.edit-product-card,.edit-mqs-group');
     if(!editBtn) return;
 
-    let product=null;
-    const editId=editBtn.dataset?.id||editBtn.dataset?.productId||card.dataset?.id||card.dataset?.productId||'';
-    if(editId) product=products.find(p=>String(p.id)===String(editId));
-
-    if(!product){
-      const nameNode=card.querySelector('h2,h3,.product-name,.name,strong');
-      const name=String(nameNode?.textContent||'').trim().toLowerCase();
-      if(name) product=products.find(p=>String(p.name||'').trim().toLowerCase()===name);
+    let targetProducts=[];
+    if(editBtn.classList.contains('edit-product-card')){
+      const id=editBtn.dataset.id||'';
+      const product=products.find(p=>String(p.id)===String(id));
+      if(product && product.internalOnly!==true) targetProducts=[product];
+    }else{
+      const groupName=String(card.querySelector('h2')?.textContent||'').trim().toLowerCase();
+      targetProducts=products.filter(p=>
+        String(p.category||'').trim().toUpperCase()==='MQS' &&
+        String(p.name||'').trim().toLowerCase()===groupName &&
+        p.internalOnly!==true
+      );
     }
-    if(!product || product.internalOnly) return;
+    if(!targetProducts.length) return;
 
     const wrap=document.createElement('div');
     wrap.className='admin-card-availability no-print';
-    const available=product.available!==false;
+    const isAvailable=targetProducts.some(p=>p.available!==false);
     wrap.innerHTML=`<span class="avail-label">Beschikbaar:</span>
-      <button type="button" class="${available?'active':''}" data-v="1">JA</button>
-      <button type="button" class="${!available?'active':''}" data-v="0">NEE</button>`;
+      <button type="button" class="${isAvailable?'active':''}" data-v="1">JA</button>
+      <button type="button" class="${!isAvailable?'active':''}" data-v="0">NEE</button>`;
 
     wrap.querySelectorAll('button').forEach(btn=>{
       btn.onclick=async ev=>{
@@ -3508,22 +3518,23 @@ function addAdminAvailabilityControls(){
         const newValue=btn.dataset.v==='1';
         const y=window.scrollY;
         try{
-          await setCatalogAvailability(product.id,newValue);
-          product.available=newValue;
+          await setCatalogAvailability(targetProducts.map(p=>p.id),newValue);
+          targetProducts.forEach(p=>p.available=newValue);
           wrap.querySelectorAll('button').forEach(b=>b.classList.toggle('active',(b.dataset.v==='1')===newValue));
-          const badge=card.querySelector('.availability-badge,.available-badge,.status-badge');
-          if(badge) badge.textContent=newValue?'Beschikbaar':'Niet beschikbaar';
-          setTimeout(()=>window.scrollTo(0,y),0);
-          setTimeout(()=>window.scrollTo(0,y),150);
+          const badge=card.querySelector('.badge');
+          if(badge) badge.textContent=newValue?'Beschikbaar':'Uitverkocht';
+          requestAnimationFrame(()=>window.scrollTo(0,y));
+          setTimeout(()=>window.scrollTo(0,y),120);
         }catch(e){
           console.error(e);
+          alert('Beschikbaar JA/NEE opslaan is mislukt.');
         }
       };
     });
 
-    const actionArea=editBtn.parentElement;
-    if(actionArea) actionArea.parentElement?.insertBefore(wrap,actionArea);
-    else card.appendChild(wrap);
+    const actions=card.querySelector('.product-admin-actions');
+    if(actions) actions.parentElement.insertBefore(wrap,actions);
+    else card.querySelector('.body')?.appendChild(wrap);
   });
 }
 
