@@ -76,7 +76,7 @@ window.addEventListener('unhandledrejection',function(e){
 <section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username" readonly><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
-<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
+<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="credit">CREDIT</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
 <main>
 <section id="catalog" class="tab active">
 
@@ -394,6 +394,26 @@ window.addEventListener('unhandledrejection',function(e){
       <button id="whatsappSaleBtn" class="btn secondary" type="button">Bestelling via WhatsApp</button>
     </div>
     <div id="saleMessage" class="message"></div>
+  </div>
+</section>
+
+
+<section id="credit" class="tab">
+  <div class="panel">
+    <h2>CREDIT – teruggenomen producten</h2>
+    <p class="meta">Geen prijzen. Kies een product uit de Catalogus of typ zelf een product dat niet in de Catalogus staat.</p>
+    <div class="sales-grid">
+      <div><label>Klantnaam</label><input id="creditCustomerName" placeholder="Naam klant" list="customerSuggestions" autocomplete="off"></div>
+      <div><label>Notitie / reden</label><input id="creditNote" placeholder="Optioneel"></div>
+    </div>
+    <datalist id="creditProductSuggestions"></datalist>
+    <div id="creditItems" class="sale-items"></div>
+    <button id="addCreditItemBtn" class="btn light" type="button" style="margin-top:12px">Product toevoegen</button>
+    <div class="button-row" style="margin-top:14px">
+      <button id="saveCreditBtn" class="btn primary" type="button">CREDIT opslaan</button>
+      <button id="clearCreditBtn" class="btn light" type="button">Leegmaken</button>
+    </div>
+    <div id="creditMessage" class="message"></div>
   </div>
 </section>
 
@@ -2580,7 +2600,7 @@ function isPickOrderRead(s){
   return s?.pickRead===true || s?.pickProcessed===true || s?.pickStatus==='read' || !!s?.pickReadAt;
 }
 function pickUnreadOrders(){
-  return sales.filter(s=>!isPickOrderRead(s));
+  return sales.filter(s=>!s.isCredit && s.recordType!=='credit' && !isPickOrderRead(s));
 }
 function updatePickUnreadUI(){
   const n=pickUnreadOrders().length;
@@ -2635,7 +2655,7 @@ function pickOrderDate(s){
 function renderPickOrders(){
   const box=$('pickOrderList');if(!box)return;
   // Alleen nog niet gelezen/geprinte bestellingen blijven bovenaan bij NIEUW.
-  const list=sales.filter(s=>!isPickOrderRead(s)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const list=sales.filter(s=>!s.isCredit && s.recordType!=='credit' && !isPickOrderRead(s)).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   box.innerHTML=list.length?'':'<div class="meta">Geen nieuwe bestellingen.</div>';
   for(const s of list){
     const items=(s.items||[]).map(i=>`<div><strong>${safe(i.name||'')}</strong>${i.productCode?` · Code: ${safe(i.productCode)}`:''} · <strong>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())} · ${Number(i.qty||0)}</strong></div>`).join('');
@@ -2652,7 +2672,7 @@ function renderPickOrders(){
 function renderPickHistory(){
   const box=$('pickHistoryList'),input=$('pickHistorySearch');if(!box||!input)return;
   const q=String(input.value||'').trim().toLowerCase();
-  const archived=sales.filter(s=>isPickOrderRead(s) && (!q||String(s.customerName||'').toLowerCase().includes(q)))
+  const archived=sales.filter(s=>!s.isCredit && s.recordType!=='credit' && isPickOrderRead(s) && (!q||String(s.customerName||'').toLowerCase().includes(q)))
     .sort((a,b)=>String(a.customerName||'').localeCompare(String(b.customerName||''),'nl',{sensitivity:'base'}) || ((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
   if(!archived.length){box.innerHTML=`<div class="meta">${q?'Geen oudere bestellingen gevonden voor deze klant.':'Nog geen gelezen of geprinte bestellingen.'}</div>`;return;}
   box.innerHTML='';
@@ -2731,7 +2751,7 @@ function startPickSalesListener(){
   onSnapshot(collection(db,'sales'),s=>{
     const previousIds=new Set(sales.map(x=>x.id));
     const next=s.docs.map(d=>({id:d.id,...d.data()}));
-    const added=pickInitialSalesLoaded?next.filter(x=>!previousIds.has(x.id)):[];
+    const added=pickInitialSalesLoaded?next.filter(x=>!previousIds.has(x.id) && !x.isCredit && x.recordType!=='credit'):[];
     sales=next;
     renderPickOrders();
     if(pickInitialSalesLoaded&&added.length)notifyNewPickOrders(added);
@@ -2782,6 +2802,7 @@ function startCatalogListener(){
         renderExpiryAlerts();
         maybeShowExpiryNotification().catch(e=>console.warn('Melding overgeslagen:',e));
         refreshCategorySelects();
+        refreshCreditProductSuggestions();
         renderPackageSystem();
         if(isMQSCategory())loadMQSBulkValues();
         document.querySelectorAll('.sale-product').forEach(sel=>{
@@ -3042,6 +3063,81 @@ async function deleteCustomer(id){
   }
 }
 
+
+function refreshCreditProductSuggestions(){
+  const list=$('creditProductSuggestions');
+  if(!list)return;
+  const names=[...new Set(products
+    .filter(p=>!p.internalOnly)
+    .map(p=>productDisplayName(p))
+    .filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'nl',{sensitivity:'base'}));
+  list.innerHTML=names.map(name=>`<option value="${safe(name)}"></option>`).join('');
+}
+
+function creditUnitOptions(selected='EACH'){
+  const opts=['EACH','P12','P','CRT'];
+  return opts.map(v=>`<option value="${v}"${v===selected?' selected':''}>${v}</option>`).join('');
+}
+
+function addCreditItem(data={}){
+  const box=$('creditItems');if(!box)return;
+  const row=document.createElement('div');
+  row.className='sale-item credit-item';
+  row.style.gridTemplateColumns='minmax(180px,1fr) 120px 100px auto';
+  row.innerHTML=`
+    <div class="wide"><label>Product</label><input class="credit-product" list="creditProductSuggestions" placeholder="Kies of typ product" value="${safe(data.name||'')}"></div>
+    <div><label>Eenheid</label><select class="credit-unit">${creditUnitOptions(String(data.unit||'EACH').toUpperCase())}</select></div>
+    <div><label>Aantal</label><input class="credit-qty" type="number" min="0.01" step="0.01" value="${Number(data.qty||1)}"></div>
+    <button type="button" class="btn light remove-credit-item" style="margin-bottom:1px">Verwijderen</button>`;
+  box.appendChild(row);
+  row.querySelector('.remove-credit-item').onclick=()=>row.remove();
+}
+
+function clearCreditForm(){
+  if($('creditCustomerName'))$('creditCustomerName').value='';
+  if($('creditNote'))$('creditNote').value='';
+  if($('creditItems'))$('creditItems').innerHTML='';
+  addCreditItem();
+}
+
+function getCreditItems(){
+  return [...document.querySelectorAll('#creditItems .credit-item')].map(row=>{
+    const name=String(row.querySelector('.credit-product')?.value||'').trim();
+    const unit=String(row.querySelector('.credit-unit')?.value||'EACH').trim().toUpperCase();
+    const qty=Number(row.querySelector('.credit-qty')?.value||0);
+    const found=products.find(p=>productDisplayName(p).toLowerCase()===name.toLowerCase());
+    return {name,qty,unitType:unit.toLowerCase(),unitLabel:unit,productId:found?.id||'',productCode:found?productCodeForUnit(found,unit.toLowerCase()):'',price:0};
+  }).filter(i=>i.name&&i.qty>0);
+}
+
+async function saveCredit(){
+  if(currentRole!=='owner')return;
+  const customerName=cleanCustomerName($('creditCustomerName')?.value||'');
+  const items=getCreditItems();
+  if(!customerName)return msg($('creditMessage'),'Vul klantnaam in.',true);
+  if(!items.length)return msg($('creditMessage'),'Voeg minstens één product en aantal toe.',true);
+  try{
+    await ensureCustomerExists(customerName);
+    await addDoc(collection(db,'sales'),{
+      recordType:'credit',
+      isCredit:true,
+      customerName,
+      orderType:'CREDIT',
+      note:String($('creditNote')?.value||'').trim(),
+      items,
+      total:0,
+      pickRead:true,
+      pickProcessed:true,
+      pickStatus:'read',
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    });
+    msg($('creditMessage'),'CREDIT opgeslagen en toegevoegd aan de verkoophistorie van de klant.');
+    clearCreditForm();
+  }catch(e){msg($('creditMessage'),'CREDIT opslaan mislukt: '+e.message,true);}
+}
+
 async function saveSale(){
   const customerName=cleanCustomerName($('saleCustomerName').value),items=getSaleItems();
   if(!customerName)return msg($('saleMessage'),'Vul klantnaam in.',true);
@@ -3064,7 +3160,8 @@ async function deleteSavedOrder(id){
   if(!order)return;
 
   const customer=order.customerName||'Onbekende klant';
-  const ok=confirm(`Bestelling van "${customer}" verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
+  const isCredit=order.isCredit===true || order.recordType==='credit' || order.orderType==='CREDIT';
+  const ok=confirm(`${isCredit?'CREDIT':'Bestelling'} van "${customer}" verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
   if(!ok)return;
 
   try{
@@ -3100,10 +3197,15 @@ function renderHistory(){
   for(const s of list){
     const card=document.createElement('div'); card.className='history-card';
     const d=s.createdAt?.toDate?.(),date=d?d.toLocaleString('nl-NL'):'Bezig met opslaan…';
-    const items=(s.items||[]).map(i=>`${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`).join('<br>');
-    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div></div><div class="meta" style="margin-top:10px">${items}</div><div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
-      <button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>
-      <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">Bestelling verwijderen</button>
+    const isCredit=s.isCredit===true || s.recordType==='credit' || s.orderType==='CREDIT';
+    const items=(s.items||[]).map(i=>isCredit
+      ? `${Number(i.qty||0)} × ${safe(i.unitLabel||(i.unitType||'EACH').toUpperCase())} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)}`
+      : `${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`
+    ).join('<br>');
+    if(isCredit){card.style.borderLeft='7px solid #b91c1c';card.style.background='#fff7f7';}
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong>${isCredit?' <span style="display:inline-block;margin-left:8px;padding:4px 9px;border-radius:999px;background:#b91c1c;color:#fff;font-size:.8rem;font-weight:900">CREDIT</span>':''}<div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${isCredit?' · CREDIT':(s.orderType?` · ${safe(s.orderType)}`:'')}</div></div></div><div class="meta" style="margin-top:10px">${items}</div>${isCredit?'':`<div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>`}${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
+      ${isCredit?'':`<button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>`}
+      <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">${isCredit?'CREDIT verwijderen':'Bestelling verwijderen'}</button>
     </div>`;
     $('historyList').appendChild(card);
   }
@@ -4088,6 +4190,11 @@ if(notificationDaysEl){
 if($('enableNotificationsBtn'))$('enableNotificationsBtn').onclick=enableNotifications;
 updateNotificationStatus();
 $('addSaleItemBtn').onclick=()=>addSaleItem();
+if($('addCreditItemBtn'))$('addCreditItemBtn').onclick=()=>addCreditItem();
+if($('saveCreditBtn'))$('saveCreditBtn').onclick=saveCredit;
+if($('clearCreditBtn'))$('clearCreditBtn').onclick=clearCreditForm;
+refreshCreditProductSuggestions();
+if($('creditItems')&&!$('creditItems').children.length)addCreditItem();
 $('addMQSSaleItemBtn').onclick=()=>addSaleItem({productId:'',qty:1,price:''},'MQS');$('saveSaleBtn').onclick=saveSale;$('whatsappSaleBtn').onclick=sendSaleToWhatsApp;$('customerSearch').oninput=renderHistory;$('deleteAllOrdersBtn').onclick=deleteAllSavedOrders;$('addTabletEmailBtn').onclick=addTabletEmail;$('pickLoginBtn').onclick=loginOrderPick;$('pickLoginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginOrderPick();});$('pickEnableNotificationsBtn').onclick=enablePickNotifications;$('createOrderPickAccountBtn').onclick=createOrderPickAccount;$('pickHistorySearch').oninput=renderPickHistory;setupAdminCatalogFilter();$('addPackageCustomProductBtn').onclick=addPackageCustomProduct;$('calculatePackagesBtn').onclick=calculateAndSavePackages;$('newPackageDayBtn').onclick=startNewPackageDay;$('exportPackageCsvBtn').onclick=exportPackageTotalsCsv;
 
 $('manageCategoriesBtn').onclick=()=>{$('categoryManager').classList.toggle('hidden');renderCategoryManager();};
