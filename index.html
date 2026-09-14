@@ -97,7 +97,7 @@ window.addEventListener('unhandledrejection',function(e){
     <label><input type="radio" name="catalogOrderType" value="E.C" checked> E.C</label>
     <label><input type="radio" name="catalogOrderType" value="D.A"> D.A</label>
     <label><input type="radio" name="catalogOrderType" value="D.A COOL"> D.A COOL</label>
-    <label><input type="radio" name="catalogOrderType" value="CREDIT"> CREDIT</label>
+    <label><input id="catalogCreditOption" type="checkbox" value="CREDIT"> CREDIT</label>
   </div>
   <div id="catalogCartSummary" class="cart-summary">
     <strong>Winkelmand: <span id="catalogCartCount">0</span> regels</strong>
@@ -385,7 +385,7 @@ window.addEventListener('unhandledrejection',function(e){
       <label><input type="radio" name="orderType" value="E.C" checked> E.C</label>
       <label><input type="radio" name="orderType" value="D.A"> D.A</label>
       <label><input type="radio" name="orderType" value="D.A COOL"> D.A COOL</label>
-      <label><input type="radio" name="orderType" value="CREDIT"> CREDIT</label>
+      <label><input id="saleCreditOption" type="checkbox" value="CREDIT"> CREDIT</label>
     </div>
     <div id="saleItems" class="sale-items"></div>
     <button id="addSaleItemBtn" class="btn light" type="button" style="margin-top:12px">Productregel toevoegen</button>
@@ -660,6 +660,20 @@ function getProductCode(p){
 function catalogOrderType(){
   return document.querySelector('input[name="catalogOrderType"]:checked')?.value||'E.C';
 }
+function catalogCreditChecked(){
+  return !!document.getElementById('catalogCreditOption')?.checked;
+}
+function catalogOrderLabel(){
+  return catalogOrderType()+(catalogCreditChecked()?' + CREDIT':'');
+}
+function storedOrderLabel(s){
+  if(!s)return '';
+  let base=String(s.orderType||'E.C');
+  let credit=!!s.creditOption;
+  if(base==='CREDIT' && s.recordType!=='credit' && s.isCredit!==true){base='E.C';credit=true;}
+  return base+(credit?' + CREDIT':'');
+}
+
 function catalogCartItems(){
   return Object.entries(catalogCart).map(([productId,item])=>{
     const product=products.find(p=>p.id===productId);
@@ -696,6 +710,7 @@ function clearCatalogOrder(){
   $('catalogOrderNote').value='';
   const ec=document.querySelector('input[name="catalogOrderType"][value="E.C"]');
   if(ec)ec.checked=true;
+  const creditOpt=document.getElementById('catalogCreditOption'); if(creditOpt)creditOpt.checked=false;
   document.querySelectorAll('.catalog-order-qty').forEach(input=>input.value='');
   document.querySelectorAll('.catalog-order-unit').forEach(select=>select.value='each');
   updateCatalogCart();
@@ -720,7 +735,7 @@ function buildOrderPreview(){
   const note=$('catalogOrderNote').value.trim();
   // CREDIT hier is alleen een type/markering op een gewone verkoopbon.
   // Echte creditbonnen worden uitsluitend gemaakt via de aparte CREDIT-tab.
-  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderType())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
+  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderLabel())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
   $('orderPreview').classList.remove('hidden');
 }
 function printCatalogOrder(){buildOrderPreview();if(!$('orderPreview').classList.contains('hidden'))window.print();}
@@ -735,7 +750,7 @@ function buildCatalogWhatsAppText(){
     '*ORDER PICK BON*',
     `Datum: ${new Date().toLocaleDateString('nl-NL')}`,
     `Klant: ${customerName}`,
-    `Bestelling: ${catalogOrderType()}`,
+    `Bestelling: ${catalogOrderLabel()}`,
     '',
     '*PRODUCT | EENHEID | AANTAL*'
   ];
@@ -764,6 +779,7 @@ async function saveCatalogOrder(){
     orderNumber:editingSaleId?(sales.find(s=>s.id===editingSaleId)?.orderNumber||orderNumber()):orderNumber(),
     customerName,
     orderType:selectedType,
+    creditOption:catalogCreditChecked(),
     recordType:'sale',
     isCredit:false,
     note:$('catalogOrderNote').value.trim(),
@@ -795,8 +811,12 @@ function editSavedOrder(id){
   editingSaleId=id;
   $('catalogCustomerName').value=sale.customerName||'';
   $('catalogOrderNote').value=sale.note||'';
-  const orderRadio=document.querySelector(`input[name="catalogOrderType"][value="${sale.orderType||'E.C'}"]`);
+  let editBaseType=String(sale.orderType||'E.C');
+  let editCredit=!!sale.creditOption;
+  if(editBaseType==='CREDIT' && sale.recordType!=='credit' && sale.isCredit!==true){editBaseType='E.C';editCredit=true;}
+  const orderRadio=document.querySelector(`input[name="catalogOrderType"][value="${editBaseType}"]`);
   if(orderRadio)orderRadio.checked=true;
+  const creditOpt=document.getElementById('catalogCreditOption'); if(creditOpt)creditOpt.checked=editCredit;
   catalogCart={};
   (sale.items||[]).forEach(item=>{
     if(item.productId)catalogCart[item.productId]={unitType:item.unitType||'each',qty:Number(item.qty||0)};
@@ -1924,7 +1944,7 @@ function getSaleItems(){
   }).filter(x=>x.productId&&x.qty>0&&Number.isFinite(x.price));
 }
 function updateSaleTotal(){$('saleTotal').textContent=getSaleItems().reduce((s,x)=>s+x.qty*x.price,0).toFixed(2);}
-function resetSale(){$('saleCustomerName').value='';$('saleNote').value='';const first=document.querySelector('input[name="orderType"][value="E.C"]');if(first)first.checked=true;$('saleItems').innerHTML='';addSaleItem();}
+function resetSale(){$('saleCustomerName').value='';$('saleNote').value='';const first=document.querySelector('input[name="orderType"][value="E.C"]');if(first)first.checked=true;const creditOpt=document.getElementById('saleCreditOption');if(creditOpt)creditOpt.checked=false;$('saleItems').innerHTML='';addSaleItem();}
 
 
 const DEFAULT_PACKAGES=[
@@ -2669,7 +2689,7 @@ function renderPickOrders(){
     const items=(s.items||[]).map(i=>`<div><strong>${safe(i.name||'')}</strong>${i.productCode?` · Code: ${safe(i.productCode)}`:''} · <strong>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())} · ${Number(i.qty||0)}</strong></div>`).join('');
     const card=document.createElement('div');
     card.className='history-card pick-order-new';
-    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''}</div></div><span class="pick-unread">NIEUW</span></div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">GELEZEN</button></div>`;
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''}</div></div><span class="pick-unread">NIEUW</span></div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">GELEZEN</button></div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
@@ -2698,7 +2718,7 @@ function renderPickHistory(){
     card.className='history-card';
     const itemCount=(s.items||[]).reduce((sum,i)=>sum+Number(i.qty||0),0);
     const deleteButton=currentRole==='owner'?`<button type="button" class="btn light delete-old-pick-order" data-id="${s.id}" style="color:#b91c1c">VERWIJDEREN</button>`:'';
-    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(s.orderType)}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div><span class="meta">GELEZEN</span></div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deleteButton}</div>`;
+    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div><span class="meta">GELEZEN</span></div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deleteButton}</div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-old-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
@@ -2720,7 +2740,7 @@ async function deleteOldPickOrder(id){
 async function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
   const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.productCode||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
-  $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(s.orderType)}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
+  $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(storedOrderLabel(s))}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
   await markPickSeen(id);
   window.print();
 }
@@ -3158,6 +3178,7 @@ async function saveSale(){
     await addDoc(collection(db,'sales'),{
       customerName,
       orderType:selectedType,
+      creditOption:!!document.getElementById('saleCreditOption')?.checked,
       recordType:'sale',
       isCredit:false,
       note:$('saleNote').value.trim(),
@@ -3217,7 +3238,7 @@ function renderHistory(){
       : `${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`
     ).join('<br>');
     if(isCredit){card.style.borderLeft='7px solid #b91c1c';card.style.background='#fff7f7';}
-    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong>${isCredit?' <span style="display:inline-block;margin-left:8px;padding:4px 9px;border-radius:999px;background:#b91c1c;color:#fff;font-size:.8rem;font-weight:900">CREDIT</span>':''}<div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${isCredit?' · CREDIT':(s.orderType?` · ${safe(s.orderType)}`:'')}</div></div></div><div class="meta" style="margin-top:10px">${items}</div>${isCredit?'':`<div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>`}${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong>${isCredit?' <span style="display:inline-block;margin-left:8px;padding:4px 9px;border-radius:999px;background:#b91c1c;color:#fff;font-size:.8rem;font-weight:900">CREDIT</span>':''}<div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${isCredit?' · CREDIT':(s.orderType?` · ${safe(storedOrderLabel(s))}`:'')}</div></div></div><div class="meta" style="margin-top:10px">${items}</div>${isCredit?'':`<div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>`}${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
       ${isCredit?'':`<button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>`}
       <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">${isCredit?'CREDIT verwijderen':'Bestelling verwijderen'}</button>
     </div>`;
@@ -3230,6 +3251,7 @@ function renderHistory(){
 function buildWhatsAppText(){
   const customerName=$('saleCustomerName').value.trim()||'Klant';
   const orderType=document.querySelector('input[name="orderType"]:checked')?.value||'E.C';
+  const orderLabel=orderType+(document.getElementById('saleCreditOption')?.checked?' + CREDIT':'');
   const items=getSaleItems();
   if(!items.length){
     msg($('saleMessage'),'Voeg minstens één product toe.',true);
@@ -3239,7 +3261,7 @@ function buildWhatsAppText(){
     '*ORDER PICK BON*',
     `Datum: ${new Date().toLocaleDateString('nl-NL')}`,
     `Klant: ${customerName}`,
-    `Bestelling: ${orderType}`,
+    `Bestelling: ${orderLabel}`,
     '',
     '*PRODUCT | EENHEID | AANTAL*'
   ];
@@ -4647,6 +4669,10 @@ if(!window.__adminAvailabilityObserver){
   });
 }
 
+
+// CREDIT is an extra option and can be combined with E.C / D.A / D.A COOL.
+document.getElementById('catalogCreditOption')?.addEventListener('change',()=>buildOrderPreview());
+document.getElementById('saleCreditOption')?.addEventListener('change',()=>updateSaleTotal());
 </script>
 <div class="quick-search-action no-print">
   <button id="quickSearchBtn" class="floating-btn" type="button" title="Snel zoeken" aria-label="Snel zoeken">🔎</button>
