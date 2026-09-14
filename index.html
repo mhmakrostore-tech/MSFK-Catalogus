@@ -97,6 +97,7 @@ window.addEventListener('unhandledrejection',function(e){
     <label><input type="radio" name="catalogOrderType" value="E.C" checked> E.C</label>
     <label><input type="radio" name="catalogOrderType" value="D.A"> D.A</label>
     <label><input type="radio" name="catalogOrderType" value="D.A COOL"> D.A COOL</label>
+    <label><input type="radio" name="catalogOrderType" value="CREDIT"> CREDIT</label>
   </div>
   <div id="catalogCartSummary" class="cart-summary">
     <strong>Winkelmand: <span id="catalogCartCount">0</span> regels</strong>
@@ -384,6 +385,7 @@ window.addEventListener('unhandledrejection',function(e){
       <label><input type="radio" name="orderType" value="E.C" checked> E.C</label>
       <label><input type="radio" name="orderType" value="D.A"> D.A</label>
       <label><input type="radio" name="orderType" value="D.A COOL"> D.A COOL</label>
+      <label><input type="radio" name="orderType" value="CREDIT"> CREDIT</label>
     </div>
     <div id="saleItems" class="sale-items"></div>
     <button id="addSaleItemBtn" class="btn light" type="button" style="margin-top:12px">Productregel toevoegen</button>
@@ -716,6 +718,8 @@ function buildOrderPreview(){
   }).join('');
   const total=items.reduce((s,i)=>s+i.qty*i.price,0);
   const note=$('catalogOrderNote').value.trim();
+  // CREDIT hier is alleen een type/markering op een gewone verkoopbon.
+  // Echte creditbonnen worden uitsluitend gemaakt via de aparte CREDIT-tab.
   $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderType())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
   $('orderPreview').classList.remove('hidden');
 }
@@ -752,12 +756,16 @@ async function saveCatalogOrder(){
   const items=catalogCartItems();
   if(!customerName)return msg($('catalogOrderMessage'),'Vul de klantnaam in.',true);
   if(!items.length)return msg($('catalogOrderMessage'),'Vul bij minstens één product een aantal in.',true);
+  const selectedType=catalogOrderType();
+  const isCredit=false; // CREDIT als keuze blijft een gewone verkoopbon
   const total=items.reduce((sum,item)=>sum+item.qty*item.price,0);
   const creatorEmail=String(auth.currentUser?.email||'').toLowerCase();
   const data={
     orderNumber:editingSaleId?(sales.find(s=>s.id===editingSaleId)?.orderNumber||orderNumber()):orderNumber(),
     customerName,
-    orderType:catalogOrderType(),
+    orderType:selectedType,
+    recordType:'sale',
+    isCredit:false,
     note:$('catalogOrderNote').value.trim(),
     items,
     total,
@@ -3142,14 +3150,20 @@ async function saveSale(){
   const customerName=cleanCustomerName($('saleCustomerName').value),items=getSaleItems();
   if(!customerName)return msg($('saleMessage'),'Vul klantnaam in.',true);
   if(!items.length)return msg($('saleMessage'),'Voeg minstens één product toe.',true);
+  const selectedType=document.querySelector('input[name="orderType"]:checked')?.value||'E.C';
+  const isCredit=false; // CREDIT hier is alleen een type op de gewone verkoopbon
   const total=items.reduce((s,x)=>s+x.qty*x.price,0);
   try{
     await ensureCustomerExists(customerName);
     await addDoc(collection(db,'sales'),{
       customerName,
-      orderType:document.querySelector('input[name="orderType"]:checked')?.value||'E.C',
+      orderType:selectedType,
+      recordType:'sale',
+      isCredit:false,
       note:$('saleNote').value.trim(),
-      items,total,createdAt:serverTimestamp()
+      items,
+      total,
+      createdAt:serverTimestamp()
     });
     msg($('saleMessage'),'Bestelling opgeslagen.'); resetSale();
   }catch(e){msg($('saleMessage'),'Opslaan mislukt: '+e.message,true);}
@@ -3160,7 +3174,7 @@ async function deleteSavedOrder(id){
   if(!order)return;
 
   const customer=order.customerName||'Onbekende klant';
-  const isCredit=order.isCredit===true || order.recordType==='credit' || order.orderType==='CREDIT';
+  const isCredit=order.isCredit===true || order.recordType==='credit';
   const ok=confirm(`${isCredit?'CREDIT':'Bestelling'} van "${customer}" verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
   if(!ok)return;
 
@@ -3197,7 +3211,7 @@ function renderHistory(){
   for(const s of list){
     const card=document.createElement('div'); card.className='history-card';
     const d=s.createdAt?.toDate?.(),date=d?d.toLocaleString('nl-NL'):'Bezig met opslaan…';
-    const isCredit=s.isCredit===true || s.recordType==='credit' || s.orderType==='CREDIT';
+    const isCredit=s.isCredit===true || s.recordType==='credit';
     const items=(s.items||[]).map(i=>isCredit
       ? `${Number(i.qty||0)} × ${safe(i.unitLabel||(i.unitType||'EACH').toUpperCase())} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)}`
       : `${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`
