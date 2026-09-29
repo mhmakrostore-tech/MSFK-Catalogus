@@ -2701,6 +2701,10 @@ function renderPickOrders(){
 }
 function isDeliveredOrder(s){return s?.deliveryStatus==='delivered'||s?.delivered===true||!!s?.deliveredAt;}
 function deliveredDateLabel(s){
+  if(s?.deliveryDate){
+    const parts=String(s.deliveryDate).split('-');
+    if(parts.length===3)return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
   const d=s?.deliveredAt?.toDate?.();
   if(d)return d.toLocaleDateString('nl-NL');
   if(typeof s?.deliveredAt==='string'){const x=new Date(s.deliveredAt);if(!Number.isNaN(x.getTime()))return x.toLocaleDateString('nl-NL');}
@@ -2708,9 +2712,60 @@ function deliveredDateLabel(s){
 }
 async function setOrderDelivered(id,delivered){
   if(currentRole!=='owner')return;
+  const order=sales.find(s=>s.id===id);
+  let invoiceNumber='', deliveredDate='';
+
+  if(delivered){
+    const existingInvoice=String(order?.deliveryInvoiceNumber||'');
+    const enteredInvoice=window.prompt('Voer het Invoice nummer in:',existingInvoice);
+    if(enteredInvoice===null)return;
+    invoiceNumber=String(enteredInvoice).trim();
+    if(!invoiceNumber){
+      msg($('pickMessage'),'Vul eerst het Invoice nummer in.',true);
+      return;
+    }
+
+    const existingDate=order?.deliveryDate
+      || (order?.deliveredAt?.toDate?.()
+          ? order.deliveredAt.toDate().toISOString().slice(0,10)
+          : new Date().toISOString().slice(0,10));
+    const enteredDate=window.prompt('Bezorgdatum (JJJJ-MM-DD):',existingDate);
+    if(enteredDate===null)return;
+    deliveredDate=String(enteredDate).trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(deliveredDate)){
+      msg($('pickMessage'),'Gebruik voor de bezorgdatum JJJJ-MM-DD, bijvoorbeeld 2026-09-29.',true);
+      return;
+    }
+  }
+
   try{
-    await setDoc(doc(db,'sales',id),delivered?{deliveryStatus:'delivered',delivered:true,deliveredAt:serverTimestamp(),deliveredBy:auth.currentUser?.email||''}:{deliveryStatus:'pending',delivered:false,deliveredAt:null,deliveredBy:''},{merge:true});
-    msg($('pickMessage'),delivered?'Order gemarkeerd als bezorgd / weggegaan.':'Order teruggezet naar nog te bezorgen.');
+    await setDoc(
+      doc(db,'sales',id),
+      delivered
+        ? {
+            deliveryStatus:'delivered',
+            delivered:true,
+            deliveredAt:serverTimestamp(),
+            deliveryDate:deliveredDate,
+            deliveredBy:auth.currentUser?.email||'',
+            deliveryInvoiceNumber:invoiceNumber
+          }
+        : {
+            deliveryStatus:'pending',
+            delivered:false,
+            deliveredAt:null,
+            deliveryDate:'',
+            deliveredBy:'',
+            deliveryInvoiceNumber:''
+          },
+      {merge:true}
+    );
+    msg(
+      $('pickMessage'),
+      delivered
+        ? `Order gemarkeerd als bezorgd / weggegaan. Datum ${deliveredDate} en Invoice ${invoiceNumber} opgeslagen.`
+        : 'Order teruggezet naar nog te bezorgen.'
+    );
   }catch(e){msg($('pickMessage'),'Bezorgstatus opslaan mislukt: '+e.message,true);}
 }
 function renderPickHistory(){
@@ -2735,8 +2790,9 @@ function renderPickHistory(){
     const itemCount=(s.items||[]).reduce((sum,i)=>sum+Number(i.qty||0),0);
     const deleteButton=currentRole==='owner'?`<button type="button" class="btn light delete-old-pick-order" data-id="${s.id}" style="color:#b91c1c">VERWIJDEREN</button>`:'';
     const delivered=isDeliveredOrder(s),deliveredDate=deliveredDateLabel(s);
-    const deliveryBadge=delivered?`<span style="font-weight:900;color:#15803d">BEZORGD${deliveredDate?` · ${safe(deliveredDate)}`:''}</span>`:`<span style="font-weight:900;color:#b91c1c">NOG TE BEZORGEN</span>`;
-    const deliveryButton=currentRole==='owner'?(delivered?`<button type="button" class="btn light pending-pick-order" data-id="${s.id}">TERUG NAAR NOG TE BEZORGEN</button>`:`<button type="button" class="btn secondary delivered-pick-order" data-id="${s.id}">BEZORGD / WEGGEGAAN</button>`):'';
+    const invoiceNumber=String(s.deliveryInvoiceNumber||'').trim();
+    const deliveryBadge=delivered?`<span style="font-weight:900;color:#15803d">BEZORGD${deliveredDate?` · ${safe(deliveredDate)}`:''}${invoiceNumber?` · Invoice ${safe(invoiceNumber)}`:''}</span>`:`<span style="font-weight:900;color:#b91c1c">NOG TE BEZORGEN</span>`;
+    const deliveryButton=currentRole==='owner'?(delivered?`<button type="button" class="btn light delivered-pick-order" data-id="${s.id}">DATUM / INVOICE WIJZIGEN</button><button type="button" class="btn light pending-pick-order" data-id="${s.id}">TERUG NAAR NOG TE BEZORGEN</button>`:`<button type="button" class="btn secondary delivered-pick-order" data-id="${s.id}">BEZORGD / WEGGEGAAN</button>`):'';
     card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div>${deliveryBadge}</div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deliveryButton}${deleteButton}</div>`;
     box.appendChild(card);
   }
