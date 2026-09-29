@@ -445,7 +445,7 @@ window.addEventListener('unhandledrejection',function(e){
     <button id="createOrderPickAccountBtn" type="button" class="btn secondary" style="margin-top:12px">ORDER PICK account maken</button>
     <div id="orderPickSetupMsg" class="message"></div>
   </div>
-  <div class="panel">
+  <div id="customerManagePanel" class="panel">
     <h2>Klanten</h2>
     <p class="meta">Opgeslagen klantnamen verschijnen automatisch zodra je bij Nieuwe verkoop begint te typen.</p>
     <div id="customerManagerList"></div>
@@ -2537,12 +2537,14 @@ function applyRoleUI(){
   document.body.classList.toggle('tablet-mode',isTablet);
 
   document.querySelectorAll('.tabs button').forEach(btn=>{
-    const keep=isPick?btn.dataset.tab==='pick':(!isTablet||btn.dataset.tab==='catalog');
+    const keep=isPick?btn.dataset.tab==='pick':(!isTablet||['catalog','customers'].includes(btn.dataset.tab));
     btn.classList.toggle('hidden',!keep);
   });
 
   if($('tabletAccessPanel'))$('tabletAccessPanel').classList.toggle('hidden',isTablet||isPick);
   if($('orderPickSetupPanel'))$('orderPickSetupPanel').classList.toggle('hidden',isTablet||isPick);
+  if($('customerManagePanel'))$('customerManagePanel').classList.toggle('hidden',isTablet||isPick);
+  if($('deleteAllOrdersBtn'))$('deleteAllOrdersBtn').classList.toggle('hidden',isTablet||isPick);
   document.querySelectorAll('.product-admin-actions').forEach(el=>el.classList.toggle('hidden',isTablet||isPick));
 
   if(isTablet||isPick){
@@ -2689,13 +2691,27 @@ function renderPickOrders(){
     const items=(s.items||[]).map(i=>`<div><strong>${safe(i.name||'')}</strong>${i.productCode?` · Code: ${safe(i.productCode)}`:''} · <strong>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())} · ${Number(i.qty||0)}</strong></div>`).join('');
     const card=document.createElement('div');
     card.className='history-card pick-order-new';
-    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''}</div></div><span class="pick-unread">NIEUW</span></div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">GELEZEN</button></div>`;
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''}</div></div><span><span class="pick-unread">NIEUW</span><br><small style="font-weight:900;color:#b91c1c">NOG TE BEZORGEN</small></span></div><div style="margin-top:12px;line-height:1.7">${items}</div>${s.note?`<div style="margin-top:10px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}<div class="button-row no-print" style="margin-top:12px"><button type="button" class="btn primary print-pick-order" data-id="${s.id}">PRINT PICK BON</button><button type="button" class="btn light seen-pick-order" data-id="${s.id}">GELEZEN</button></div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
   box.querySelectorAll('.seen-pick-order').forEach(btn=>btn.onclick=()=>markPickSeen(btn.dataset.id));
   updatePickUnreadUI();
   renderPickHistory();
+}
+function isDeliveredOrder(s){return s?.deliveryStatus==='delivered'||s?.delivered===true||!!s?.deliveredAt;}
+function deliveredDateLabel(s){
+  const d=s?.deliveredAt?.toDate?.();
+  if(d)return d.toLocaleDateString('nl-NL');
+  if(typeof s?.deliveredAt==='string'){const x=new Date(s.deliveredAt);if(!Number.isNaN(x.getTime()))return x.toLocaleDateString('nl-NL');}
+  return '';
+}
+async function setOrderDelivered(id,delivered){
+  if(currentRole!=='owner')return;
+  try{
+    await setDoc(doc(db,'sales',id),delivered?{deliveryStatus:'delivered',delivered:true,deliveredAt:serverTimestamp(),deliveredBy:auth.currentUser?.email||''}:{deliveryStatus:'pending',delivered:false,deliveredAt:null,deliveredBy:''},{merge:true});
+    msg($('pickMessage'),delivered?'Order gemarkeerd als bezorgd / weggegaan.':'Order teruggezet naar nog te bezorgen.');
+  }catch(e){msg($('pickMessage'),'Bezorgstatus opslaan mislukt: '+e.message,true);}
 }
 function renderPickHistory(){
   const box=$('pickHistoryList'),input=$('pickHistorySearch');if(!box||!input)return;
@@ -2718,10 +2734,15 @@ function renderPickHistory(){
     card.className='history-card';
     const itemCount=(s.items||[]).reduce((sum,i)=>sum+Number(i.qty||0),0);
     const deleteButton=currentRole==='owner'?`<button type="button" class="btn light delete-old-pick-order" data-id="${s.id}" style="color:#b91c1c">VERWIJDEREN</button>`:'';
-    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div><span class="meta">GELEZEN</span></div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deleteButton}</div>`;
+    const delivered=isDeliveredOrder(s),deliveredDate=deliveredDateLabel(s);
+    const deliveryBadge=delivered?`<span style="font-weight:900;color:#15803d">BEZORGD${deliveredDate?` · ${safe(deliveredDate)}`:''}</span>`:`<span style="font-weight:900;color:#b91c1c">NOG TE BEZORGEN</span>`;
+    const deliveryButton=currentRole==='owner'?(delivered?`<button type="button" class="btn light pending-pick-order" data-id="${s.id}">TERUG NAAR NOG TE BEZORGEN</button>`:`<button type="button" class="btn secondary delivered-pick-order" data-id="${s.id}">BEZORGD / WEGGEGAAN</button>`):'';
+    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div>${deliveryBadge}</div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deliveryButton}${deleteButton}</div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-old-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
+  box.querySelectorAll('.delivered-pick-order').forEach(btn=>btn.onclick=()=>setOrderDelivered(btn.dataset.id,true));
+  box.querySelectorAll('.pending-pick-order').forEach(btn=>btn.onclick=()=>setOrderDelivered(btn.dataset.id,false));
   box.querySelectorAll('.delete-old-pick-order').forEach(btn=>btn.onclick=()=>deleteOldPickOrder(btn.dataset.id));
 }
 async function deleteOldPickOrder(id){
@@ -2918,6 +2939,17 @@ async function addGiveawayEntry(){
     msg($('giveawayMessage'),'Toegevoegd.');
     renderGiveaways();
   }catch(e){msg($('giveawayMessage'),'Opslaan mislukt: '+e.message,true);}
+}
+
+function startTabletHistoryListeners(){
+  onSnapshot(collection(db,'sales'),snap=>{
+    sales=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderHistory();
+  },e=>console.warn('Verkoophistorie laden mislukt:',e));
+  onSnapshot(collection(db,'customers'),snap=>{
+    customers=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderCustomerSuggestions();
+  },e=>console.warn('Klanten laden mislukt:',e));
 }
 
 function startOwnerListeners(){
@@ -3238,10 +3270,10 @@ function renderHistory(){
       : `${Number(i.qty||0)} × ${i.unitLabel||(i.unitType||'each').toUpperCase()} ${i.productCode?`[${safe(i.productCode)}] `:''}${safe(i.name)} — $ ${(Number(i.qty||0)*Number(i.price||0)).toFixed(2)}`
     ).join('<br>');
     if(isCredit){card.style.borderLeft='7px solid #b91c1c';card.style.background='#fff7f7';}
-    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong>${isCredit?' <span style="display:inline-block;margin-left:8px;padding:4px 9px;border-radius:999px;background:#b91c1c;color:#fff;font-size:.8rem;font-weight:900">CREDIT</span>':''}<div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${isCredit?' · CREDIT':(s.orderType?` · ${safe(storedOrderLabel(s))}`:'')}</div></div></div><div class="meta" style="margin-top:10px">${items}</div>${isCredit?'':`<div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>`}${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}<div class="button-row">
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(s.customerName||'Onbekende klant')}</strong>${isCredit?' <span style="display:inline-block;margin-left:8px;padding:4px 9px;border-radius:999px;background:#b91c1c;color:#fff;font-size:.8rem;font-weight:900">CREDIT</span>':''}<div class="meta">${s.orderNumber?`${safe(s.orderNumber)} · `:''}${date}${isCredit?' · CREDIT':(s.orderType?` · ${safe(storedOrderLabel(s))}`:'')}</div></div></div><div class="meta" style="margin-top:10px">${items}</div>${isCredit?'':`<div class="total-box">Totaal: $ ${Number(s.total||0).toFixed(2)}</div>`}${s.note?`<div class="meta">Opmerking: ${safe(s.note)}</div>`:''}${currentRole==='owner'?`<div class="button-row">
       ${isCredit?'':`<button type="button" class="btn light edit-saved-order" data-sale="${s.id}">Bestelling bewerken</button>`}
       <button type="button" class="btn light delete-saved-order" data-sale="${s.id}">${isCredit?'CREDIT verwijderen':'Bestelling verwijderen'}</button>
-    </div>`;
+    </div>`:''}`;
     $('historyList').appendChild(card);
   }
   $('historyList').querySelectorAll('.edit-saved-order').forEach(button=>button.onclick=()=>editSavedOrder(button.dataset.sale));
@@ -4654,6 +4686,7 @@ onAuthStateChanged(auth,async u=>{
   }else{
     startCatalogListener();
     if(currentRole==='owner')startOwnerListeners();
+    else if(currentRole==='tablet')startTabletHistoryListeners();
   }
 });
 
