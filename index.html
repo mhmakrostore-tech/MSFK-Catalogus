@@ -76,7 +76,7 @@ window.addEventListener('unhandledrejection',function(e){
 <section id="login" class="login hidden"><div class="login-card"><h1>MSFK Verkoop & EXP</h1><p>Privé productcatalogus.</p><button id="loginBtn" class="btn primary">Inloggen met Google</button><hr style="margin:22px 0;border:0;border-top:1px solid var(--border)"><h3>ORDER PICK</h3><p class="meta">Voor de order-pc's. Geen Google-account nodig.</p><label>Login</label><input id="pickLoginName" value="orderpick@maxi.bonaire" autocomplete="username" readonly><label>Wachtwoord</label><input id="pickLoginPassword" type="password" placeholder="Wachtwoord" autocomplete="current-password"><button id="pickLoginBtn" class="btn secondary" type="button" style="margin-top:12px;width:100%">ORDER PICK inloggen</button><div id="loginMsg" class="message"></div></div></section>
 <div id="app" class="hidden">
 <header class="top"><div><h1>MSFK Verkoop & EXP</h1><small id="email"></small></div><button id="logoutBtn" class="btn ghost">Uitloggen</button></header>
-<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="credit">CREDIT</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="makroOverview">MAKRO overzicht</button><button data-tab="notifications">Meldingen</button></nav>
+<nav class="tabs"><button data-tab="catalog" class="active">Catalogus</button><button data-tab="add">Product toevoegen</button><button data-tab="sale">Nieuwe verkoop</button><button data-tab="credit">CREDIT</button><button data-tab="customers">Klanten & historie</button><button data-tab="pick">ORDER PICK <span id="pickTabBadge" class="pick-unread hidden">0</span></button><button data-tab="packages">Pakketten</button><button data-tab="giveaway">Gratis / Uitgedeeld</button><button data-tab="notifications">Meldingen</button></nav>
 <main>
 <section id="catalog" class="tab active">
 
@@ -373,18 +373,6 @@ window.addEventListener('unhandledrejection',function(e){
 <div id="list"></div></div>
 </section>
 
-<section id="makroOverview" class="tab">
-  <div class="panel">
-    <h2>MAKRO – alle toegevoegde producten</h2>
-    <p class="meta">Hier zie je als beheerder alle producten die in categorie MAKRO zijn opgeslagen, ook als ze niet bij Meldingen staan.</p>
-    <div class="toolbar" style="grid-template-columns:1fr auto">
-      <input id="makroOverviewSearch" type="search" placeholder="Zoek product, barcode of code…">
-      <strong style="align-self:center">Totaal: <span id="makroOverviewCount">0</span></strong>
-    </div>
-    <div id="makroOverviewList"></div>
-  </div>
-</section>
-
 <section id="sale" class="tab">
   <div class="panel">
     <h2>Nieuwe verkoop</h2>
@@ -489,8 +477,8 @@ window.addEventListener('unhandledrejection',function(e){
   </div>
   <div class="panel no-print">
     <h2>Oudere bestellingen</h2>
-    <p class="meta">Zoek op klantnaam. Oude bestellingen kunnen alleen bekeken en opnieuw geprint worden.</p>
-    <input id="pickHistorySearch" class="pick-history-search" type="search" placeholder="Zoek klantnaam…" autocomplete="off">
+    <p class="meta">Zoek op klantnaam of invoicenummer. Ook bezorgde bestellingen blijven terug te vinden.</p>
+    <input id="pickHistorySearch" class="pick-history-search" type="search" placeholder="Zoek klantnaam of invoicenummer…" autocomplete="off">
     <div id="pickHistoryList"><div class="meta">Gelezen en geprinte bestellingen komen hier automatisch onder de klant.</div></div>
   </div>
   <div id="pickPrintPreview" class="pick-print-preview"></div>
@@ -2783,9 +2771,9 @@ async function setOrderDelivered(id,delivered){
 function renderPickHistory(){
   const box=$('pickHistoryList'),input=$('pickHistorySearch');if(!box||!input)return;
   const q=String(input.value||'').trim().toLowerCase();
-  const archived=sales.filter(s=>!s.isCredit && s.recordType!=='credit' && isPickOrderRead(s) && (!q||String(s.customerName||'').toLowerCase().includes(q)))
+  const archived=sales.filter(s=>!s.isCredit && s.recordType!=='credit' && (isPickOrderRead(s)||isDeliveredOrder(s)) && (!q||String(s.customerName||'').toLowerCase().includes(q)||String(s.deliveryInvoiceNumber||'').toLowerCase().includes(q)))
     .sort((a,b)=>String(a.customerName||'').localeCompare(String(b.customerName||''),'nl',{sensitivity:'base'}) || ((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
-  if(!archived.length){box.innerHTML=`<div class="meta">${q?'Geen oudere bestellingen gevonden voor deze klant.':'Nog geen gelezen of geprinte bestellingen.'}</div>`;return;}
+  if(!archived.length){box.innerHTML=`<div class="meta">${q?'Geen bestellingen gevonden met deze klantnaam of dit invoicenummer.':'Nog geen gelezen of geprinte bestellingen.'}</div>`;return;}
   box.innerHTML='';
   let lastCustomer='';
   for(const s of archived){
@@ -2805,7 +2793,7 @@ function renderPickHistory(){
     const invoiceNumber=String(s.deliveryInvoiceNumber||'').trim();
     const deliveryBadge=delivered?`<span style="font-weight:900;color:#15803d">BEZORGD${deliveredDate?` · ${safe(deliveredDate)}`:''}${invoiceNumber?` · Invoice ${safe(invoiceNumber)}`:''}</span>`:`<span style="font-weight:900;color:#b91c1c">NOG TE BEZORGEN</span>`;
     const deliveryButton=currentRole==='owner'?(delivered?`<button type="button" class="btn light delivered-pick-order" data-id="${s.id}">DATUM / INVOICE WIJZIGEN</button><button type="button" class="btn light pending-pick-order" data-id="${s.id}">TERUG NAAR NOG TE BEZORGEN</button>`:`<button type="button" class="btn secondary delivered-pick-order" data-id="${s.id}">BEZORGD / WEGGEGAAN</button>`):'';
-    card.innerHTML=`<div class="history-head"><div><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div>${deliveryBadge}</div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deliveryButton}${deleteButton}</div>`;
+    card.innerHTML=`<div class="history-head"><div><strong>${safe(customer)}</strong><div class="meta">${safe(pickOrderDate(s))}${s.orderType?` · ${safe(storedOrderLabel(s))}`:''} · ${itemCount} item${itemCount===1?'':'s'}</div></div>${deliveryBadge}</div><div class="button-row" style="margin-top:12px"><button type="button" class="btn primary print-old-pick-order" data-id="${s.id}">PRINT OPNIEUW</button>${deliveryButton}${deleteButton}</div>`;
     box.appendChild(card);
   }
   box.querySelectorAll('.print-old-pick-order').forEach(btn=>btn.onclick=()=>printPickOrder(btn.dataset.id));
@@ -4178,38 +4166,7 @@ function renderList(){
 
     root.appendChild(section);
   }
-  renderMakroOverview($('makroOverviewSearch')?.value||'');
 }
-function renderMakroOverview(term=''){
-  const root=$('makroOverviewList');
-  if(!root)return;
-  const q=String(term||'').trim().toLowerCase();
-  const allMakro=products.filter(p=>String(p.category||'').trim().toUpperCase()==='MAKRO');
-  const visible=allMakro.filter(p=>{
-    const c=normalizedCodes(p);
-    return `${productDisplayName(p)} ${p.barcode||''} ${c.each||''} ${c.p12||''} ${c.crt||''}`.toLowerCase().includes(q);
-  }).sort(compareProductsByNameWeight);
-  if($('makroOverviewCount'))$('makroOverviewCount').textContent=allMakro.length;
-  root.innerHTML='';
-  if(!visible.length){root.innerHTML='<div class="meta">Geen MAKRO-producten gevonden.</div>';return;}
-  for(const p of visible){
-    const exps=[
-      [p.expiry1||p.exp1,p.stockExp1??p.stock1],
-      [p.expiry2||p.exp2,p.stockExp2??p.stock2],
-      [p.expiry3||p.exp3,p.stockExp3??p.stock3]
-    ].filter(x=>x[0]);
-    const row=document.createElement('div');
-    row.className='row';
-    row.innerHTML=`${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}
-      <div><strong>${safe(productDisplayName(p))}</strong>
-        <div class="meta">${p.barcode?`Barcode: ${safe(p.barcode)}<br>`:''}${exps.length?exps.map((x,i)=>`EXP ${i+1}: <strong>${safe(formatDate(x[0]))}</strong>${x[1]!==undefined&&x[1]!==''?` &nbsp; Aantal: ${safe(String(x[1]))}`:''}`).join('<br>'):'Geen EXP ingevuld'}</div>
-      </div>
-      <div class="actions"><button type="button" class="btn light edit-makro-overview">Bewerken</button></div>`;
-    row.querySelector('.edit-makro-overview').onclick=()=>edit(p.id);
-    root.appendChild(row);
-  }
-}
-
 function setupAdminCatalogFilter(){
   const box=$('adminCatalogFilter');if(!box)return;
   box.querySelectorAll('[data-filter]').forEach(btn=>{
@@ -4346,9 +4303,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   $(b.dataset.tab).classList.add('active');
-  if(b.dataset.tab==='makroOverview')renderMakroOverview($('makroOverviewSearch')?.value||'');
 });
-if($('makroOverviewSearch'))$('makroOverviewSearch').oninput=e=>renderMakroOverview(e.target.value);
 $('saveCatalogOrderBtn').onclick=saveCatalogOrder;$('whatsappCatalogOrderBtn').onclick=sendCatalogOrderWhatsApp;$('printCatalogOrderBtn').onclick=printCatalogOrder;$('clearCatalogOrderBtn').onclick=clearCatalogOrder;
 if(!localStorage.getItem('msfkExpiry6MonthsV287')){localStorage.setItem('msfkNotificationDays','180');localStorage.setItem('msfkExpiry6MonthsV287','1');}
 const notificationDaysEl=$('notificationDays');
