@@ -59,6 +59,7 @@ body.tablet-mode .delete-mqs-group{display:none!important}
 @media(min-width:761px){.category-products{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}}
 </style>
 
+<style>.order-mqs-title{text-align:center;font-size:28px;font-weight:900;margin:0 0 12px}.order-table tr.order-mqs-sep td{border-bottom:5px solid #111!important}.order-barcode{max-width:120px;height:38px}.order-table tr{break-inside:avoid;page-break-inside:avoid}</style>
 </head>
 <body>
 <div id="startupError" style="display:none;margin:12px;padding:12px;border:2px solid #b91c1c;border-radius:10px;background:#fff;color:#b91c1c;font-weight:700"></div>
@@ -637,6 +638,7 @@ window.addEventListener('unhandledrejection',function(e){
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
@@ -684,6 +686,7 @@ function catalogCartItems(){
     return {
       productId,
       productCode:codeForUnit(product,unitType),
+      category:product.category||'', mqsFormat:product.mqsFormat||'',
       name:productDisplayName(product),
       unitType,
       unitLabel:unitLabelForProduct(product,unitType),
@@ -720,25 +723,40 @@ function orderNumber(){
   const now=new Date();
   return `MSFK-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
 }
+function orderIsMQS(i){
+  const p=products.find(p=>p.id===i.productId);
+  const cat=String(i.category||i.productCategory||p?.category||'').trim().toUpperCase();
+  return /^(MQS|500\s*(GR|G))$/.test(cat)||/^(MQS|500)$/.test(String(i.mqsFormat||'').toUpperCase())||/\b(MQS|500\s*gr)\s*$/i.test(String(i.name||''));
+}
+function orderSortedItems(items){return [...items].sort((a,b)=>Number(orderIsMQS(b))-Number(orderIsMQS(a)));}
+function orderRowClass(items,i){return orderIsMQS(items[i])&&i+1<items.length&&!orderIsMQS(items[i+1])?'order-mqs-sep':'';}
+function orderBarcodeCell(i){const code=String(i.productCode||i.code||'').trim();return `<td>${code?`<svg class="order-barcode" data-barcode="${safe(code)}"></svg>`:'Geen code'}</td>`;}
+function renderOrderBarcodes(id){
+  const svgs=$(id).querySelectorAll('svg[data-barcode]');
+  if(svgs.length&&typeof JsBarcode!=='function')return false;
+  for(const svg of svgs){try{JsBarcode(svg,svg.dataset.barcode,{format:'CODE128',displayValue:true,fontSize:11,height:34,margin:8,width:1.5});}catch(e){svg.replaceWith(document.createTextNode(svg.dataset.barcode+' (geen barcode)'));}}
+  return true;
+}
 function buildOrderPreview(){
-  const items=catalogCartItems();
+  const items=orderSortedItems(catalogCartItems());
   if(!items.length){$('orderPreview').classList.add('hidden');$('orderPreview').innerHTML='';return;}
   const customer=$('catalogCustomerName').value.trim()||'Klant';
   const number=editingSaleId?`BESTELLING-${editingSaleId.slice(0,6).toUpperCase()}`:orderNumber();
   const date=new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'});
-  const rows=items.map(item=>{
+  const rows=items.map((item,idx)=>{
     const product=products.find(p=>p.id===item.productId);
     const unitLabel=item.unitType==='crt'?`CRT${product?.unitsPerCarton?` (${product.unitsPerCarton})`:''}`:(item.unitLabel||unitLabelForProduct(product,item.unitType));
-    return `<tr><td>${safe(item.productCode||'')}</td><td>${safe(item.name)}</td><td>${unitLabel}</td><td>${item.qty}</td><td>$ ${item.price.toFixed(2)}</td><td>$ ${(item.qty*item.price).toFixed(2)}</td></tr>`;
+    return `<tr class="${orderRowClass(items,idx)}"><td>${safe(item.productCode||'')}</td><td>${safe(item.name)}</td><td>${unitLabel}</td><td>${item.qty}</td><td>$ ${item.price.toFixed(2)}</td><td>$ ${(item.qty*item.price).toFixed(2)}</td>${orderBarcodeCell(item)}</tr>`;
   }).join('');
   const total=items.reduce((s,i)=>s+i.qty*i.price,0);
   const note=$('catalogOrderNote').value.trim();
   // CREDIT hier is alleen een type/markering op een gewone verkoopbon.
   // Echte creditbonnen worden uitsluitend gemaakt via de aparte CREDIT-tab.
-  $('orderPreview').innerHTML=`<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderLabel())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
+  $('orderPreview').innerHTML=`${items.some(orderIsMQS)?'<div class="order-mqs-title">MQS</div>':''}<h2>MSFK Bestelbon</h2><div class="order-meta"><div><strong>Bestelnummer</strong><br>${number}</div><div><strong>Datum</strong><br>${date}</div><div><strong>Klant</strong><br>${safe(customer)}</div></div><div><strong>Bestelling:</strong> ${safe(catalogOrderLabel())}</div><table class="order-table"><thead><tr><th>Code</th><th>Product</th><th>Eenheid</th><th>Aantal</th><th>Prijs</th><th>Totaal</th><th>Barcode</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Totaal: $ ${total.toFixed(2)}</div>${note?`<div class="meta" style="margin-top:12px"><strong>Notitie:</strong> ${safe(note)}</div>`:''}`;
   $('orderPreview').classList.remove('hidden');
+  renderOrderBarcodes('orderPreview');
 }
-function printCatalogOrder(){buildOrderPreview();if(!$('orderPreview').classList.contains('hidden'))window.print();}
+function printCatalogOrder(){buildOrderPreview();if(!$('orderPreview').classList.contains('hidden')){if(!renderOrderBarcodes('orderPreview'))return alert('Barcodebibliotheek niet geladen. Probeer opnieuw met internet.');window.print();}}
 function buildCatalogWhatsAppText(){
   const customerName=$('catalogCustomerName').value.trim()||'Klant';
   const items=catalogCartItems();
@@ -1957,7 +1975,7 @@ function getSaleItems(){
   return [...document.querySelectorAll('#saleItems .sale-item')].map(row=>{
     const productId=row.querySelector('.sale-product').value,p=products.find(x=>x.id===productId);
     const unitType=row.querySelector('.sale-unit').value,qty=Number(row.querySelector('.sale-qty').value||0);
-    return {productId,productCode:codeForUnit(p||{},unitType),name:p?productDisplayName(p):'',unitType,unitLabel:unitLabelForProduct(p||{},unitType),qty,stockUnits:stockUnitsForSale(unitType,qty,p||{}),price:Number(row.querySelector('.sale-price').value||0)};
+    return {productId,category:p?.category||'',mqsFormat:p?.mqsFormat||'',productCode:codeForUnit(p||{},unitType),name:p?productDisplayName(p):'',unitType,unitLabel:unitLabelForProduct(p||{},unitType),qty,stockUnits:stockUnitsForSale(unitType,qty,p||{}),price:Number(row.querySelector('.sale-price').value||0)};
   }).filter(x=>x.productId&&x.qty>0&&Number.isFinite(x.price));
 }
 function updateSaleTotal(){$('saleTotal').textContent=getSaleItems().reduce((s,x)=>s+x.qty*x.price,0).toFixed(2);}
@@ -2833,8 +2851,10 @@ async function deleteOldPickOrder(id){
 }
 async function printPickOrder(id){
   const s=sales.find(x=>x.id===id);if(!s)return;
-  const rows=(s.items||[]).map(i=>`<tr><td>${safe(i.name||'')}</td><td>${safe(i.productCode||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td></tr>`).join('');
-  $('pickPrintPreview').innerHTML=`<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(storedOrderLabel(s))}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
+  const items=orderSortedItems(s.items||[]);
+  const rows=items.map((i,idx)=>`<tr class="${orderRowClass(items,idx)}"><td>${safe(i.name||'')}</td><td>${safe(i.productCode||'')}</td><td>${safe(i.unitLabel||(i.unitType||'each').toUpperCase())}</td><td>${Number(i.qty||0)}</td>${orderBarcodeCell(i)}</tr>`).join('');
+  $('pickPrintPreview').innerHTML=`${items.some(orderIsMQS)?'<div class="order-mqs-title">MQS</div>':''}<h1>ORDER PICK BON</h1><div style="margin:14px 0"><strong>Klant:</strong> ${safe(s.customerName||'Onbekende klant')}<br><strong>Datum:</strong> ${safe(pickOrderDate(s))}${s.orderType?`<br><strong>Bestelling:</strong> ${safe(storedOrderLabel(s))}`:''}</div><table class="order-table"><thead><tr><th>Product</th><th>Code</th><th>Eenheid</th><th>Aantal</th><th>Barcode</th></tr></thead><tbody>${rows}</tbody></table>${s.note?`<div style="margin-top:14px"><strong>Notitie:</strong> ${safe(s.note)}</div>`:''}`;
+  if(!renderOrderBarcodes('pickPrintPreview'))return alert('Barcodebibliotheek niet geladen. Probeer opnieuw met internet.');
   await markPickSeen(id);
   window.print();
 }
