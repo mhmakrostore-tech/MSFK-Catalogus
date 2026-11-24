@@ -958,7 +958,7 @@ function mqsFormatKey(p){
   if(label==='MQS')return 'mqs';
   if(label==='500 GR')return '500';
   if(label==='KG'||label==='1 KG'||label.startsWith('KG – '))return 'kg';
-  return '';
+  return mqsFormatKeyForDisplay(p);
 }
 function loadMQSBulkValues(){
   const map={};
@@ -1104,12 +1104,24 @@ async function saveMQSBulk(){
     {key:'500',format:'500',label:'500 gr',weightValue:500,weightUnit:'gr',actualWeightKg:0,code:$('mqsCode500').value.trim(),price:Number($('mqsPrice500').value||0),crtCode:$('mqsCrtCode500').value.trim(),crtPrice:Number($('mqsCrtPrice500').value||0),crt:Number($('mqsCrt500').value||0)},
     {key:'kg',format:'KG',label:'KG',weightValue:1,weightUnit:'kg',actualWeightKg:Number($('mqsActualKg').value||0),code:$('mqsCodeKg').value.trim(),price:Number($('mqsPriceKg').value||0),crtCode:$('mqsCrtCodeKg').value.trim(),crtPrice:Number($('mqsCrtPriceKg').value||0),crt:Number($('mqsCrtKg').value||0)}
   ];
-  if(rows.every(r=>!r.code&&r.price<=0&&!r.crtCode&&r.crtPrice<=0&&r.crt<=0))return msg($('formMsg'),'Vul minstens één MQS-formaat in.',true);
+  const editProduct=products.find(p=>p.id===$('editId').value);
+  const originalName=editingMQSOriginalName||editProduct?.name||'';
+  const originalGroup=originalName?products.filter(p=>normalizeCategoryName(p.category)==='MQS'&&String(p.name||'').trim().toLowerCase()===originalName.trim().toLowerCase()):[];
+  if(!originalName&&rows.every(r=>!r.code&&r.price<=0&&!r.crtCode&&r.crtPrice<=0&&r.crt<=0))return msg($('formMsg'),'Vul minstens één MQS-formaat in.',true);
+  $('saveBtn').disabled=true;
   try{
+    const writes=[];
+    const handled=new Set();
+    const shared={name:productName,notes,expiryDate:([exp1,exp2].filter(Boolean).sort()[0]||''),expiryDate1:exp1,expiryDate2:exp2,updatedAt:serverTimestamp()};
     for(const row of rows){
-      if(!row.code&&row.price<=0&&!row.crtCode&&row.crtPrice<=0&&row.crt<=0)continue;
-      const lookupName=(editingMQSOriginalName||productName).trim().toLowerCase();
+      const emptyRow=!row.code&&row.price<=0&&!row.crtCode&&row.crtPrice<=0&&row.crt<=0;
+      const lookupName=(originalName||productName).trim().toLowerCase();
       const existing=products.find(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===lookupName&&mqsFormatKey(p)===row.key);
+      if(existing)handled.add(existing.id);
+      if(emptyRow){
+        if(existing&&originalName)writes.push(setDoc(doc(db,'catalogProducts',existing.id),{...shared,...(photoData&&photoData!==existing.photoData?{photoData}:{})},{merge:true}));
+        continue;
+      }
       const data={
         name:productName,
         category:'MQS',
@@ -1131,14 +1143,19 @@ async function saveMQSBulk(){
         expiryDate2:exp2,
         barcode:'',
         notes,
-        available:true,
+        available:existing?.available!==false,
         photoData:photoData||existing?.photoData||'',
         updatedAt:serverTimestamp()
       };
-      if(existing)await setDoc(doc(db,'catalogProducts',existing.id),data,{merge:true});
-      else await addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()});
+      if(existing){
+        if(data.photoData===existing.photoData)delete data.photoData;
+        writes.push(setDoc(doc(db,'catalogProducts',existing.id),data,{merge:true}));
+      }else writes.push(addDoc(collection(db,'catalogProducts'),{...data,createdAt:serverTimestamp()}));
     }
-    msg($('formMsg'),editingMQSOriginalName?`${productName} gewijzigd.`:`${productName} opgeslagen.`);editingMQSOriginalName='';setProductFormMode(false);
+    for(const p of originalGroup)if(!handled.has(p.id))writes.push(setDoc(doc(db,'catalogProducts',p.id),{...shared,...(photoData&&photoData!==p.photoData?{photoData}:{})},{merge:true}));
+    await Promise.all(writes);
+    $('editId').value='';
+    msg($('formMsg'),originalName?`${productName} gewijzigd.`:`${productName} opgeslagen.`);editingMQSOriginalName='';setProductFormMode(false);
     // Maak het MQS-formulier leeg voor het volgende nieuwe product.
     if($('mqsProductName'))$('mqsProductName').value='';
     [
@@ -1155,7 +1172,7 @@ async function saveMQSBulk(){
     }
   }catch(e){
     msg($('formMsg'),'Opslaan mislukt: '+e.message,true);
-  }
+  }finally{$('saveBtn').disabled=false;}
 }
 
 
@@ -1212,7 +1229,7 @@ function updateMQSWeightUI(){
   $('toppersWeightNote').classList.toggle('hidden',!isToppers);
   $('toppersScannerBox').classList.toggle('hidden',!isToppers);
   $('genericScannerBox').classList.toggle('hidden',isToppers);
-  if(isMQS&&$('mqsProductName')?.value.trim())loadMQSBulkValues();
+  if(isMQS&&!editingMQSOriginalName&&$('mqsProductName')?.value.trim())loadMQSBulkValues();
   if(isMakro||isWarehouse){
     $('internalOnly').checked=true;
     $('available').checked=false;
@@ -2909,7 +2926,7 @@ function startCatalogListener(){
         refreshCategorySelects();
         refreshCreditProductSuggestions();
         renderPackageSystem();
-        if(isMQSCategory())loadMQSBulkValues();
+        if(isMQSCategory()&&!editingMQSOriginalName)loadMQSBulkValues();
         document.querySelectorAll('.sale-product').forEach(sel=>{
           const v=sel.value;
           sel.innerHTML=productOptions(v);
@@ -4233,6 +4250,7 @@ function edit(id){
     clearNormalEditForm();
     $('cat').value='MQS';updateMQSWeightUI();
     editingMQSOriginalName=String(p.name||'').trim();
+    $('editId').value=id;
     $('mqsProductName').value=p.name||'';
     loadMQSBulkValues();
     setProductFormMode(true);
@@ -4335,8 +4353,9 @@ $('warehouseScanBtn').onclick=startWarehouseScanner;$('warehouseStopScanBtn').on
 $('makroScanBtn').onclick=startMakroScanner;$('makroStopScanBtn').onclick=stopMakroScanner;
 $('catalogScanBtn').onclick=startCatalogScanner;$('stopCatalogScanBtn').onclick=stopCatalogScanner;
 
-$('mqsProductName').addEventListener('change',loadMQSBulkValues);
+$('mqsProductName').addEventListener('change',()=>{if(!editingMQSOriginalName)loadMQSBulkValues();});
 $('mqsProductName').addEventListener('input',()=>{
+  if(editingMQSOriginalName)return;
   const wanted=String($('mqsProductName').value||'').trim().toLowerCase();
   const exists=products.some(p=>String(p.category||'').trim().toUpperCase()==='MQS'&&String(p.name||'').trim().toLowerCase()===wanted);
   if(!exists){
