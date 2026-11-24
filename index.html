@@ -636,10 +636,10 @@ window.addEventListener('unhandledrejection',function(e){
 </section>
 
 </main></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut,signInWithEmailAndPassword,createUserWithEmailAndPassword} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
@@ -2927,8 +2927,10 @@ async function createOrderPickAccount(){
   }
 }
 
+let stopCatalogListener=null;
 function startCatalogListener(){
-  onSnapshot(
+  if(stopCatalogListener)stopCatalogListener();
+  stopCatalogListener=onSnapshot(
     collection(db,'catalogProducts'),
     s=>{
       products=s.docs.map(d=>({id:d.id,...d.data()}));
@@ -3444,7 +3446,7 @@ function renderExpiryAlerts(){
         : `Nog ${p.daysLeft} dagen`;
 
     row.innerHTML=`
-      ${p.photoData?`<img class="alert-photo" src="${p.photoData}" alt="">`:'<div class="alert-photo placeholder">Geen foto</div>'}
+      ${p.photoData?`<img loading="lazy" decoding="async" class="alert-photo" src="${p.photoData}" alt="">`:'<div class="alert-photo placeholder">Geen foto</div>'}
       <div class="alert-main">
         <div class="alert-title">${safe(productDisplayName(p))}</div>
         <div class="alert-exp">EXP: ${safe(formatDate(p.expiryDate))}</div>
@@ -3912,7 +3914,7 @@ function render(){
             </div>`;
           }).join('');
 
-          card.innerHTML=`<div class="photo">${imageProduct.photoData?`<img src="${imageProduct.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${group.every(p=>p.available===false)?'Uitverkocht':'Beschikbaar'}</span></div>
+          card.innerHTML=`<div class="photo">${imageProduct.photoData?`<img loading="lazy" decoding="async" src="${imageProduct.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${group.every(p=>p.available===false)?'Uitverkocht':'Beschikbaar'}</span></div>
             <div class="body">
               <div class="cat">MQS</div>
               <h2>${safe(mqsGroupDisplayName(group))}</h2>
@@ -3969,7 +3971,7 @@ function render(){
 
         const card=document.createElement('article');
         card.className='card';
-        card.innerHTML=`<div class="photo">${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div>
+        card.innerHTML=`<div class="photo">${p.photoData?`<img loading="lazy" decoding="async" src="${p.photoData}">`:'<div class="placeholder">Geen foto</div>'}<span class="badge">${p.available===false?'Uitverkocht':'Beschikbaar'}</span></div>
           <div class="body">
             <div class="cat">${safe(p.category||'OVERIG')}</div>
             <h2>${safe(productDisplayName(p))}</h2>${String(p.category||'').trim().toUpperCase()!=='MQS'&&weightText(p)?`<div class="product-weight">${safe(weightText(p))}</div>`:''}
@@ -4026,7 +4028,7 @@ function render(){
   if(!categoryNames.length)$('grid').innerHTML='<div class="empty">Geen producten gevonden.</div>';
 
   updateCatalogCart();
-  renderList();
+  if(currentRole==='owner')renderList();
   if(currentRole==='tablet')applyRoleUI();
 }
 let adminCatalogFilter='all';
@@ -4175,7 +4177,7 @@ function renderList(){
       for(const p of visible){
         const row=document.createElement('div');
         row.className='row';
-        row.innerHTML=`${p.photoData?`<img src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}
+        row.innerHTML=`${p.photoData?`<img loading="lazy" decoding="async" src="${p.photoData}">`:'<div class="placeholder" style="width:80px;height:80px">Geen foto</div>'}
           <div><strong>${safe(productDisplayName(p))}</strong>
             <div class="meta">${normalizedCodes(p).each?`EACH Code: ${safe(normalizedCodes(p).each)}<br>`:''}${nearestExpiryDate(p)?`EXP: ${safe(formatDate(nearestExpiryDate(p)))}`:''}</div>
           </div>
@@ -4194,12 +4196,14 @@ function renderList(){
       }
     };
 
+    let itemsRendered=false;
     section.querySelector('.edit-category-header').onclick=()=>{
       section.classList.toggle('collapsed');
+      if(!section.classList.contains('collapsed')&&!itemsRendered){renderItems(search.value);itemsRendered=true;}
       localStorage.setItem(adminOpenKey,section.classList.contains('collapsed')?'0':'1');
     };
-    search.oninput=e=>renderItems(e.target.value);
-    renderItems();
+    search.oninput=e=>{renderItems(e.target.value);itemsRendered=true;};
+    if(keepOpen){renderItems();itemsRendered=true;}
 
     root.appendChild(section);
   }
@@ -4744,7 +4748,9 @@ $('cancelBtn').onclick=reset;$('search').oninput=render;$('category').onchange=r
 onAuthStateChanged(auth,async u=>{
   $('loading').classList.add('hidden');
 
+  if(stopCatalogListener){stopCatalogListener();stopCatalogListener=null;}
   if(!u){
+    products=[];
     currentRole='guest';
     $('login').classList.remove('hidden');
     $('app').classList.add('hidden');
